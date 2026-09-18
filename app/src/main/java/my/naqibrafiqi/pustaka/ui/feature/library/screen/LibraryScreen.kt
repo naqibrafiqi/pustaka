@@ -65,7 +65,6 @@ private fun LibraryScreenContent(
         topBar = {
             TopBar(
                 title = "Library",
-                onNavigateBack = { /* TODO: ??? */ },
                 actionButtons = {
                     TopBarActionButton(
                         onClick = { /* TODO: ??? */ },
@@ -92,7 +91,6 @@ private fun LibraryScreenContent(
                     modifier = Modifier
                         .background(color = MaterialTheme.colorScheme.background)
                         .padding(
-                            start = 16.dp,
                             top = 8.dp,
                             bottom = 16.dp
                         )
@@ -218,6 +216,8 @@ private fun FilterChipsScrollableRow(
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        Spacer(modifier = Modifier)
+
         SelectChip(
             selected = true,
             onClick = { /* TODO: ??? */ },
@@ -236,7 +236,7 @@ private fun FilterChipsScrollableRow(
             label = "Unread (1)"
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier)
     }
 }
 

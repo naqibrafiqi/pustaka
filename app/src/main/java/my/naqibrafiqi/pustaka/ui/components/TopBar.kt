@@ -46,7 +46,6 @@ fun TopBar(
         ) {
             Row(
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (onNavigateBack != null) {
@@ -58,7 +57,11 @@ fun TopBar(
                     }
                 }
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp)
+                ) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge
