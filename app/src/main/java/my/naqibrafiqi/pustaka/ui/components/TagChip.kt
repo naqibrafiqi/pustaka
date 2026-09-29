@@ -26,7 +26,7 @@ fun TagChip(
         modifier = modifier,
         shape = shape,
         color = color,
-        tonalElevation = 8.dp
+        tonalElevation = 32.dp
     ) {
         Row(
             modifier = Modifier.padding(
@@ -36,8 +36,8 @@ fun TagChip(
         ) {
             Text(
                 text = text,
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.labelLarge
+                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelMedium
             )
         }
     }

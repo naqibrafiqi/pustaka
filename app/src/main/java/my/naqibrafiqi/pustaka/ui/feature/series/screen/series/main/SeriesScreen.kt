@@ -1,4 +1,4 @@
-package my.naqibrafiqi.pustaka.ui.feature.series.screen.series
+package my.naqibrafiqi.pustaka.ui.feature.series.screen.series.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,14 +18,17 @@ import my.naqibrafiqi.pustaka.ui.components.TopBarActionButton
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
-fun SeriesScreen() {
+fun SeriesScreen(
+    onNavigateToSeriesDetails: (String) -> Unit
+) {
     SeriesScreenContent(
-        // TODO: Add all necessary parameters.
+        onNavigateToSeriesDetails = onNavigateToSeriesDetails
     )
 }
 
 @Composable
 private fun SeriesScreenContent(
+    onNavigateToSeriesDetails: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -63,7 +66,22 @@ private fun SeriesScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(count = 10) {
-                BookSeriesCard(modifier = Modifier.padding(horizontal = 16.dp))
+                BookSeriesCard(
+                    title = "Playing Death Game to Put Food On The Table",
+                    author = "Yushi Ukai",
+                    illustrator = "Nekometaru",
+                    totalVolume = 6,
+                    genres = listOf("Action", "Adventure"),
+                    onStartReading = {
+                        /* TODO: ??? */
+                    },
+                    onViewSeries = {
+                        onNavigateToSeriesDetails("series_uuid7") // TODO: Replace with actual series UUID
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    latestBookCover = null,
+                    currentVolume = 2
+                )
             }
         }
     }
@@ -73,6 +91,8 @@ private fun SeriesScreenContent(
 @Composable
 private fun SeriesScreenPreview() {
     PustakaTheme {
-        SeriesScreenContent()
+        SeriesScreenContent(
+            onNavigateToSeriesDetails = {}
+        )
     }
 }
