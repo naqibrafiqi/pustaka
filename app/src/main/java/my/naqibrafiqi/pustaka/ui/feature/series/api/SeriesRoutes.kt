@@ -5,3 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data object SeriesRoute : NavKey
+
+@Serializable
+data class SeriesDetailsRoute(val seriesId: String) : NavKey

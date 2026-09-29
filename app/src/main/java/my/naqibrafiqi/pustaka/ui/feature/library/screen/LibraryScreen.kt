@@ -195,8 +195,7 @@ private fun LibraryScreenContent(
                         BookCard(
                             onClick = { /* TODO: ??? */ },
                             title = "The Left Hand of Darkness",
-                            author = "Ursula K. Le Guin",
-                            modifier = Modifier.animateItem(),
+                            subtitle = "Ursula K. Le Guin",
                             progress = .42f
                         )
                     }

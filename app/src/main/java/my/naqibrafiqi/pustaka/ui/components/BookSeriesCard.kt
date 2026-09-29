@@ -39,7 +39,16 @@ import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
 fun BookSeriesCard(
+    title: String,
+    author: String,
+    illustrator: String,
+    totalVolume: Int,
+    genres: List<String>,
+    onStartReading: () -> Unit,
+    onViewSeries: () -> Unit,
     modifier: Modifier = Modifier,
+    latestBookCover: String? = null,
+    currentVolume: Int = 0,
     shape: Shape = RoundedCornerShape(16.dp)
 ) {
     var showVolumePreview by rememberSaveable { mutableStateOf(false) }
@@ -62,21 +71,36 @@ fun BookSeriesCard(
                 ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            TopAction()
+            TopAction(
+                genres = genres,
+                totalVolume = totalVolume
+            )
 
-            Details()
+            Details(
+                title = title,
+                author = author,
+                illustrator = illustrator,
+                currentVolume = currentVolume,
+                totalVolume = totalVolume,
+                latestBookCover = latestBookCover
+            )
 
             AnimatedVisibility(visible = showVolumePreview) {
                 VolumePreview()
             }
 
-            BottomAction()
+            BottomAction(
+                onStartReading = onStartReading,
+                onViewSeries = onViewSeries
+            )
         }
     }
 }
 
 @Composable
 private fun TopAction(
+    genres: List<String>,
+    totalVolume: Int,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -90,24 +114,24 @@ private fun TopAction(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TagChip(
-                    text = "Action",
+                    text = genres[0],
                     color = MaterialTheme.colorScheme.secondary.copy(alpha = .2f)
                 )
 
                 Text(
-                    text = "+6",
+                    text = "+${genres.size - 1}",
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.labelLarge
                 )
             }
 
             TagChip(
-                text = "6 volumes",
+                text = "$totalVolume volumes",
                 color = MaterialTheme.colorScheme.primary
             )
         }
 
-        IconButton(onClick = {}) {
+        IconButton(onClick = { /* TODO: ??? */ }) {
             Icon(
                 painter = painterResource(id = R.drawable.more_vert),
                 contentDescription = null
@@ -118,13 +142,28 @@ private fun TopAction(
 
 @Composable
 private fun Details(
-    modifier: Modifier = Modifier
+    title: String,
+    author: String,
+    illustrator: String,
+    currentVolume: Int,
+    totalVolume: Int,
+    modifier: Modifier = Modifier,
+    latestBookCover: String? = null
 ) {
+    val progressPercentage = if (totalVolume > 0) {
+        (currentVolume / totalVolume) * 100
+    } else {
+        0
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        BookCover(modifier = Modifier.weight(1 / 2f))
+        BookCover(
+            modifier = Modifier.weight(1 / 2f),
+            imageUrl = latestBookCover
+        )
 
         Column(
             modifier = Modifier.weight(1f),
@@ -132,7 +171,7 @@ private fun Details(
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Playing Death Games to Put Food on the Table",
+                    text = title,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Medium,
                     overflow = TextOverflow.Ellipsis,
@@ -142,7 +181,7 @@ private fun Details(
                 )
 
                 Text(
-                    text = "Yushi Ukai, Nekometaru",
+                    text = "$author, $illustrator",
                     fontWeight = FontWeight.Normal,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -169,7 +208,7 @@ private fun Details(
                         )
 
                         Text(
-                            text = "Reading: Volume 2",
+                            text = "Reading: Volume $currentVolume",
                             fontWeight = FontWeight.Medium,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -182,7 +221,7 @@ private fun Details(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     LinearProgressIndicator(
-                        progress = { 0.33f },
+                        progress = { (progressPercentage / 100).toFloat() },
                         modifier = Modifier
                             .weight(1f)
                             .height(8.dp),
@@ -193,7 +232,7 @@ private fun Details(
                     )
 
                     Text(
-                        text = "33%",
+                        text = "$progressPercentage%",
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -201,7 +240,7 @@ private fun Details(
             }
 
             Text(
-                text = "2 of 6 read",
+                text = "$currentVolume of $totalVolume read",
                 fontWeight = FontWeight.Normal,
                 style = MaterialTheme.typography.labelLarge
             )
@@ -211,6 +250,8 @@ private fun Details(
 
 @Composable
 private fun BottomAction(
+    onStartReading: () -> Unit,
+    onViewSeries: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -219,7 +260,7 @@ private fun BottomAction(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
-            onClick = {},
+            onClick = onStartReading,
             modifier = Modifier.weight(1f)
         ) {
             Row(
@@ -240,7 +281,7 @@ private fun BottomAction(
             }
         }
 
-        FilledTonalIconButton(onClick = {}) {
+        FilledTonalIconButton(onClick = onViewSeries) {
             Icon(
                 painter = painterResource(id = R.drawable.list),
                 contentDescription = "List",
@@ -348,6 +389,16 @@ private fun VolumePreview(
 @Composable
 private fun BookSeriesCardPreview() {
     PustakaTheme {
-        BookSeriesCard()
+        BookSeriesCard(
+            title = "Playing Death Game to Put Food On The Table",
+            author = "Yushi Ukai",
+            illustrator = "Nekometaru",
+            totalVolume = 6,
+            genres = listOf("Action", "Adventure"),
+            onStartReading = {},
+            onViewSeries = {},
+            latestBookCover = null,
+            currentVolume = 2
+        )
     }
 }

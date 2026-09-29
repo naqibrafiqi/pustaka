@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -70,6 +71,10 @@ fun TopBar(
                     if (subtitle != null) {
                         Text(
                             text = subtitle,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
+                            overflow = TextOverflow.MiddleEllipsis,
+                            maxLines = 1,
+                            minLines = 1,
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
