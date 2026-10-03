@@ -1,5 +1,7 @@
 package my.naqibrafiqi.pustaka.ui.components
 
+import androidx.compose.foundation.MarqueeSpacing
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,7 +41,7 @@ fun TopBar(
                 .padding(
                     start = 8.dp,
                     top = 8.dp,
-                    end = 16.dp,
+                    end = 8.dp,
                     bottom = 8.dp
                 ),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -71,8 +73,15 @@ fun TopBar(
                     if (subtitle != null) {
                         Text(
                             text = subtitle,
+                            modifier = Modifier.basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                repeatDelayMillis = 1000,
+                                initialDelayMillis = 1000,
+                                spacing = MarqueeSpacing(spacing = 24.dp),
+                                velocity = (-30).dp
+                            ),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
-                            overflow = TextOverflow.MiddleEllipsis,
+                            overflow = TextOverflow.Visible,
                             maxLines = 1,
                             minLines = 1,
                             style = MaterialTheme.typography.labelLarge

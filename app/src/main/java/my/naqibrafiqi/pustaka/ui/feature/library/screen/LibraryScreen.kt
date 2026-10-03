@@ -47,15 +47,18 @@ import my.naqibrafiqi.pustaka.ui.components.TopBarActionButton
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
-fun LibraryScreen() {
+fun LibraryScreen(
+    onNavigateToBookDetail: (String) -> Unit
+) {
     LibraryScreenContent(
-        // TODO: Add all necessary parameters.
+        onNavigateToBookDetail = onNavigateToBookDetail
     )
 }
 
 @OptIn(ExperimentalGridApi::class)
 @Composable
 private fun LibraryScreenContent(
+    onNavigateToBookDetail: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -193,7 +196,7 @@ private fun LibraryScreenContent(
                 ) {
                     repeat(25) {
                         BookCard(
-                            onClick = { /* TODO: ??? */ },
+                            onClick = { onNavigateToBookDetail("bookId") },
                             title = "The Left Hand of Darkness",
                             subtitle = "Ursula K. Le Guin",
                             progress = .42f
@@ -355,6 +358,8 @@ private fun CurrentlyReadingCard(
 @Composable
 private fun LibraryScreenPreview() {
     PustakaTheme {
-        LibraryScreenContent()
+        LibraryScreenContent(
+            onNavigateToBookDetail = {}
+        )
     }
 }

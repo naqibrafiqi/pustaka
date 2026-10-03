@@ -2,8 +2,10 @@ package my.naqibrafiqi.pustaka.ui.feature.series.impl
 
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import my.naqibrafiqi.pustaka.ui.feature.series.api.BookDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesRoute
+import my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details.BookDetailsScreen
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.series.details.SeriesDetailsScreen
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.series.main.SeriesScreen
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
@@ -23,5 +25,15 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder() {
         val navigator = LocalAppNavigator.current
 
         SeriesDetailsScreen()
+    }
+
+    entry<BookDetailsRoute> {
+        val navigator = LocalAppNavigator.current
+
+        BookDetailsScreen(
+            onNavigateBack = {
+                navigator.removeLastOrNull()
+            }
+        )
     }
 }
