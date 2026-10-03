@@ -8,3 +8,6 @@ data object SeriesRoute : NavKey
 
 @Serializable
 data class SeriesDetailsRoute(val seriesId: String) : NavKey
+
+@Serializable
+data class BookDetailsRoute(val bookId: String) : NavKey
