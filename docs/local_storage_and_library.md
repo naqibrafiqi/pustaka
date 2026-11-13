@@ -1,30 +1,151 @@
-### **Structure**
+# Local storage and library
 
-1. Set a folder, Pustaka, in the phone storage (`/storage/emulated/0/Pustaka`)
-2. Below are the folder tree:
+_Last updated: 2026-11-13_
+
+Pustaka builds its library from a folder that the user manages. The user adds, removes and organises EPUB files with any file manager or sync tool, and the app reads that folder and shows what it finds. **The app never renames, moves or edits the user's files.** The only time it changes the folder is when the user explicitly asks to delete something (see [Deleting](#deleting)).
+
+---
+
+## Folder layout
+
+The default library folder is `/storage/emulated/0/Pustaka`. The user can change it in Settings, for example to `/storage/emulated/0/Download/Pustaka`.
+
 ```
-   - ../Pustaka
-     - 01a0b844-afbc-75b6-969a-f446fedefb8a
-       - vol\_01.epub
-       - vol\_02.epub
-       - vol\_03.epub
-         - ..
-     - 01a0b844-afbc-75b6-969a-fb874bb07a8c	    
-       - vol\_01.epub
-       - vol\_02.epub
-       - ..
-     - 01a0b844-afbc-75b6-969a-fd75f21a83ae
-       - vol\_01.epub
-       - ..
-     - ..
+Pustaka/
+├── The Left Hand of Darkness.epub        → standalone book
+├── Playing Death Games/                  → series
+│   ├── Playing Death Games, Vol. 01.epub → volume
+│   ├── Playing Death Games, Vol. 02.epub → volume
+│   └── extras/                           → ignored (only one level is scanned)
+├── My New Series/                        → series with 0 volumes
+└── .hidden/                              → ignored (name starts with ".")
 ```
 
-### **Implementation**
+| What's in the folder | What the app shows |
+|---|---|
+| `.epub` file directly inside `Pustaka/` | A **standalone book**: shown in Library but not in the Series tab |
+| A folder directly inside `Pustaka/` | A **series**, even if it's empty |
+| An `.epub` file inside a series folder | A **volume** of that series |
+| Folders inside a series folder | Ignored |
+| Any file that isn't an `.epub` | Ignored |
+| Files and folders whose names start with `.` | Ignored |
 
-* The folder by default set `/storage/emulated/0/Pustaka` as the root folder, but user can change the location for the app to scan the books.
-* All the book will be added to a series, never individually. It means that user needs to create a series first, then add book(s) from there.
-* When adding series in the app, it will automatically create folder in the Pustaka folder with the of its own unique UUID (refer to **Structure** section). For now, user are advised to **NOT** add or create the series folder inside Pustaka folder because the app will not recognize it.
-* For the books, the app will assume that the name will be as this, _`..., Vol. 04.epub`_, so it will extract the last two characters (_04_) that will be the volume number to be appended with _`vol\_`_ becoming _`vol\_04.epub`_.
-* If the books don't have that name format, it will increment the last known volume or set it as _1_ if there's no known volume.
-* When selecting the books to be moved into the series folder, the app will show the list of the books to moved, and it's new name. User can check and update the name.
+---
 
+## Storage access
+
+The app is distributed through GitHub (sideloaded), not the Play Store, so it uses Android's **"All files access"** permission to read the folder directly.
+
+| Android version | Permission |
+|---|---|
+| 11 and newer (API 30+) | `MANAGE_EXTERNAL_STORAGE`. The user turns it on in a system settings screen that the app opens for them |
+| 10 (API 29) | `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`, with `requestLegacyExternalStorage="true"` in the manifest |
+
+**First launch:**
+1. A welcome screen explains why the app needs access to files, then opens the permission screen.
+2. Once access is granted, the app creates `Pustaka/` if it doesn't exist and runs the first scan.
+3. If access is refused, the app shows a screen with a "Grant access" button instead of the library.
+
+Android doesn't let an app run anything when it's installed, so the folder is created on first launch, after access is granted.
+
+---
+
+## Scanning
+
+**When it runs:**
+- every time the app is opened or brought back to the foreground
+- when the user pulls down to refresh in Library or Series
+- when the user taps "Rescan library" in Settings
+
+**How it works:**
+1. List the files and folders in `Pustaka/`, then list the files in each series folder.
+2. Compare each file's path, size and last-modified time with what the database already has. Only files that are **new or changed** get opened and read, so a refresh with nothing new is quick.
+3. Match files that have been moved or renamed to books already in the library (see [Book identity](#book-identity)).
+4. Mark books whose files have disappeared as **missing** (see [Missing files](#missing-files)).
+5. Show a short result, for example "3 new books found" or "Library is up to date".
+
+Large scans run in a background job, so they keep going if the user leaves the app.
+
+---
+
+## Book identity
+
+Because the user controls the filenames, the app has to recognise a book after it's been renamed or moved. Otherwise reading progress and highlights would be lost. Each book is identified by a **fingerprint**: a hash of the file's size plus the first and last 64 KB of its contents.
+
+The ID stored inside the EPUB (`dc:identifier` in `content.opf`) is saved too, but it isn't used on its own. Publishers sometimes reuse the same ID for every volume in a series.
+
+**On each scan:**
+- A new path with a **known** fingerprint is treated as a move or rename. The app updates the book's path and keeps its progress, highlights and edited details.
+- A new path with an **unknown** fingerprint is a new book.
+
+---
+
+## Metadata
+
+The EPUB files are read with the **[Readium Kotlin Toolkit](https://github.com/readium/kotlin-toolkit)** (BSD-3-Clause licence), using its `readium-shared` and `readium-streamer` modules. Phase 4 uses the same library to display books, so one library handles both jobs. Readium reads each book's `content.opf` file (EPUB 2 and 3) and provides:
+
+| Field | Where it comes from in `content.opf` | Where Pustaka uses it |
+|---|---|---|
+| Title | `dc:title` | Book details ("Title in file") |
+| Authors | `dc:creator` with role `aut`, or no role | Book cards, details |
+| Illustrators / translators | `dc:creator` / `dc:contributor` with role `ill` or `trl` | "Author • Illustrator" lines |
+| Publisher | `dc:publisher` | More info |
+| Publication date | `dc:date` | More info |
+| Identifier | `dc:identifier` (the `unique-identifier` ID) | More info, and a second check for identity |
+| Language | `dc:language` | More info |
+| Description | `dc:description` | Synopsis |
+| Subjects | `dc:subject` | Genres and tags |
+| Series and volume number | `belongs-to-collection` + `group-position` (EPUB 3), or `calibre:series` + `calibre:series_index` | Volume order |
+| Cover | the manifest item marked as the cover | Cover images, saved in the app's cache |
+| Total pages | Readium's position list | "Page X of Y" |
+
+### Default names and editing
+- **Series name** is the folder name by default.
+- **Book name** is the filename without `.epub` by default.
+- The user can edit every series and book detail, names included. Edits are saved in the app's database and **never written into the files**. Each field can be reset to its default.
+- On the "Edit details" screen, a "Use details from file" button fills the fields from the EPUB's own details. This helps when a filename is untidy, such as `[Group] Series v04 (Digital).epub`.
+- Series details other than the name (author, illustrator, synopsis, genres) are filled from the series' first volume by default.
+
+---
+
+## Volume order
+
+The order of volumes within a series is decided by the first rule that gives an answer:
+1. **The user's own number**, if they've set one in Edit details.
+2. **The volume number stored in the EPUB** (`group-position` or `calibre:series_index`).
+3. **A number in the filename**, such as `Vol. 04`, `Vol 4`, `v04`, `#4`, `Volume 4`, or a number at the end of the name.
+4. **The filename itself**, sorted so that `10` comes after `9`.
+
+Books with the same number are ordered by filename.
+
+---
+
+## Missing files
+
+When a known file is no longer found, its book is marked **missing** instead of being deleted:
+- It still appears, greyed out with a "File not found" label, and it can't be opened.
+- Its progress, highlights and edited details are kept.
+- If a file with the same fingerprint turns up again, anywhere in the library, it's restored automatically.
+- The user can remove a missing book from the library for good. Its data is deleted.
+
+---
+
+## Deleting
+
+The app only changes the folder when the user asks it to.
+
+| Action | Choices offered | Effect |
+|---|---|---|
+| Delete series | **Remove from library** | Hides the series and its books. They don't come back on the next scan, and can be restored in Settings → Hidden items. The folder isn't touched |
+| | **Delete folder and files** | Deletes the folder and every EPUB in it after a confirmation that shows how many files will go. Can't be undone |
+| Delete an empty series | (one choice) | Deletes the empty folder |
+| Delete book | **Remove from library** / **Delete file** | Same as for a series, for one file |
+
+---
+
+## Out of scope for v1
+- Moving or renaming files from inside the app. Users do this with a file manager, and the app picks up the change through the fingerprint.
+- Folders nested deeper than one level inside `Pustaka/`.
+- Formats other than EPUB (PDF, CBZ).
+- Watching the folder for changes while the app is closed.
+- Storing edited details next to the books (for example a `.pustaka.json` file) so they survive reinstalling the app. This is a possible later addition.
