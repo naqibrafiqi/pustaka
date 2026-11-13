@@ -1,5 +1,5 @@
 [versions]
-agp = "9.4.1"
+agp = "9.5.1"
 coilCompose = "3.3.0"
 coreKtx = "1.19.0"
 foundationLayout = "1.12.1"
@@ -12,7 +12,6 @@ kotlin = "2.2.10"
 composeBom = "2026.02.01"
 nav3Core = "1.1.7"
 lifecycleViewmodelNav3 = "2.12.0-alpha02"
-kotlinSerialization = "2.2.21"
 kotlinxSerializationCore = "1.9.0"
 material3AdaptiveNav3 = "1.4.0-alpha01"
 room = "2.6.1"
@@ -54,6 +53,6 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization"}
+jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

@@ -24,7 +24,11 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder() {
     entry<SeriesDetailsRoute> {
         val navigator = LocalAppNavigator.current
 
-        SeriesDetailsScreen()
+        SeriesDetailsScreen(
+            onNavigateBack = {
+                navigator.removeLastOrNull()
+            }
+        )
     }
 
     entry<BookDetailsRoute> {

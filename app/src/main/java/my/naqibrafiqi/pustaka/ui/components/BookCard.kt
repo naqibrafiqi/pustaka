@@ -51,15 +51,21 @@ fun BookCard(
         if (isGrid) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 BookCover(
-                    imageUrl = imageUrl
+                    imageUrl = imageUrl,
+                    modifier = Modifier.padding(
+                        start = 8.dp,
+                        top = 16.dp,
+                        end = 8.dp
+                    )
                 )
 
                 Column(
                     modifier = Modifier.padding(
-                        horizontal = 8.dp,
-                        vertical = 16.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        start = 8.dp,
+                        top = 8.dp,
+                        bottom = 16.dp,
+                        end = 8.dp
+                    )
                 ) {
                     Column {
                         Text(
@@ -77,7 +83,7 @@ fun BookCard(
                                 fontWeight = FontWeight.Normal,
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
-                                style = MaterialTheme.typography.labelMedium
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
                     }
@@ -92,15 +98,15 @@ fun BookCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Progress",
-                                fontWeight = FontWeight.Normal,
-                                style = MaterialTheme.typography.labelMedium
+                                text = "Reading",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.labelLarge
                             )
 
                             Text(
                                 text = "${(progress * 100).toInt()}%",
                                 fontWeight = FontWeight.SemiBold,
-                                style = MaterialTheme.typography.labelMedium
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
 
@@ -108,7 +114,7 @@ fun BookCard(
                             progress = { progress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(4.dp),
+                                .height(8.dp),
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
@@ -126,21 +132,16 @@ fun BookCard(
             ) {
                 BookCover(
                     imageUrl = imageUrl,
-                    modifier = Modifier.weight(.3f)
+                    modifier = Modifier.weight(.4f)
                 )
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Column {
                         Text(
                             text = title,
                             fontWeight = FontWeight.SemiBold,
                             lineHeight = 18.sp,
                             overflow = TextOverflow.Ellipsis,
-                            maxLines = 2,
-                            minLines = 2,
                             style = MaterialTheme.typography.bodyLarge
                         )
 
@@ -150,7 +151,7 @@ fun BookCard(
                                 fontWeight = FontWeight.Normal,
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
-                                style = MaterialTheme.typography.labelMedium
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
                     }
@@ -165,15 +166,15 @@ fun BookCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Progress",
-                                fontWeight = FontWeight.Normal,
-                                style = MaterialTheme.typography.labelMedium
+                                text = "Reading",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.labelLarge
                             )
 
                             Text(
                                 text = "${(progress * 100).toInt()}%",
                                 fontWeight = FontWeight.SemiBold,
-                                style = MaterialTheme.typography.labelMedium
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
 
