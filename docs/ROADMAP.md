@@ -122,7 +122,7 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 
 ## Working agreement
 
-- **Branches and pull requests:** one feature branch per phase, or per sub-feature for the large phases. Each gets a PR into `main` for you to review.
+- **Branches and pull requests:** one feature branch per phase, or per sub-feature for the large phases. Each starts from `1.0.0` and gets a PR into `1.0.0` for you to review. `1.0.0` is merged into `main` separately.
 - **Commit messages:** follow the existing style, e.g. `feat: …` and `fix: …`.
 - **Reports:** at the end of each phase you'll get what was built, what was tested and how, and any decisions that came up along the way.
 - **Scope changes:** if something in the designs is unclear or conflicts with this plan, Claude asks before building it.
