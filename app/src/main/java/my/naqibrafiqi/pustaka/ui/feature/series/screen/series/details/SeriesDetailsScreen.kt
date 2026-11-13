@@ -67,14 +67,18 @@ import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun SeriesDetailsScreen() {
+fun SeriesDetailsScreen(
+    onNavigateBack: () -> Unit
+) {
     SeriesDetailsScreenContent(
         // TODO: Pass series details parameters
+        onNavigateBack = onNavigateBack
     )
 }
 
 @Composable
 private fun SeriesDetailsScreenContent(
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val tags = listOf("Action", "Battle royale", "Drama", "Mystery", "Psychological", "Thriller")
@@ -91,7 +95,7 @@ private fun SeriesDetailsScreenContent(
             TopBar(
                 title = "Series Details",
                 subtitle = "Playing Death Games to Put Food on the Table",
-                onNavigateBack = { /* TODO: ??? */ },
+                onNavigateBack = onNavigateBack,
                 actionButtons = {
                     DropdownMenuButton(
                         expanded = openMenu,
@@ -660,6 +664,8 @@ private fun VolumesHeader(
 @Composable
 private fun SeriesDetailsScreenPreview() {
     PustakaTheme {
-        SeriesDetailsScreenContent()
+        SeriesDetailsScreenContent(
+            onNavigateBack = {}
+        )
     }
 }

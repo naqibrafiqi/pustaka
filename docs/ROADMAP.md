@@ -31,8 +31,8 @@ Sizes: **S** is about one working session, **M** is 2–3 sessions, **L** is 4 o
 
 ### Phase 0: Housekeeping (S)
 Clean up the codebase before building on it.
-- Confirm `./gradlew assembleDebug` succeeds and fix anything that breaks it. Room 2.6.1 probably doesn't work with KSP 2.3.x, so it is likely to need an upgrade to 2.7 or newer.
-- Use the same version for every Kotlin plugin. They are currently a mix of 2.2.10 and 2.2.21.
+- Confirm `./gradlew assembleDebug` succeeds. ✅ It already did. The Room version check moved to Phase 1, because Room's code generator doesn't run until the database has at least one table.
+- Use the same version for every Kotlin plugin. ✅ The serialization plugin now uses the shared `kotlin` version (2.2.10).
 - Delete the commented-out code in `PustakaRoutes.kt`.
 - Make the back button on Series Details work. Its `onNavigateBack` is still a TODO.
 - Save `README.md` as UTF-8 and give it a short project description.
@@ -41,6 +41,7 @@ Clean up the codebase before building on it.
 
 ### Phase 1: Data foundation (M)
 Build the database and the layer that screens will read data through.
+- Check that Room 2.6.1 works with KSP 2.3.x once the first table exists, and upgrade to Room 2.7 or newer if it doesn't.
 - **Models and Room tables.** Book and series details keep two versions of each field: the value from the file or folder, and the user's edit if there is one.
   - `Series`: id, folder path, name (from the folder name / edited), author, illustrator, synopsis, main genre, tags, cover, hidden flag, and created/updated times.
   - `Book`: id, series id (empty for standalone books), file path, fingerprint, file size, last-modified time, status flags (missing, hidden), name (from the filename / edited), the details read from `content.opf` (title, creators with roles, publisher, date, identifier, language, description, subjects, series position), volume number (from the file / edited), cover, total positions, reading status (unread, reading or finished), date added, date last opened.
@@ -131,7 +132,7 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 
 | Phase | Status |
 |---|---|
-| 0. Housekeeping | Not started |
+| 0. Housekeeping | Done |
 | 1. Data foundation | Not started |
 | 2. Library folder and scanning | Not started (design agreed) |
 | 3. Connect screens to data | Not started |
