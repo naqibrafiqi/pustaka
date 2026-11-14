@@ -28,7 +28,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,17 +50,23 @@ import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
 fun LibraryScreen(
-    onNavigateToBookDetail: (String) -> Unit
+    onNavigateToBookDetail: (String) -> Unit,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
 ) {
     LibraryScreenContent(
-        onNavigateToBookDetail = onNavigateToBookDetail
+        onNavigateToBookDetail = onNavigateToBookDetail,
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
     )
 }
 
-@OptIn(ExperimentalGridApi::class)
+@OptIn(ExperimentalGridApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun LibraryScreenContent(
     onNavigateToBookDetail: (String) -> Unit,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -82,125 +90,131 @@ private fun LibraryScreenContent(
             )
         },
     ) { innerPadding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
-            state = listState,
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
         ) {
-            stickyHeader {
-                FilterChipsScrollableRow(
-                    modifier = Modifier
-                        .background(color = MaterialTheme.colorScheme.background)
-                        .padding(
-                            top = 8.dp,
-                            bottom = 16.dp
-                        )
-                )
-            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState,
+                contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
+            ) {
+                stickyHeader {
+                    FilterChipsScrollableRow(
+                        modifier = Modifier
+                            .background(color = MaterialTheme.colorScheme.background)
+                            .padding(
+                                top = 8.dp,
+                                bottom = 16.dp
+                            )
+                    )
+                }
 
-            item {
-                Column(
-                    modifier = Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 32.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+                item {
+                    Column(
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 32.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Currently Reading",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+
+                            Text(
+                                text = "Read 32m ago",
+                                color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+
+                        CurrentlyReadingCard()
+                    }
+                }
+
+                stickyHeader {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = MaterialTheme.colorScheme.background)
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 8.dp
+                            ),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Currently Reading",
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-
-                        Text(
-                            text = "Read 32m ago",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-
-                    CurrentlyReadingCard()
-                }
-            }
-
-            stickyHeader {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = MaterialTheme.colorScheme.background)
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 8.dp
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Recently Added",
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-
-                        Text(
-                            text = "(24 books)",
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-
-                    TextButton(onClick = { /* TODO: ??? */ }) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "View all",
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.labelLarge
+                                text = "Recently Added",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyLarge
                             )
 
-                            Icon(
-                                painter = painterResource(id = R.drawable.chevron_forward),
-                                contentDescription = null
+                            Text(
+                                text = "(24 books)",
+                                color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
+                                style = MaterialTheme.typography.labelLarge
                             )
+                        }
+
+                        TextButton(onClick = { /* TODO: ??? */ }) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "View all",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+
+                                Icon(
+                                    painter = painterResource(id = R.drawable.chevron_forward),
+                                    contentDescription = null
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            item {
-                Grid(
-                    config = {
-                        repeat(2) {
-                            column(GridTrackSize.MinMax(min = 0.dp, max = 1.fr))
+                item {
+                    Grid(
+                        config = {
+                            repeat(2) {
+                                column(GridTrackSize.MinMax(min = 0.dp, max = 1.fr))
+                            }
+                            gap(16.dp)
+                            flow = GridFlow.Row
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        repeat(25) {
+                            BookCard(
+                                onClick = { onNavigateToBookDetail("bookId") },
+                                title = "The Left Hand of Darkness",
+                                subtitle = "Ursula K. Le Guin",
+                                progress = .42f
+                            )
                         }
-                        gap(16.dp)
-                        flow = GridFlow.Row
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    repeat(25) {
-                        BookCard(
-                            onClick = { onNavigateToBookDetail("bookId") },
-                            title = "The Left Hand of Darkness",
-                            subtitle = "Ursula K. Le Guin",
-                            progress = .42f
-                        )
                     }
                 }
             }
@@ -359,7 +373,9 @@ private fun CurrentlyReadingCard(
 private fun LibraryScreenPreview() {
     PustakaTheme {
         LibraryScreenContent(
-            onNavigateToBookDetail = {}
+            onNavigateToBookDetail = {},
+            isRefreshing = false,
+            onRefresh = {}
         )
     }
 }

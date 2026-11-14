@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,16 +21,23 @@ import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
 fun SeriesScreen(
-    onNavigateToSeriesDetails: (String) -> Unit
+    onNavigateToSeriesDetails: (String) -> Unit,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
 ) {
     SeriesScreenContent(
-        onNavigateToSeriesDetails = onNavigateToSeriesDetails
+        onNavigateToSeriesDetails = onNavigateToSeriesDetails,
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SeriesScreenContent(
     onNavigateToSeriesDetails: (String) -> Unit,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -57,31 +66,37 @@ private fun SeriesScreenContent(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding() + 8.dp),
-            state = listState,
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(top = innerPadding.calculateTopPadding()),
         ) {
-            items(count = 10) {
-                BookSeriesCard(
-                    title = "Playing Death Game to Put Food On The Table",
-                    author = "Yushi Ukai",
-                    illustrator = "Nekometaru",
-                    totalVolume = 6,
-                    genres = listOf("Action", "Adventure"),
-                    onStartReading = {
-                        /* TODO: ??? */
-                    },
-                    onViewSeries = {
-                        onNavigateToSeriesDetails("series_uuid7") // TODO: Replace with actual series UUID
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    latestBookCover = null,
-                    currentVolume = 2
-                )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState,
+                contentPadding = PaddingValues(top = 8.dp, bottom = innerPadding.calculateBottomPadding()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(count = 10) {
+                    BookSeriesCard(
+                        title = "Playing Death Game to Put Food On The Table",
+                        author = "Yushi Ukai",
+                        illustrator = "Nekometaru",
+                        totalVolume = 6,
+                        genres = listOf("Action", "Adventure"),
+                        onStartReading = {
+                            /* TODO: ??? */
+                        },
+                        onViewSeries = {
+                            onNavigateToSeriesDetails("series_uuid7") // TODO: Replace with actual series UUID
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        latestBookCover = null,
+                        currentVolume = 2
+                    )
+                }
             }
         }
     }
@@ -92,7 +107,9 @@ private fun SeriesScreenContent(
 private fun SeriesScreenPreview() {
     PustakaTheme {
         SeriesScreenContent(
-            onNavigateToSeriesDetails = {}
+            onNavigateToSeriesDetails = {},
+            isRefreshing = false,
+            onRefresh = {}
         )
     }
 }
