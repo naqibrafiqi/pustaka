@@ -26,9 +26,15 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -44,6 +50,8 @@ import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.MessageState
 import my.naqibrafiqi.pustaka.ui.components.SynopsisSection
 import my.naqibrafiqi.pustaka.ui.components.TopBar
+import my.naqibrafiqi.pustaka.ui.components.menu.DropdownMenuButton
+import my.naqibrafiqi.pustaka.ui.components.menu.MenuItem
 import my.naqibrafiqi.pustaka.ui.model.BookItem
 import my.naqibrafiqi.pustaka.ui.model.BookState
 import my.naqibrafiqi.pustaka.ui.model.volumesLabel
@@ -56,6 +64,9 @@ fun SeriesDetailsScreen(
     onToggleLayout: () -> Unit,
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     SeriesDetailsScreenContent(
         state = state,
@@ -63,6 +74,9 @@ fun SeriesDetailsScreen(
         onToggleLayout = onToggleLayout,
         onRetry = onRetry,
         onOpenBook = onOpenBook,
+        onEdit = onEdit,
+        onDelete = onDelete,
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -73,20 +87,56 @@ private fun SeriesDetailsScreenContent(
     onToggleLayout: () -> Unit,
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
     val gridState = rememberLazyGridState()
     val ready = state as? SeriesDetailsUiState.Ready
     val isGrid = ready?.isGrid ?: true
 
+    var openMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            // "Edit details" and "Delete series" join this bar's menu in Phase 3's second part.
             TopBar(
                 title = "Series Details",
                 subtitle = ready?.name,
                 onNavigateBack = onNavigateBack,
+                actionButtons = if (ready == null) null else {
+                    {
+                        DropdownMenuButton(
+                            expanded = openMenu,
+                            openMenu = {
+                                openMenu = true
+                            },
+                            closeMenu = {
+                                openMenu = false
+                            }
+                        ) {
+                            MenuItem(
+                                onClick = {
+                                    openMenu = false
+                                    onEdit()
+                                },
+                                text = "Edit details",
+                                leadingIconResId = R.drawable.edit
+                            )
+
+                            MenuItem(
+                                onClick = {
+                                    openMenu = false
+                                    onDelete()
+                                },
+                                text = "Delete series",
+                                leadingIconResId = R.drawable.delete
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -470,6 +520,9 @@ private fun SeriesDetailsScreenPreview() {
             onToggleLayout = {},
             onRetry = {},
             onOpenBook = {},
+            onEdit = {},
+            onDelete = {},
+            snackbarHostState = SnackbarHostState(),
         )
     }
 }

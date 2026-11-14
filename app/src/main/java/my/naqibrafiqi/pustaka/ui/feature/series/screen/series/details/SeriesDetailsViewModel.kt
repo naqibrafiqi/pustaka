@@ -8,13 +8,21 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.data.library.DeleteResult
+import my.naqibrafiqi.pustaka.data.library.FolderContents
+import my.naqibrafiqi.pustaka.data.library.LibraryFiles
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
 import my.naqibrafiqi.pustaka.data.model.Series
@@ -22,10 +30,37 @@ import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import my.naqibrafiqi.pustaka.ui.model.BookItem
+import my.naqibrafiqi.pustaka.ui.model.DetailsEvent
 import my.naqibrafiqi.pustaka.ui.model.SeriesProgress
 import my.naqibrafiqi.pustaka.ui.model.fileSizeLabel
 import my.naqibrafiqi.pustaka.ui.model.genresOf
 import my.naqibrafiqi.pustaka.ui.model.toItem
+
+/** The steps of "Delete series". See "Deleting" in `docs/local_storage_and_library.md`. */
+sealed interface SeriesDeleteDialog {
+    val name: String
+    val folderPath: String
+
+    /** "Remove from library" or "Delete folder and files". */
+    data class Choose(
+        override val name: String,
+        override val folderPath: String,
+        val contents: FolderContents,
+    ) : SeriesDeleteDialog
+
+    /** The last check before the folder and its files are deleted. */
+    data class ConfirmDeleteFiles(
+        override val name: String,
+        override val folderPath: String,
+        val contents: FolderContents,
+    ) : SeriesDeleteDialog
+
+    /** The folder has nothing in it, so it's just deleted. */
+    data class ConfirmDeleteEmptyFolder(
+        override val name: String,
+        override val folderPath: String,
+    ) : SeriesDeleteDialog
+}
 
 sealed interface SeriesDetailsUiState {
 
@@ -66,6 +101,7 @@ class SeriesDetailsViewModel @AssistedInject constructor(
     private val seriesRepository: SeriesRepository,
     private val books: BookRepository,
     private val reading: ReadingRepository,
+    private val libraryFiles: LibraryFiles,
     private val savedState: SavedStateHandle,
 ) : ViewModel() {
 
@@ -89,6 +125,59 @@ class SeriesDetailsViewModel @AssistedInject constructor(
             }.catch { emit(SeriesDetailsUiState.Error("Couldn't load this series.")) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), SeriesDetailsUiState.Loading)
+
+    private val _deleteDialog = MutableStateFlow<SeriesDeleteDialog?>(null)
+
+    /** The delete dialog that's showing, if any. */
+    val deleteDialog: StateFlow<SeriesDeleteDialog?> = _deleteDialog.asStateFlow()
+
+    private val _events = Channel<DetailsEvent>(Channel.BUFFERED)
+    val events: Flow<DetailsEvent> = _events.receiveAsFlow()
+
+    /**
+     * "Delete series". A folder with nothing in it is simply deleted after a confirmation. Otherwise
+     * the user picks between removing the series from the library and deleting its files.
+     */
+    fun requestDelete() {
+        viewModelScope.launch {
+            val series = seriesRepository.getSeries(seriesId) ?: return@launch
+            val contents = libraryFiles.contentsOf(series.folderPath)
+            _deleteDialog.value = if (contents.files == 0) {
+                SeriesDeleteDialog.ConfirmDeleteEmptyFolder(series.name.value, series.folderPath)
+            } else {
+                SeriesDeleteDialog.Choose(series.name.value, series.folderPath, contents)
+            }
+        }
+    }
+
+    fun chooseDeleteFiles() {
+        val choose = _deleteDialog.value as? SeriesDeleteDialog.Choose ?: return
+        _deleteDialog.value = SeriesDeleteDialog.ConfirmDeleteFiles(choose.name, choose.folderPath, choose.contents)
+    }
+
+    /** Hides the series and its volumes. The folder isn't touched. */
+    fun removeFromLibrary() {
+        _deleteDialog.value = null
+        viewModelScope.launch {
+            seriesRepository.setHidden(seriesId, true)
+            _events.send(DetailsEvent.Closed)
+        }
+    }
+
+    /** Deletes the folder and everything in it, after the user has confirmed. */
+    fun deleteFolder() {
+        _deleteDialog.value = null
+        viewModelScope.launch {
+            when (val result = libraryFiles.deleteSeriesFolder(seriesId)) {
+                DeleteResult.Deleted -> _events.send(DetailsEvent.Closed)
+                is DeleteResult.Failed -> _events.send(DetailsEvent.Message(result.message))
+            }
+        }
+    }
+
+    fun dismissDeleteDialog() {
+        _deleteDialog.value = null
+    }
 
     fun toggleLayout() {
         isGrid.value = !isGrid.value

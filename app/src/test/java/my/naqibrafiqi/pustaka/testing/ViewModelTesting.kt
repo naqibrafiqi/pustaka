@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import my.naqibrafiqi.pustaka.data.library.scan.LibraryScans
+import my.naqibrafiqi.pustaka.data.library.scan.ScanStatus
 import my.naqibrafiqi.pustaka.data.settings.AppSettings
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import org.junit.rules.TestWatcher
@@ -25,4 +27,13 @@ class FakeSettings(path: String = "/storage/emulated/0/Pustaka") : SettingsRepos
     override suspend fun setLibraryFolderPath(path: String) = error("not used")
     override suspend fun resetLibraryFolderPath() = error("not used")
     override suspend fun setHasSeenWelcome() = error("not used")
+}
+
+/** Counts the scans asked for, without running any. */
+class FakeScans : LibraryScans {
+    var requested = 0
+    override val status: Flow<ScanStatus> = MutableStateFlow(ScanStatus.IDLE)
+    override fun requestScan() {
+        requested++
+    }
 }

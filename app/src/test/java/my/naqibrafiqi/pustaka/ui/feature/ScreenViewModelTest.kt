@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import my.naqibrafiqi.pustaka.data.library.LibraryFiles
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.model.BookDetails
 import my.naqibrafiqi.pustaka.data.model.Creator
@@ -15,6 +16,7 @@ import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
+import my.naqibrafiqi.pustaka.testing.FakeScans
 import my.naqibrafiqi.pustaka.testing.FakeSettings
 import my.naqibrafiqi.pustaka.testing.MainDispatcherRule
 import my.naqibrafiqi.pustaka.testing.T0
@@ -65,6 +67,8 @@ class ScreenViewModelTest {
 
     @After
     fun tearDown() = db.close()
+
+    private fun files() = LibraryFiles(FakeSettings(), series, books, FakeScans())
 
     private fun library() = LibraryViewModel(books, reading, FakeSettings(), clock, SavedStateHandle())
 
@@ -159,7 +163,7 @@ class ScreenViewModelTest {
         series.addSeries("/lib/Empty", "Empty")
         books.setReadingStatus(volumes[0], ReadingStatus.FINISHED)
 
-        val state = SeriesViewModel(series, books, FakeSettings()).state.awaitState<SeriesUiState.Ready>()
+        val state = SeriesViewModel(series, books, FakeSettings(), files()).state.awaitState<SeriesUiState.Ready>()
 
         assertEquals(listOf("Death Games", "Empty"), state.series.map { it.name })
         val deathGames = state.series.first { it.id == seriesId }
@@ -182,7 +186,7 @@ class ScreenViewModelTest {
         val (seriesId, volumes) = addSeriesWithVolumes("Death Games", 3)
         db.bookDao().setMissing(volumes[2], true)
 
-        val state = SeriesDetailsViewModel(seriesId, series, books, reading, SavedStateHandle())
+        val state = SeriesDetailsViewModel(seriesId, series, books, reading, files(), SavedStateHandle())
             .state.awaitState<SeriesDetailsUiState.Ready>()
 
         assertEquals("Death Games", state.name)
@@ -199,7 +203,7 @@ class ScreenViewModelTest {
     @Test
     fun seriesDetailsTogglesBetweenGridAndList() = runTest {
         val (seriesId, _) = addSeriesWithVolumes("Death Games", 1)
-        val viewModel = SeriesDetailsViewModel(seriesId, series, books, reading, SavedStateHandle())
+        val viewModel = SeriesDetailsViewModel(seriesId, series, books, reading, files(), SavedStateHandle())
         assertTrue(viewModel.state.awaitState<SeriesDetailsUiState.Ready>().isGrid)
 
         viewModel.toggleLayout()
@@ -209,7 +213,7 @@ class ScreenViewModelTest {
 
     @Test
     fun seriesDetailsForAnUnknownSeriesIsNotFound() = runTest {
-        val state = SeriesDetailsViewModel(404, series, books, reading, SavedStateHandle()).state
+        val state = SeriesDetailsViewModel(404, series, books, reading, files(), SavedStateHandle()).state
             .first { it !is SeriesDetailsUiState.Loading }
 
         assertEquals(SeriesDetailsUiState.NotFound, state)
@@ -235,7 +239,7 @@ class ScreenViewModelTest {
         reading.saveProgress(id, locator = "{}", progression = 0.5, position = 100)
         reading.recordSession(id, startedAt = T0, endedAt = T0.plusSeconds(3600), pagesRead = 40)
 
-        val state = BookDetailsViewModel(id, books, reading, series)
+        val state = BookDetailsViewModel(id, books, reading, series, files())
             .state.awaitState<BookDetailsUiState.Ready>()
 
         assertEquals("Death Games, Vol. 02", state.title)
@@ -256,7 +260,7 @@ class ScreenViewModelTest {
     fun bookDetailsOfAnUnreadStandaloneBookHasNoSeriesOrStats() = runTest {
         val id = books.addBook(book("The Left Hand of Darkness.epub"))
 
-        val state = BookDetailsViewModel(id, books, reading, series)
+        val state = BookDetailsViewModel(id, books, reading, series, files())
             .state.awaitState<BookDetailsUiState.Ready>()
 
         assertNull(state.seriesLine)
@@ -270,7 +274,7 @@ class ScreenViewModelTest {
     @Test
     fun bookDetailsNoticesWhenTheBookIsDeleted() = runTest {
         val id = books.addBook(book("a.epub"))
-        val viewModel = BookDetailsViewModel(id, books, reading, series)
+        val viewModel = BookDetailsViewModel(id, books, reading, series, files())
         viewModel.state.awaitState<BookDetailsUiState.Ready>()
 
         books.deleteBook(id)
