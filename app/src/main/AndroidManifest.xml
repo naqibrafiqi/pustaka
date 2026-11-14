@@ -51,6 +51,17 @@
             android:exported="false"
             android:theme="@style/Theme.Pustaka.Reader" />
 
+        <!-- Shares exported highlights with other apps. See ExportFiles. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.exports"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/export_paths" />
+        </provider>
+
         <!-- WorkManager is set up by PustakaApplication, so it can create Hilt workers. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

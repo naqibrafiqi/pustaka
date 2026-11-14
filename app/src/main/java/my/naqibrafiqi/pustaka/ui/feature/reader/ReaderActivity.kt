@@ -372,6 +372,7 @@ class ReaderActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_BOOK_ID = "bookId"
         const val EXTRA_FROM_START = "fromStart"
+        const val EXTRA_LOCATOR = "locator"
 
         /** The reader's group of decorations for highlights. */
         private const val HIGHLIGHTS = "highlights"
@@ -382,10 +383,13 @@ class ReaderActivity : AppCompatActivity() {
         /**
          * @param fromStart forgets the saved position and opens the book at its first page.
          *   Otherwise the book opens where it was left.
+         * @param locator a place in the book to open at instead, such as a highlight's, as a
+         *   serialized Readium `Locator`.
          */
-        fun intent(context: Context, bookId: Long, fromStart: Boolean = false): Intent =
+        fun intent(context: Context, bookId: Long, fromStart: Boolean = false, locator: String? = null): Intent =
             Intent(context, ReaderActivity::class.java)
                 .putExtra(EXTRA_BOOK_ID, bookId)
                 .putExtra(EXTRA_FROM_START, fromStart)
+                .putExtra(EXTRA_LOCATOR, locator)
     }
 }

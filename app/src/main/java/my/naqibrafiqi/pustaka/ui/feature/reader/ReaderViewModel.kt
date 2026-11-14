@@ -126,6 +126,9 @@ class ReaderViewModel @Inject constructor(
     }
     private val fromStart: Boolean = savedStateHandle[ReaderActivity.EXTRA_FROM_START] ?: false
 
+    /** Where to open the book instead of the saved position, for example at a highlight. */
+    private val openAt: Locator? = savedStateHandle.get<String>(ReaderActivity.EXTRA_LOCATOR)?.let(::parseLocator)
+
     private val _state = MutableStateFlow<ReaderUiState>(ReaderUiState.Loading)
     val state: StateFlow<ReaderUiState> = _state.asStateFlow()
 
@@ -280,7 +283,7 @@ class ReaderViewModel @Inject constructor(
 
         if (fromStart) reading.clearProgress(bookId)
         val saved = if (fromStart) null else reading.observeProgress(bookId).first()
-        val initialLocator = saved?.locator?.let(::parseLocator)
+        val initialLocator = openAt ?: saved?.locator?.let(::parseLocator)
 
         // Reading a finished book again from the start makes it a book being read.
         if (book.readingStatus == ReadingStatus.UNREAD || (fromStart && book.readingStatus == ReadingStatus.FINISHED)) {

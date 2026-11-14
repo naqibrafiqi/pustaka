@@ -120,7 +120,7 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 ### Phase 5: Highlights (M)
 This phase is split into two pull requests:
 1. Highlighting in the reader: select text to highlight it, see highlights on the page, and tap one to change its colour, add a note or delete it. Copy and Share are in the same selection menu. ✅ Done in PR 1.
-2. The Highlights tab, opening the reader at a highlight, and exporting as Markdown.
+2. The Highlights tab, opening the reader at a highlight, and exporting as Markdown. ✅ Done in PR 2.
 
 - Select text in the reader to create a highlight, with an optional note and colour.
 - **Highlights tab:** highlights grouped by series and book, with search. Tapping one opens the reader at that spot.
@@ -161,6 +161,6 @@ This phase is split into two pull requests:
 | 2. Library folder and scanning | Done |
 | 3. Connect screens to data | Done |
 | 4. Reader | Done |
-| 5. Highlights | In progress: PR 1 (reader) in review, PR 2 (Highlights tab and export) next |
+| 5. Highlights | In review (PR 1 merged, PR 2 into `1.0.0`) |
 | 6. Settings, search and sorting | Not started |
 | 7. Polish and release | Not started |
