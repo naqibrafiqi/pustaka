@@ -1,6 +1,6 @@
 # Pustaka Roadmap
 
-_Last updated: 2026-11-13_
+_Last updated: 2026-11-14_
 
 Pustaka is an offline EPUB reader for books that come in series of numbered volumes. Today the app has its navigation and four designed screens (Library, Series, Series Details and Book Details), all showing placeholder data. This roadmap takes it from there to a release you can install and use every day.
 
@@ -41,7 +41,7 @@ Clean up the codebase before building on it.
 
 ### Phase 1: Data foundation (M)
 Build the database and the layer that screens will read data through.
-- Check that Room 2.6.1 works with KSP 2.3.x once the first table exists, and upgrade to Room 2.7 or newer if it doesn't.
+- Check that Room 2.6.1 works with KSP 2.3.x once the first table exists, and upgrade to Room 2.7 or newer if it doesn't. ✅ It didn't: the 2.6.1 compiler fails under KSP2 ("unexpected jvm signature V") and its Gradle plugin can't load. Room is now 2.8.4, with the schema exported to `app/schemas/`.
 - **Models and Room tables.** Book and series details keep two versions of each field: the value from the file or folder, and the user's edit if there is one.
   - `Series`: id, folder path, name (from the folder name / edited), author, illustrator, synopsis, main genre, tags, cover, hidden flag, and created/updated times.
   - `Book`: id, series id (empty for standalone books), file path, fingerprint, file size, last-modified time, status flags (missing, hidden), name (from the filename / edited), the details read from `content.opf` (title, creators with roles, publisher, date, identifier, language, description, subjects, series position), volume number (from the file / edited), cover, total positions, reading status (unread, reading or finished), date added, date last opened.
@@ -133,7 +133,7 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 | Phase | Status |
 |---|---|
 | 0. Housekeeping | Done |
-| 1. Data foundation | Not started |
+| 1. Data foundation | In review (PR into `1.0.0`) |
 | 2. Library folder and scanning | Not started (design agreed) |
 | 3. Connect screens to data | Not started |
 | 4. Reader | Not started |
