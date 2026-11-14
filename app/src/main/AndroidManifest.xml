@@ -41,6 +41,16 @@
             </intent-filter>
         </activity>
 
+        <!--
+            The reader handles rotation, screen size and dark mode changes itself, so the open
+            book isn't closed and opened again. See ReaderActivity.
+        -->
+        <activity
+            android:name=".ui.feature.reader.ReaderActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density"
+            android:exported="false"
+            android:theme="@style/Theme.Pustaka.Reader" />
+
         <!-- WorkManager is set up by PustakaApplication, so it can create Hilt workers. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

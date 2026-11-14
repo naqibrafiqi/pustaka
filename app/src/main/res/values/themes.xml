@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.Pustaka" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Readium's reader is built on AppCompat, so the reader screen uses an AppCompat theme. -->
+    <style name="Theme.Pustaka.Reader" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>

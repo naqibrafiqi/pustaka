@@ -12,6 +12,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.ui.feature.reader.rememberReaderLauncher
 import my.naqibrafiqi.pustaka.ui.feature.series.api.BookDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.EditBookRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.EditSeriesRoute
@@ -36,6 +37,7 @@ import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
 fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanViewModel) {
     entry<SeriesRoute> {
         val navigator = LocalAppNavigator.current
+        val reader = rememberReaderLauncher()
         val viewModel: SeriesViewModel = hiltViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val isRefreshing by scanViewModel.isRefreshing.collectAsStateWithLifecycle()
@@ -51,6 +53,7 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanView
             onRetry = viewModel::retry,
             onOpenSeries = { seriesId -> navigator.add(SeriesDetailsRoute(seriesId)) },
             onOpenBook = { bookId -> navigator.add(BookDetailsRoute(bookId)) },
+            onReadBook = { bookId -> reader.open(bookId, fromStart = false) },
             createDialog = createDialog,
             onNewSeries = viewModel::openCreateDialog,
             onNewNameChange = viewModel::changeNewName,
@@ -92,6 +95,7 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanView
     // Also opened from Library, so it's in that tab's back stack too.
     entry<BookDetailsRoute> { route ->
         val navigator = LocalAppNavigator.current
+        val reader = rememberReaderLauncher()
         val viewModel = hiltViewModel<BookDetailsViewModel, BookDetailsViewModel.Factory>(
             creationCallback = { factory -> factory.create(route.bookId) }
         )
@@ -106,6 +110,7 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanView
             onRetry = viewModel::retry,
             onEdit = { navigator.add(EditBookRoute(route.bookId)) },
             onDelete = viewModel::requestDelete,
+            onRead = { fromStart -> reader.open(route.bookId, fromStart) },
             snackbarHostState = snackbarHostState,
         )
 

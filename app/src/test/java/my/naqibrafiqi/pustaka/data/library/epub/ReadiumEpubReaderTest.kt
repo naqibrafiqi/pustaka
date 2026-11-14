@@ -35,7 +35,7 @@ class ReadiumEpubReaderTest {
     @Before
     fun setUp() {
         coverDir = temp.newFolder("covers")
-        reader = ReadiumEpubReader(ApplicationProvider.getApplicationContext(), CoverStore(coverDir))
+        reader = ReadiumEpubReader(ReadiumToolkit(ApplicationProvider.getApplicationContext()), CoverStore(coverDir))
     }
 
     @Test
