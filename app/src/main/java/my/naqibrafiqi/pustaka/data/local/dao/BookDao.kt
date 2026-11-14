@@ -72,6 +72,13 @@ interface BookDao {
     @Query("SELECT * FROM books")
     suspend fun getAll(): List<BookEntity>
 
+    /** Every book in the series, including hidden and missing ones. */
+    @Query("SELECT * FROM books WHERE seriesId = :seriesId")
+    suspend fun getInSeries(seriesId: Long): List<BookEntity>
+
+    @Query("SELECT COUNT(*) FROM books WHERE seriesId = :seriesId")
+    suspend fun countInSeries(seriesId: Long): Int
+
     @Insert
     suspend fun insert(book: BookEntity): Long
 
