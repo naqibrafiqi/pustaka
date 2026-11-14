@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
@@ -39,7 +40,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
-import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.input.InputListener
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.navigator.preferences.ReadingProgression
@@ -84,16 +84,24 @@ class ReaderActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.onReaderResumed()
+    }
+
     override fun onPause() {
         super.onPause()
-        viewModel.saveNow()
+        viewModel.onReaderPaused()
     }
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
     private fun Reader(book: ReaderUiState.Ready) {
-        val theme = if (isSystemInDarkTheme()) Theme.DARK else Theme.LIGHT
-        val preferences = EpubPreferences(theme = theme)
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
+        val finishCard by viewModel.finishCard.collectAsStateWithLifecycle()
+        val systemDark = isSystemInDarkTheme()
+        val theme = settings.readiumTheme(systemDark)
+        val preferences = settings.toEpubPreferences(systemDark)
 
         // The fragment is made by Readium's factory, which has to be in place before it's added.
         remember(book) {
@@ -112,13 +120,16 @@ class ReaderActivity : AppCompatActivity() {
         var navigator by remember { mutableStateOf<EpubNavigatorFragment?>(null) }
         var chromeVisible by rememberSaveable { mutableStateOf(false) }
         var contentsOpen by rememberSaveable { mutableStateOf(false) }
+        var settingsOpen by rememberSaveable { mutableStateOf(false) }
         val position by viewModel.position.collectAsStateWithLifecycle()
 
-        SystemBars(visible = chromeVisible || contentsOpen, darkContent = theme != Theme.DARK)
+        SystemBars(visible = chromeVisible || contentsOpen || settingsOpen, darkContent = theme != Theme.DARK)
 
+        // The finish card takes the bottom of the screen, so the menus make way for it.
+        LaunchedEffect(finishCard) { if (finishCard != null) chromeVisible = false }
         LaunchedEffect(navigator, preferences) { navigator?.submitPreferences(preferences) }
         LaunchedEffect(navigator) { navigator?.currentLocator?.collect(viewModel::onLocatorChanged) }
-        PageTaps(navigator, onMenuTap = { chromeVisible = !chromeVisible })
+        PageTaps(navigator, scroll = settings.scroll, onMenuTap = { chromeVisible = !chromeVisible })
 
         Box(
             Modifier
@@ -138,7 +149,29 @@ class ReaderActivity : AppCompatActivity() {
                 position = position,
                 onNavigateBack = ::finish,
                 onOpenContents = { contentsOpen = true },
+                onOpenSettings = { settingsOpen = true },
                 onGoToPage = { page -> book.positions.getOrNull(page - 1)?.let { navigator?.go(it, animated = false) } },
+            )
+
+            finishCard?.let { card ->
+                FinishCardView(
+                    card = card,
+                    onReadNext = { next ->
+                        startActivity(intent(this@ReaderActivity, next.bookId, next.fromStart))
+                        finish()
+                    },
+                    onClose = viewModel::dismissFinishCard,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
+        }
+
+        if (settingsOpen) {
+            ReaderSettingsSheet(
+                settings = settings,
+                onChange = viewModel::updateSettings,
+                onReset = viewModel::resetSettings,
+                onDismiss = { settingsOpen = false },
             )
         }
 
@@ -156,14 +189,22 @@ class ReaderActivity : AppCompatActivity() {
         }
     }
 
-    /** Taps on the edges turn the page. A tap in the middle shows or hides the menus. */
+    /**
+     * Taps on the edges turn the page. A tap in the middle shows or hides the menus. When
+     * scrolling, there are no pages to turn, so any tap shows or hides the menus.
+     */
     @Composable
-    private fun PageTaps(navigator: EpubNavigatorFragment?, onMenuTap: () -> Unit) {
+    private fun PageTaps(navigator: EpubNavigatorFragment?, scroll: Boolean, onMenuTap: () -> Unit) {
         val latestOnMenuTap by rememberUpdatedState(onMenuTap)
+        val latestScroll by rememberUpdatedState(scroll)
         DisposableEffect(navigator) {
             if (navigator == null) return@DisposableEffect onDispose { }
             val listener = object : InputListener {
                 override fun onTap(event: TapEvent): Boolean {
+                    if (latestScroll) {
+                        latestOnMenuTap()
+                        return true
+                    }
                     val rightToLeft = navigator.settings.value.readingProgression == ReadingProgression.RTL
                     when (TapZone.of(event.point.x, navigator.publicationView.width, rightToLeft)) {
                         TapZone.PREVIOUS -> navigator.goBackward(animated = true)

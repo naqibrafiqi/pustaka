@@ -102,7 +102,7 @@ Replace the placeholder data. This phase is split into two pull requests:
 ### Phase 4: Reader (L)
 The core feature, built on Readium's reader view. Readium's reader is an older Android Fragment, so it is wrapped for use in Compose. This phase is split into two pull requests:
 1. Opening a book, page turning, the table of contents, the progress bar, and saving and resuming the position. ✅ Done in PR 1.
-2. Reading sessions, reader settings, and finishing a book.
+2. Reading sessions, reader settings, and finishing a book. ✅ Done in PR 2.
 
 - Open a book from "Resume", "Continue From Page N" or "Read From Beginning".
 - Page turning, a table of contents, and a progress bar.
@@ -152,7 +152,7 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 | 1. Data foundation | Done |
 | 2. Library folder and scanning | Done |
 | 3. Connect screens to data | Done |
-| 4. Reader | In progress (PR 1 in review) |
+| 4. Reader | In review (two PRs into `1.0.0`) |
 | 5. Highlights | Not started |
 | 6. Settings, search and sorting | Not started |
 | 7. Polish and release | Not started |

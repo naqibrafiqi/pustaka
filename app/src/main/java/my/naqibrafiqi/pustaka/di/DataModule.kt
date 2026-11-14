@@ -22,8 +22,10 @@ import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
 import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
+import my.naqibrafiqi.pustaka.data.settings.DataStoreReaderSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.DataStoreSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.DefaultLibraryFolder
+import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import java.io.File
 import java.time.Clock
@@ -77,4 +79,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReaderSettingsRepository(impl: DataStoreReaderSettingsRepository): ReaderSettingsRepository
 }
