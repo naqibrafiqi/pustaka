@@ -397,6 +397,7 @@ class LibraryScannerTest {
         override val settings: Flow<AppSettings> = MutableStateFlow(AppSettings(libraryFolderPath = path))
         override suspend fun setLibraryFolderPath(path: String) = error("not used")
         override suspend fun resetLibraryFolderPath() = error("not used")
+        override suspend fun setHasSeenWelcome() = error("not used")
     }
 
     /** Reads the fields written by [writeFake], and "saves" a cover as a small file. */
