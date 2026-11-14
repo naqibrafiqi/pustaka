@@ -3,6 +3,7 @@ package my.naqibrafiqi.pustaka.data.repository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
+import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.BookDetails
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.data.model.SeriesDetails
@@ -238,17 +239,33 @@ class RepositoryTest {
     @Test
     fun highlightsCanBeAddedEditedAndDeleted() = runTest {
         val bookId = books.addBook(book("Vol 1.epub"))
-        val id = highlights.addHighlight(bookId, locator = "{}", text = "A quote", note = "  ", color = 1)
+        val id = highlights.addHighlight(bookId, locator = "{}", text = "A quote", note = "  ", color = HighlightColor.GREEN)
         assertNull(highlights.observeHighlights(bookId).first().single().note)
 
         clock.advanceSeconds(5)
-        highlights.updateHighlight(id, note = "Good line", color = 2)
+        highlights.updateHighlight(id, note = "Good line", color = HighlightColor.BLUE)
         val updated = highlights.observeAllHighlights().first().single()
         assertEquals("Good line", updated.note)
-        assertEquals(2, updated.color)
+        assertEquals(HighlightColor.BLUE, updated.color)
         assertEquals(T0.plusSeconds(5), updated.updatedAt)
 
         highlights.deleteHighlight(id)
         assertTrue(highlights.observeHighlights(bookId).first().isEmpty())
+    }
+
+    @Test
+    fun aNewHighlightGetsTheColourUsedLast() = runTest {
+        val bookId = books.addBook(book("Vol 1.epub"))
+        assertEquals(HighlightColor.YELLOW, highlights.lastUsedColor())
+
+        val first = highlights.addHighlight(bookId, locator = "{}", text = "One", note = null, color = HighlightColor.GREEN)
+        clock.advanceSeconds(1)
+        highlights.addHighlight(bookId, locator = "{}", text = "Two", note = null, color = HighlightColor.PINK)
+        assertEquals(HighlightColor.PINK, highlights.lastUsedColor())
+
+        // Changing an older highlight counts as using its colour.
+        clock.advanceSeconds(1)
+        highlights.updateHighlight(first, note = null, color = HighlightColor.BLUE)
+        assertEquals(HighlightColor.BLUE, highlights.lastUsedColor())
     }
 }

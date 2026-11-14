@@ -7,23 +7,29 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import my.naqibrafiqi.pustaka.data.library.epub.OpenFailure
 import my.naqibrafiqi.pustaka.data.library.epub.OpenResult
 import my.naqibrafiqi.pustaka.data.library.epub.ReadiumToolkit
 import my.naqibrafiqi.pustaka.data.model.Book
+import my.naqibrafiqi.pustaka.data.model.Highlight
+import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettings
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.ui.model.SeriesProgress
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
+import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import org.json.JSONObject
 import org.readium.r2.shared.publication.Locator
@@ -90,12 +96,17 @@ data class FinishCard(
  */
 data class NextVolume(val bookId: Long, val title: String, val label: String, val fromStart: Boolean)
 
+/** A highlight in the book being read, with its place in the book ready for the reader to draw. */
+data class ReaderHighlight(val highlight: Highlight, val locator: Locator) {
+    val id: Long get() = highlight.id
+}
+
 /**
  * Opens a book in the reader and keeps its reading position saved. The position is written shortly
  * after each page turn, and straight away when the reader goes into the background.
  *
- * It also records reading sessions (see [SessionTracker]), applies the reader settings, and marks
- * the book finished on its last page.
+ * It also records reading sessions (see [SessionTracker]), applies the reader settings, marks
+ * the book finished on its last page, and keeps the book's highlights.
  */
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -106,6 +117,7 @@ class ReaderViewModel @Inject constructor(
     private val toolkit: ReadiumToolkit,
     private val seriesRepository: SeriesRepository,
     private val readerSettings: ReaderSettingsRepository,
+    private val highlightRepository: HighlightRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -113,6 +125,9 @@ class ReaderViewModel @Inject constructor(
         "The reader needs a book id."
     }
     private val fromStart: Boolean = savedStateHandle[ReaderActivity.EXTRA_FROM_START] ?: false
+
+    /** Where to open the book instead of the saved position, for example at a highlight. */
+    private val openAt: Locator? = savedStateHandle.get<String>(ReaderActivity.EXTRA_LOCATOR)?.let(::parseLocator)
 
     private val _state = MutableStateFlow<ReaderUiState>(ReaderUiState.Loading)
     val state: StateFlow<ReaderUiState> = _state.asStateFlow()
@@ -127,6 +142,16 @@ class ReaderViewModel @Inject constructor(
 
     private val _finishCard = MutableStateFlow<FinishCard?>(null)
     val finishCard: StateFlow<FinishCard?> = _finishCard.asStateFlow()
+
+    /** The book's highlights, drawn on the page. Any whose place can't be read are left out. */
+    val highlights: StateFlow<List<ReaderHighlight>> = highlightRepository.observeHighlights(bookId)
+        .map { list -> list.mapNotNull { highlight -> parseLocator(highlight.locator)?.let { ReaderHighlight(highlight, it) } } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val _openHighlightId = MutableStateFlow<Long?>(null)
+
+    /** The highlight being looked at or changed, after tapping it on the page. */
+    val openHighlightId: StateFlow<Long?> = _openHighlightId.asStateFlow()
 
     private var publication: Publication? = null
     private var book: Book? = null
@@ -192,6 +217,51 @@ class ReaderViewModel @Inject constructor(
         _finishCard.value = null
     }
 
+    /**
+     * Highlights the selected text straight away, in the colour used last (decision D14).
+     *
+     * @param selection where the selection is, with the selected text and the text around it.
+     */
+    fun addHighlight(selection: Locator) {
+        val text = selection.text.highlight?.trim()?.ifEmpty { null } ?: return
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                highlightRepository.addHighlight(
+                    bookId = bookId,
+                    locator = selection.toJSON().toString(),
+                    text = text,
+                    note = null,
+                    color = highlightRepository.lastUsedColor(),
+                )
+            }
+        }
+    }
+
+    fun openHighlight(id: Long) {
+        _openHighlightId.value = id
+    }
+
+    fun closeHighlight() {
+        _openHighlightId.value = null
+    }
+
+    /** Changes the highlight's colour or note. A blank note removes it. */
+    fun updateHighlight(id: Long, color: HighlightColor, note: String?) {
+        val current = highlights.value.firstOrNull { it.id == id }?.highlight ?: return
+        val cleanNote = note?.trim()?.ifEmpty { null }
+        if (current.color == color && current.note == cleanNote) return
+        viewModelScope.launch {
+            withContext(NonCancellable) { highlightRepository.updateHighlight(id, cleanNote, color) }
+        }
+    }
+
+    fun deleteHighlight(id: Long) {
+        if (_openHighlightId.value == id) _openHighlightId.value = null
+        viewModelScope.launch {
+            withContext(NonCancellable) { highlightRepository.deleteHighlight(id) }
+        }
+    }
+
     /** Saves the position now, for when the reader goes into the background or closes. */
     fun saveNow() {
         val locator = latestLocator.value ?: return
@@ -213,7 +283,7 @@ class ReaderViewModel @Inject constructor(
 
         if (fromStart) reading.clearProgress(bookId)
         val saved = if (fromStart) null else reading.observeProgress(bookId).first()
-        val initialLocator = saved?.locator?.let(::parseLocator)
+        val initialLocator = openAt ?: saved?.locator?.let(::parseLocator)
 
         // Reading a finished book again from the start makes it a book being read.
         if (book.readingStatus == ReadingStatus.UNREAD || (fromStart && book.readingStatus == ReadingStatus.FINISHED)) {
