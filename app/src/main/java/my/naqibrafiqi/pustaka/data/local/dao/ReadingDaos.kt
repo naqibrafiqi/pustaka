@@ -19,6 +19,9 @@ interface ReadingProgressDao {
     @Query("SELECT * FROM reading_progress WHERE bookId = :bookId")
     suspend fun get(bookId: Long): ReadingProgressEntity?
 
+    @Query("SELECT * FROM reading_progress")
+    fun observeAll(): Flow<List<ReadingProgressEntity>>
+
     @Upsert
     suspend fun upsert(progress: ReadingProgressEntity)
 

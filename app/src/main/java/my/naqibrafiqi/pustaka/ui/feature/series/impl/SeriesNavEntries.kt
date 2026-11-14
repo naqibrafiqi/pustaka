@@ -9,43 +9,59 @@ import my.naqibrafiqi.pustaka.ui.feature.series.api.BookDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details.BookDetailsScreen
+import my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details.BookDetailsViewModel
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.series.details.SeriesDetailsScreen
+import my.naqibrafiqi.pustaka.ui.feature.series.screen.series.details.SeriesDetailsViewModel
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.series.main.SeriesScreen
+import my.naqibrafiqi.pustaka.ui.feature.series.screen.series.main.SeriesViewModel
 import my.naqibrafiqi.pustaka.ui.scan.LibraryScanViewModel
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
 
-fun EntryProviderScope<NavKey>.seriesEntryBuilder() {
+fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanViewModel) {
     entry<SeriesRoute> {
         val navigator = LocalAppNavigator.current
-        val scanViewModel: LibraryScanViewModel = hiltViewModel()
+        val viewModel: SeriesViewModel = hiltViewModel()
+        val state by viewModel.state.collectAsStateWithLifecycle()
         val isRefreshing by scanViewModel.isRefreshing.collectAsStateWithLifecycle()
 
         SeriesScreen(
-            onNavigateToSeriesDetails = { seriesId ->
-                navigator.add(SeriesDetailsRoute(seriesId))
-            },
+            state = state,
             isRefreshing = isRefreshing,
             onRefresh = scanViewModel::refresh,
+            onRetry = viewModel::retry,
+            onOpenSeries = { seriesId -> navigator.add(SeriesDetailsRoute(seriesId)) },
+            onOpenBook = { bookId -> navigator.add(BookDetailsRoute(bookId)) },
         )
     }
 
-    entry<SeriesDetailsRoute> {
+    entry<SeriesDetailsRoute> { route ->
         val navigator = LocalAppNavigator.current
+        val viewModel = hiltViewModel<SeriesDetailsViewModel, SeriesDetailsViewModel.Factory>(
+            creationCallback = { factory -> factory.create(route.seriesId) }
+        )
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
         SeriesDetailsScreen(
-            onNavigateBack = {
-                navigator.removeLastOrNull()
-            }
+            state = state,
+            onNavigateBack = { navigator.removeLastOrNull() },
+            onToggleLayout = viewModel::toggleLayout,
+            onRetry = viewModel::retry,
+            onOpenBook = { bookId -> navigator.add(BookDetailsRoute(bookId)) },
         )
     }
 
-    entry<BookDetailsRoute> {
+    // Also opened from Library, so it's in that tab's back stack too.
+    entry<BookDetailsRoute> { route ->
         val navigator = LocalAppNavigator.current
+        val viewModel = hiltViewModel<BookDetailsViewModel, BookDetailsViewModel.Factory>(
+            creationCallback = { factory -> factory.create(route.bookId) }
+        )
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
         BookDetailsScreen(
-            onNavigateBack = {
-                navigator.removeLastOrNull()
-            }
+            state = state,
+            onNavigateBack = { navigator.removeLastOrNull() },
+            onRetry = viewModel::retry,
         )
     }
 }
