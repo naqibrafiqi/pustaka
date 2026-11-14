@@ -11,7 +11,8 @@ import kotlin.math.roundToInt
 
 /**
  * The "Velocity" and "Estimated Left" tiles in Book Details, worked out from the book's reading
- * sessions. The reader records sessions from Phase 4, so until then both show "—".
+ * sessions, which the reader records (see `SessionTracker`). Both show "—" until there's at least a
+ * minute of reading with pages turned.
  *
  * Pages here are Readium positions, the same pages as in "Page X of Y".
  */

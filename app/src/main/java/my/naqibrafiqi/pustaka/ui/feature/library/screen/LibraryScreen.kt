@@ -61,6 +61,7 @@ fun LibraryScreen(
     onToggleLayout: () -> Unit,
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
+    onResumeBook: (Long) -> Unit,
 ) {
     LibraryScreenContent(
         state = state,
@@ -70,6 +71,7 @@ fun LibraryScreen(
         onToggleLayout = onToggleLayout,
         onRetry = onRetry,
         onOpenBook = onOpenBook,
+        onResumeBook = onResumeBook,
     )
 }
 
@@ -83,6 +85,7 @@ private fun LibraryScreenContent(
     onToggleLayout: () -> Unit,
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
+    onResumeBook: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -126,7 +129,7 @@ private fun LibraryScreenContent(
             ) {
                 when (state) {
                     is LibraryUiState.Error -> item { ErrorState(message = state.message, onRetry = onRetry) }
-                    is LibraryUiState.Ready -> readyContent(state, onSelectFilter, onOpenBook)
+                    is LibraryUiState.Ready -> readyContent(state, onSelectFilter, onOpenBook, onResumeBook)
                     LibraryUiState.Loading -> Unit
                 }
             }
@@ -138,6 +141,7 @@ private fun LazyListScope.readyContent(
     state: LibraryUiState.Ready,
     onSelectFilter: (LibraryFilter) -> Unit,
     onOpenBook: (Long) -> Unit,
+    onResumeBook: (Long) -> Unit,
 ) {
     stickyHeader {
         FilterChipsScrollableRow(
@@ -199,6 +203,7 @@ private fun LazyListScope.readyContent(
                 CurrentlyReadingCard(
                     current = current,
                     onOpen = { onOpenBook(current.book.id) },
+                    onResume = { onResumeBook(current.book.id) },
                 )
             } else {
                 NothingInProgressCard()
@@ -306,6 +311,7 @@ private fun FilterChipsScrollableRow(
 private fun CurrentlyReadingCard(
     current: CurrentlyReading,
     onOpen: () -> Unit,
+    onResume: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val book = current.book
@@ -402,8 +408,7 @@ private fun CurrentlyReadingCard(
                     style = MaterialTheme.typography.labelLarge
                 )
 
-                // Opens Book Details for now. The reader arrives in Phase 4.
-                Button(onClick = onOpen) {
+                Button(onClick = onResume) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -484,6 +489,7 @@ private fun LibraryScreenPreview() {
             onToggleLayout = {},
             onRetry = {},
             onOpenBook = {},
+            onResumeBook = {},
         )
     }
 }
@@ -507,6 +513,7 @@ private fun LibraryScreenEmptyPreview() {
             onToggleLayout = {},
             onRetry = {},
             onOpenBook = {},
+            onResumeBook = {},
         )
     }
 }

@@ -63,6 +63,7 @@ fun BookDetailsScreen(
     onRetry: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onRead: (fromStart: Boolean) -> Unit,
     snackbarHostState: SnackbarHostState,
 ) {
     BookDetailsScreenContent(
@@ -71,6 +72,7 @@ fun BookDetailsScreen(
         onRetry = onRetry,
         onEdit = onEdit,
         onDelete = onDelete,
+        onRead = onRead,
         snackbarHostState = snackbarHostState,
     )
 }
@@ -82,6 +84,7 @@ private fun BookDetailsScreenContent(
     onRetry: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onRead: (fromStart: Boolean) -> Unit,
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
@@ -163,6 +166,7 @@ private fun BookDetailsScreenContent(
             )
             is BookDetailsUiState.Ready -> ReadyContent(
                 state = state,
+                onRead = onRead,
                 contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 16.dp),
                 modifier = contentModifier,
             )
@@ -177,6 +181,7 @@ private fun BookDetailsScreenContent(
 @Composable
 private fun ReadyContent(
     state: BookDetailsUiState.Ready,
+    onRead: (fromStart: Boolean) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -241,7 +246,7 @@ private fun ReadyContent(
             ) {
                 ProgressSection(state)
 
-                ReadButtons(state)
+                ReadButtons(state, onRead)
             }
         }
 
@@ -328,30 +333,37 @@ private fun ProgressSection(state: BookDetailsUiState.Ready) {
     }
 }
 
-/** The reader arrives in Phase 4, so these buttons stay disabled until then. */
+/**
+ * "Start Reading" or "Continue From Page N", plus "Read From Beginning" once the book has been
+ * started. A finished book is read again from its first page.
+ */
 @Composable
-private fun ReadButtons(state: BookDetailsUiState.Ready) {
-    val readerAvailable = false
+private fun ReadButtons(state: BookDetailsUiState.Ready, onRead: (fromStart: Boolean) -> Unit) {
+    val finished = state.state == BookState.FINISHED
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Button(
-            onClick = { /* Opens the reader from Phase 4. */ },
-            enabled = readerAvailable && state.canRead,
+            onClick = { onRead(finished) },
+            enabled = state.canRead,
             modifier = Modifier.fillMaxWidth()
         ) {
             ButtonContent(
                 iconRes = R.drawable.book_5,
-                text = state.continuePage?.let { "Continue From Page $it" } ?: "Start Reading"
+                text = when {
+                    finished -> "Read Again"
+                    state.continuePage != null -> "Continue From Page ${state.continuePage}"
+                    else -> "Start Reading"
+                }
             )
         }
 
         if (state.continuePage != null) {
             OutlinedButton(
-                onClick = { /* Opens the reader from Phase 4. */ },
-                enabled = readerAvailable && state.canRead,
+                onClick = { onRead(true) },
+                enabled = state.canRead,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 ButtonContent(iconRes = R.drawable.menu_book, text = "Read From Beginning")
@@ -496,6 +508,7 @@ private fun BookDetailsScreenPreview() {
             onRetry = {},
             onEdit = {},
             onDelete = {},
+            onRead = {},
             snackbarHostState = SnackbarHostState(),
         )
     }
