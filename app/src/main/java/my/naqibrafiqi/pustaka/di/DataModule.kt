@@ -29,6 +29,8 @@ import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import java.io.File
 import java.time.Clock
+import my.naqibrafiqi.pustaka.data.export.CacheExportFiles
+import my.naqibrafiqi.pustaka.data.export.ExportFiles
 import javax.inject.Singleton
 
 @Module
@@ -83,4 +85,7 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindReaderSettingsRepository(impl: DataStoreReaderSettingsRepository): ReaderSettingsRepository
+
+    @Binds
+    abstract fun bindExportFiles(impl: CacheExportFiles): ExportFiles
 }

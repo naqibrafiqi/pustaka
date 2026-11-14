@@ -330,6 +330,22 @@ class ReaderViewModelTest {
     }
 
     @Test
+    fun opensAtAHighlightInsteadOfTheSavedPosition() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val first = viewModel(bookId)
+        val positions = first.ready().positions
+        first.onLocatorChanged(positions[0])
+        first.saveNow()
+        val highlight = positions.last().copy(text = Locator.Text(highlight = "a quote"))
+
+        val ready = viewModel(bookId, locator = highlight.toJSON().toString()).ready()
+
+        assertEquals(highlight.href, ready.initialLocator?.href)
+        assertEquals(highlight.locations.position, ready.initialLocator?.locations?.position)
+        assertEquals("a quote", ready.initialLocator?.text?.highlight)
+    }
+
+    @Test
     fun aSelectionWithoutTextIsntHighlighted() = runTest {
         val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
         val viewModel = viewModel(bookId)
@@ -374,9 +390,13 @@ class ReaderViewModelTest {
     private suspend fun addBook(file: File, seriesId: Long? = null): Long =
         books.addBook(book(file.name, seriesId = seriesId, folder = file.parent))
 
-    private fun viewModel(bookId: Long, fromStart: Boolean = false) = ReaderViewModel(
+    private fun viewModel(bookId: Long, fromStart: Boolean = false, locator: String? = null) = ReaderViewModel(
         savedStateHandle = SavedStateHandle(
-            mapOf(ReaderActivity.EXTRA_BOOK_ID to bookId, ReaderActivity.EXTRA_FROM_START to fromStart),
+            mapOf(
+                ReaderActivity.EXTRA_BOOK_ID to bookId,
+                ReaderActivity.EXTRA_FROM_START to fromStart,
+                ReaderActivity.EXTRA_LOCATOR to locator,
+            ),
         ),
         books = books,
         reading = reading,
