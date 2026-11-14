@@ -7,10 +7,11 @@ import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.local.toEntity
 import my.naqibrafiqi.pustaka.data.local.toModel
 import my.naqibrafiqi.pustaka.data.model.Highlight
+import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import java.time.Clock
 import javax.inject.Inject
 
-/** Highlights. The table is ready now; the reader and Highlights tab use it from Phase 5. */
+/** Highlights, made in the reader and listed in the Highlights tab. */
 interface HighlightRepository {
 
     /** Newest first. */
@@ -19,11 +20,18 @@ interface HighlightRepository {
     /** In the order they were made. */
     fun observeHighlights(bookId: Long): Flow<List<Highlight>>
 
-    suspend fun addHighlight(bookId: Long, locator: String, text: String, note: String?, color: Int): Long
+    suspend fun addHighlight(bookId: Long, locator: String, text: String, note: String?, color: HighlightColor): Long
 
-    suspend fun updateHighlight(id: Long, note: String?, color: Int)
+    /** A blank note removes the note. */
+    suspend fun updateHighlight(id: Long, note: String?, color: HighlightColor)
 
     suspend fun deleteHighlight(id: Long)
+
+    /**
+     * The colour a new highlight gets (decision D14): the one used last, when a highlight was made
+     * or changed, or [HighlightColor.DEFAULT] before the first highlight.
+     */
+    suspend fun lastUsedColor(): HighlightColor
 }
 
 class DefaultHighlightRepository @Inject constructor(
@@ -44,7 +52,7 @@ class DefaultHighlightRepository @Inject constructor(
         locator: String,
         text: String,
         note: String?,
-        color: Int,
+        color: HighlightColor,
     ): Long {
         val now = clock.instant()
         return dao.insert(
@@ -60,7 +68,7 @@ class DefaultHighlightRepository @Inject constructor(
         )
     }
 
-    override suspend fun updateHighlight(id: Long, note: String?, color: Int) {
+    override suspend fun updateHighlight(id: Long, note: String?, color: HighlightColor) {
         database.withTransaction {
             val highlight = dao.getById(id)?.toModel() ?: return@withTransaction
             dao.update(
@@ -74,4 +82,7 @@ class DefaultHighlightRepository @Inject constructor(
     }
 
     override suspend fun deleteHighlight(id: Long) = dao.deleteById(id)
+
+    override suspend fun lastUsedColor(): HighlightColor =
+        dao.lastUsedColor()?.let(HighlightColor::of) ?: HighlightColor.DEFAULT
 }

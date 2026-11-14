@@ -8,6 +8,7 @@ import my.naqibrafiqi.pustaka.data.local.entity.SeriesEntity
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.BookDetails
 import my.naqibrafiqi.pustaka.data.model.Highlight
+import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
 import my.naqibrafiqi.pustaka.data.model.ReadingSession
 import my.naqibrafiqi.pustaka.data.model.Series
@@ -97,7 +98,7 @@ internal fun HighlightEntity.toModel() = Highlight(
     locator = locator,
     text = text,
     note = note,
-    color = color,
+    color = HighlightColor.of(color),
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -108,7 +109,7 @@ internal fun Highlight.toEntity() = HighlightEntity(
     locator = locator,
     text = text,
     note = note,
-    color = color,
+    color = color.argb,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
