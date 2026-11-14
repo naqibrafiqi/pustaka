@@ -2,6 +2,9 @@ package my.naqibrafiqi.pustaka.ui.feature.reader
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import my.naqibrafiqi.pustaka.data.library.epub.OpenFailure
@@ -13,6 +16,12 @@ import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultBookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
+import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
+import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
+import my.naqibrafiqi.pustaka.data.model.SeriesDetails
+import my.naqibrafiqi.pustaka.data.settings.ReaderSettings
+import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
+import my.naqibrafiqi.pustaka.data.settings.ReaderTheme
 import my.naqibrafiqi.pustaka.testing.MainDispatcherRule
 import my.naqibrafiqi.pustaka.testing.T0
 import my.naqibrafiqi.pustaka.testing.TestClock
@@ -31,6 +40,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
+import java.time.Duration
 import kotlin.random.Random
 
 /** Opens real (small) EPUB files with Readium, against a real (in-memory) database. */
@@ -47,6 +57,8 @@ class ReaderViewModelTest {
     private val clock = TestClock()
     private lateinit var books: BookRepository
     private lateinit var reading: ReadingRepository
+    private lateinit var series: SeriesRepository
+    private val readerSettings = FakeReaderSettings()
     private val toolkit = ReadiumToolkit(ApplicationProvider.getApplicationContext())
 
     @Before
@@ -54,6 +66,7 @@ class ReaderViewModelTest {
         db = inMemoryDatabase()
         books = DefaultBookRepository(db, clock)
         reading = DefaultReadingRepository(db, clock)
+        series = DefaultSeriesRepository(db, clock)
     }
 
     @After
@@ -168,6 +181,130 @@ class ReaderViewModelTest {
         assertNotNull(viewModel(bookId = 404).failed().message)
     }
 
+    @Test
+    fun recordsASessionWhenTheReaderGoesIntoTheBackground() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val pages = viewModel.ready().positions
+        val started = clock.now
+
+        viewModel.onLocatorChanged(pages[0])
+        clock.advanceSeconds(60)
+        viewModel.onLocatorChanged(pages[1])
+        clock.advanceSeconds(60)
+        viewModel.onLocatorChanged(pages[2])
+        clock.advanceSeconds(30)
+        viewModel.onReaderPaused()
+
+        val session = reading.observeSessions(bookId).first { it.isNotEmpty() }.single()
+        assertEquals(2, session.pagesRead)
+        assertEquals(started, session.startedAt)
+        assertEquals(started.plusSeconds(150), session.endedAt)
+        // "Read 32m ago" counts from when the reading stopped.
+        books.observeBook(bookId).first { it?.lastOpenedAt == started.plusSeconds(150) }
+    }
+
+    @Test
+    fun comingBackStartsANewSessionOnTheSamePage() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val pages = viewModel.ready().positions
+        viewModel.onLocatorChanged(pages[0])
+        clock.advanceSeconds(60)
+        viewModel.onReaderPaused()
+
+        clock.advanceSeconds(3_600)
+        viewModel.onReaderResumed()
+        clock.advanceSeconds(60)
+        viewModel.onLocatorChanged(pages[1])
+        viewModel.onReaderPaused()
+
+        // The first stretch turned no pages, so only the second one is recorded.
+        val session = reading.observeSessions(bookId).first { it.isNotEmpty() }.single()
+        assertEquals(1, session.pagesRead)
+        assertEquals(Duration.ofSeconds(60), session.duration)
+    }
+
+    @Test
+    fun reachingTheLastPageFinishesTheBookAndOffersTheNextVolume() = runTest {
+        val seriesId = series.addSeries(temp.root.resolve("Brunhild").path, "Brunhild", SeriesDetails())
+        val first = addBook(epub("Brunhild/Brunhild, Vol. 01.epub"), seriesId)
+        val second = addBook(epub("Brunhild/Brunhild, Vol. 02.epub"), seriesId)
+        val viewModel = viewModel(first)
+        val ready = viewModel.ready()
+
+        viewModel.onLocatorChanged(ready.positions[ready.pageCount - 2])
+        assertNull(viewModel.finishCard.value)
+        viewModel.onLocatorChanged(ready.positions.last())
+
+        val card = viewModel.card()
+        assertEquals("Brunhild, Vol. 01", card.title)
+        assertEquals(NextVolume(second, "Brunhild, Vol. 02", "Volume 2", fromStart = false), card.next)
+        assertEquals(ReadingStatus.FINISHED, books.getBook(first)?.readingStatus)
+
+        // Turning back and forth on the last page doesn't show it again once closed.
+        viewModel.dismissFinishCard()
+        viewModel.onLocatorChanged(ready.positions[ready.pageCount - 2])
+        viewModel.onLocatorChanged(ready.positions.last())
+        assertNull(viewModel.finishCard.value)
+    }
+
+    @Test
+    fun aFinishedNextVolumeIsReadAgainFromTheStart() = runTest {
+        val seriesId = series.addSeries(temp.root.resolve("Brunhild").path, "Brunhild", SeriesDetails())
+        val first = addBook(epub("Brunhild/Brunhild, Vol. 01.epub"), seriesId)
+        val second = addBook(epub("Brunhild/Brunhild, Vol. 02.epub"), seriesId)
+        books.setReadingStatus(second, ReadingStatus.FINISHED)
+        val viewModel = viewModel(first)
+
+        viewModel.onLocatorChanged(viewModel.ready().positions.last())
+
+        assertEquals(true, viewModel.card().next?.fromStart)
+    }
+
+    @Test
+    fun theLastVolumeHasNothingNext() = runTest {
+        val seriesId = series.addSeries(temp.root.resolve("Brunhild").path, "Brunhild", SeriesDetails())
+        val last = addBook(epub("Brunhild/Brunhild, Vol. 01.epub"), seriesId)
+        val viewModel = viewModel(last)
+
+        viewModel.onLocatorChanged(viewModel.ready().positions.last())
+
+        val card = viewModel.card()
+        assertNull(card.next)
+        assertEquals("Brunhild", card.seriesName)
+    }
+
+    @Test
+    fun aStandaloneBookIsJustFinished() = runTest {
+        val bookId = addBook(epub("Battle Divas, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+
+        viewModel.onLocatorChanged(viewModel.ready().positions.last())
+
+        val card = viewModel.card()
+        assertNull(card.next)
+        assertNull(card.seriesName)
+        assertEquals(ReadingStatus.FINISHED, books.getBook(bookId)?.readingStatus)
+    }
+
+    @Test
+    fun settingsAreLoadedBeforeTheBookIsShownAndSavedWhenChanged() = runTest {
+        readerSettings.current.value = ReaderSettings(theme = ReaderTheme.SEPIA)
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        viewModel.ready()
+
+        assertEquals(ReaderTheme.SEPIA, viewModel.settings.value.theme)
+
+        viewModel.updateSettings(viewModel.settings.value.copy(scroll = true))
+        assertEquals(true, readerSettings.current.value.scroll)
+
+        viewModel.resetSettings()
+        assertEquals(ReaderSettings(), readerSettings.current.value)
+        assertEquals(ReaderSettings(), viewModel.settings.value)
+    }
+
     /**
      * Readium counts pages from each chapter's size inside the zip, so the text is varied enough
      * not to compress away, giving the book several pages.
@@ -178,8 +315,8 @@ class ReaderViewModelTest {
         return writeEpub(temp.root.resolve(name), metadata = "<dc:title>Test</dc:title>", chapterText = words.joinToString(" "))
     }
 
-    private suspend fun addBook(file: File): Long =
-        books.addBook(book(file.name, folder = file.parent))
+    private suspend fun addBook(file: File, seriesId: Long? = null): Long =
+        books.addBook(book(file.name, seriesId = seriesId, folder = file.parent))
 
     private fun viewModel(bookId: Long, fromStart: Boolean = false) = ReaderViewModel(
         savedStateHandle = SavedStateHandle(
@@ -188,6 +325,9 @@ class ReaderViewModelTest {
         books = books,
         reading = reading,
         toolkit = toolkit,
+        seriesRepository = series,
+        readerSettings = readerSettings,
+        clock = clock,
     )
 
     private suspend fun ReaderViewModel.ready(): ReaderUiState.Ready =
@@ -195,4 +335,17 @@ class ReaderViewModelTest {
 
     private suspend fun ReaderViewModel.failed(): ReaderUiState.Failed =
         state.first { it !is ReaderUiState.Loading } as ReaderUiState.Failed
+
+    private suspend fun ReaderViewModel.card(): FinishCard = finishCard.filterNotNull().first()
+}
+
+private class FakeReaderSettings : ReaderSettingsRepository {
+    val current = MutableStateFlow(ReaderSettings())
+    override val settings: Flow<ReaderSettings> = current
+    override suspend fun update(settings: ReaderSettings) {
+        current.value = settings
+    }
+    override suspend fun reset() {
+        current.value = ReaderSettings()
+    }
 }

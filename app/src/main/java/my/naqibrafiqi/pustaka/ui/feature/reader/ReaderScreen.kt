@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +30,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +63,7 @@ fun ReaderChrome(
     position: ReaderPosition,
     onNavigateBack: () -> Unit,
     onOpenContents: () -> Unit,
+    onOpenSettings: () -> Unit,
     onGoToPage: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -76,6 +79,7 @@ fun ReaderChrome(
                 chapterTitle = position.chapterTitle,
                 onNavigateBack = onNavigateBack,
                 onOpenContents = onOpenContents,
+                onOpenSettings = onOpenSettings,
             )
         }
 
@@ -96,6 +100,7 @@ private fun ReaderTopBar(
     chapterTitle: String?,
     onNavigateBack: () -> Unit,
     onOpenContents: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     Surface(tonalElevation = 3.dp, shadowElevation = 2.dp) {
         Row(
@@ -131,6 +136,9 @@ private fun ReaderTopBar(
             }
             IconButton(onClick = onOpenContents) {
                 Icon(painter = painterResource(R.drawable.list), contentDescription = "Contents")
+            }
+            IconButton(onClick = onOpenSettings) {
+                Icon(painter = painterResource(R.drawable.settings), contentDescription = "Reading settings")
             }
         }
     }
@@ -254,6 +262,61 @@ private fun ContentsList(entries: List<TocEntry>, currentIndex: Int?, onSelect: 
 
 private const val MAX_INDENT = 3
 
+/**
+ * Shown on the last page (decision D10): the book is finished, and the next volume is offered
+ * when there is one. Nothing opens until a button is tapped.
+ */
+@Composable
+fun FinishCardView(
+    card: FinishCard,
+    onReadNext: (NextVolume) -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(16.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        tonalElevation = 6.dp,
+        shadowElevation = 8.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = "Finished",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(text = card.title, style = MaterialTheme.typography.titleLarge)
+            val next = card.next
+            Text(
+                text = when {
+                    next != null -> "Up next: ${next.label} · ${next.title}"
+                    card.seriesName != null -> "That was the last volume of ${card.seriesName}."
+                    else -> "You've reached the end of this book."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            ) {
+                TextButton(onClick = onClose) { Text("Close") }
+                if (next != null) {
+                    Button(onClick = { onReadNext(next) }) { Text("Read next") }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun ReaderLoading(modifier: Modifier = Modifier) {
     LoadingState(modifier = modifier.background(MaterialTheme.colorScheme.background))
@@ -288,9 +351,26 @@ private fun ReaderChromePreview() {
                 position = ReaderPosition(page = 42, pageCount = 240, percent = 17, chapterTitle = "Chapter 2: The Dragon's Maiden"),
                 onNavigateBack = {},
                 onOpenContents = {},
+                onOpenSettings = {},
                 onGoToPage = {},
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun FinishCardPreview() {
+    PustakaTheme {
+        FinishCardView(
+            card = FinishCard(
+                title = "Brunhild, Vol. 01",
+                seriesName = "Brunhild",
+                next = NextVolume(bookId = 2, title = "Brunhild, Vol. 02", label = "Volume 2", fromStart = false),
+            ),
+            onReadNext = {},
+            onClose = {},
+        )
     }
 }
 
