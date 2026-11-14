@@ -1,9 +1,14 @@
 package my.naqibrafiqi.pustaka.ui.feature.reader
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -34,10 +39,14 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.fragment.compose.AndroidFragment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import org.readium.r2.navigator.DecorableNavigator
+import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.input.InputListener
@@ -58,6 +67,9 @@ import org.readium.r2.shared.util.AbsoluteUrl
 class ReaderActivity : AppCompatActivity() {
 
     private val viewModel: ReaderViewModel by viewModels()
+
+    /** The reader view once it's on screen, for the text selection menu. */
+    private var navigatorFragment: EpubNavigatorFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
@@ -113,6 +125,7 @@ class ReaderActivity : AppCompatActivity() {
                     // The page keeps the same size when the system bars hide, so it isn't laid
                     // out again every time the menus are shown.
                     shouldApplyInsetsPadding = false
+                    selectionActionModeCallback = selectionMenu
                 },
             )
         }
@@ -122,14 +135,21 @@ class ReaderActivity : AppCompatActivity() {
         var contentsOpen by rememberSaveable { mutableStateOf(false) }
         var settingsOpen by rememberSaveable { mutableStateOf(false) }
         val position by viewModel.position.collectAsStateWithLifecycle()
+        val highlights by viewModel.highlights.collectAsStateWithLifecycle()
+        val openHighlightId by viewModel.openHighlightId.collectAsStateWithLifecycle()
+        val openHighlight = highlights.firstOrNull { it.id == openHighlightId }?.highlight
 
-        SystemBars(visible = chromeVisible || contentsOpen || settingsOpen, darkContent = theme != Theme.DARK)
+        SystemBars(
+            visible = chromeVisible || contentsOpen || settingsOpen || openHighlight != null,
+            darkContent = theme != Theme.DARK,
+        )
 
         // The finish card takes the bottom of the screen, so the menus make way for it.
         LaunchedEffect(finishCard) { if (finishCard != null) chromeVisible = false }
         LaunchedEffect(navigator, preferences) { navigator?.submitPreferences(preferences) }
         LaunchedEffect(navigator) { navigator?.currentLocator?.collect(viewModel::onLocatorChanged) }
         PageTaps(navigator, scroll = settings.scroll, onMenuTap = { chromeVisible = !chromeVisible })
+        Highlights(navigator, highlights = highlights, openId = openHighlightId, scroll = settings.scroll)
 
         Box(
             Modifier
@@ -140,7 +160,10 @@ class ReaderActivity : AppCompatActivity() {
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility.union(WindowInsets.displayCutout)),
-                onUpdate = { navigator = it },
+                onUpdate = {
+                    navigator = it
+                    navigatorFragment = it
+                },
             )
 
             ReaderChrome(
@@ -164,6 +187,15 @@ class ReaderActivity : AppCompatActivity() {
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
+        }
+
+        openHighlight?.let { highlight ->
+            HighlightSheet(
+                highlight = highlight,
+                onChange = { color, note -> viewModel.updateHighlight(highlight.id, color, note) },
+                onDelete = { viewModel.deleteHighlight(highlight.id) },
+                onDismiss = viewModel::closeHighlight,
+            )
         }
 
         if (settingsOpen) {
@@ -219,6 +251,97 @@ class ReaderActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Draws the book's highlights on the page, and opens one when it's tapped. The open one is
+     * drawn as active, so it stands out while its sheet is showing.
+     */
+    @Composable
+    private fun Highlights(
+        navigator: EpubNavigatorFragment?,
+        highlights: List<ReaderHighlight>,
+        openId: Long?,
+        scroll: Boolean,
+    ) {
+        val latestScroll by rememberUpdatedState(scroll)
+        LaunchedEffect(navigator, highlights, openId) {
+            val decorations = highlights.map {
+                Decoration(
+                    id = it.id.toString(),
+                    locator = it.locator,
+                    style = Decoration.Style.Highlight(tint = it.highlight.color.argb, isActive = it.id == openId),
+                )
+            }
+            navigator?.applyDecorations(decorations, HIGHLIGHTS)
+        }
+        DisposableEffect(navigator) {
+            if (navigator == null) return@DisposableEffect onDispose { }
+            val listener = object : DecorableNavigator.Listener {
+                override fun onDecorationActivated(event: DecorableNavigator.OnActivatedEvent): Boolean {
+                    val id = event.decoration.id.toLongOrNull() ?: return false
+                    val x = event.point?.x ?: return false
+                    val rightToLeft = navigator.settings.value.readingProgression == ReadingProgression.RTL
+                    // Not handled here means the tap goes on to PageTaps and turns the page.
+                    if (!highlightTapOpens(x, navigator.publicationView.width, latestScroll, rightToLeft)) return false
+                    viewModel.openHighlight(id)
+                    return true
+                }
+            }
+            navigator.addDecorationListener(HIGHLIGHTS, listener)
+            onDispose { navigator.removeDecorationListener(listener) }
+        }
+    }
+
+    /**
+     * The menu shown over selected text. Readium replaces the system's menu with this one, so Copy
+     * and Share are added back next to Highlight.
+     */
+    private val selectionMenu = object : ActionMode.Callback {
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+            menu.add(Menu.NONE, MENU_HIGHLIGHT, 0, "Highlight")
+            menu.add(Menu.NONE, MENU_COPY, 1, android.R.string.copy)
+            menu.add(Menu.NONE, MENU_SHARE, 2, "Share")
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean = false
+
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            val navigator = navigatorFragment ?: return false
+            lifecycleScope.launch {
+                val selection = navigator.currentSelection()
+                navigator.clearSelection()
+                mode.finish()
+                val locator = selection?.locator ?: return@launch
+                val text = locator.text.highlight?.trim()?.ifEmpty { null } ?: return@launch
+                when (item.itemId) {
+                    MENU_HIGHLIGHT -> viewModel.addHighlight(locator)
+                    MENU_COPY -> copy(text)
+                    MENU_SHARE -> share(text)
+                }
+            }
+            return true
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode) {}
+    }
+
+    private fun copy(text: String) {
+        // Android shows its own message that the text was copied.
+        getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("Quote", text))
+    }
+
+    private fun share(text: String) {
+        val title = (viewModel.state.value as? ReaderUiState.Ready)?.title
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, shareText(text, title))
+        try {
+            startActivity(Intent.createChooser(send, null))
+        } catch (_: ActivityNotFoundException) {
+            // Nothing to share with.
+        }
+    }
+
     /** Hides the status and navigation bars while reading. A swipe from the edge shows them briefly. */
     @Composable
     private fun SystemBars(visible: Boolean, darkContent: Boolean) {
@@ -249,6 +372,12 @@ class ReaderActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_BOOK_ID = "bookId"
         const val EXTRA_FROM_START = "fromStart"
+
+        /** The reader's group of decorations for highlights. */
+        private const val HIGHLIGHTS = "highlights"
+        private const val MENU_HIGHLIGHT = 1
+        private const val MENU_COPY = 2
+        private const val MENU_SHARE = 3
 
         /**
          * @param fromStart forgets the saved position and opens the book at its first page.

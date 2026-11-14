@@ -23,6 +23,10 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D8 | Reader settings for each book, or one set for all | **One set for every book.** Phase 6's "Default reader settings" edits the same set. |
 | D9 | How pages turn | **Paged by default**: swipe, or tap the left or right edge of the page. A **Scroll** switch in reader settings changes to continuous scrolling. |
 | D10 | What happens at the end of a volume | The book is **marked Finished** and a card offers the **next volume** ("Read next" or "Close"). Nothing opens until you tap. |
+| D11 | Where "Export as Markdown" sends highlights | The **Android share sheet**, with a `.md` file, so it can go to Drive, a notes app, email and so on. Nothing is written to the `Pustaka` folder. |
+| D12 | What can be exported at once | **One book, or everything**: each book's group in the Highlights tab has Export, and the tab's menu has "Export all". Everything goes into one file, grouped by series and book. |
+| D13 | Highlight colours | **Four: yellow, green, blue and pink.** Yellow is used for the very first highlight. |
+| D14 | What "Highlight" does after selecting text | The text is **highlighted at once**, in the colour used last. Tapping the highlight lets you change its colour, add a note or delete it. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md). No decisions are open right now.
 
@@ -114,6 +118,10 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 **Done when:** you can read a volume from start to finish, with the position surviving app restarts.
 
 ### Phase 5: Highlights (M)
+This phase is split into two pull requests:
+1. Highlighting in the reader: select text to highlight it, see highlights on the page, and tap one to change its colour, add a note or delete it. Copy and Share are in the same selection menu. ✅ Done in PR 1.
+2. The Highlights tab, opening the reader at a highlight, and exporting as Markdown.
+
 - Select text in the reader to create a highlight, with an optional note and colour.
 - **Highlights tab:** highlights grouped by series and book, with search. Tapping one opens the reader at that spot.
 - Edit and delete highlights, and export them as Markdown.
@@ -152,7 +160,7 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 | 1. Data foundation | Done |
 | 2. Library folder and scanning | Done |
 | 3. Connect screens to data | Done |
-| 4. Reader | In review (two PRs into `1.0.0`) |
-| 5. Highlights | Not started |
+| 4. Reader | Done |
+| 5. Highlights | In progress: PR 1 (reader) in review, PR 2 (Highlights tab and export) next |
 | 6. Settings, search and sorting | Not started |
 | 7. Polish and release | Not started |

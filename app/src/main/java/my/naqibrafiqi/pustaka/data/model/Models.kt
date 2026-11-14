@@ -112,11 +112,10 @@ data class ReadingSession(
 }
 
 /**
- * A highlighted passage in a book. The table exists from Phase 1; the reader starts creating
- * highlights in Phase 5.
+ * A highlighted passage in a book, made by selecting text in the reader.
  *
- * @property locator the passage as a serialized Readium `Locator` (JSON).
- * @property color an ARGB colour.
+ * @property locator the passage as a serialized Readium `Locator` (JSON), including the text
+ *   around it, which the reader uses to find it again.
  */
 data class Highlight(
     val id: Long = 0,
@@ -124,7 +123,7 @@ data class Highlight(
     val locator: String,
     val text: String,
     val note: String? = null,
-    val color: Int,
+    val color: HighlightColor,
     val createdAt: Instant,
     val updatedAt: Instant,
 )

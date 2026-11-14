@@ -10,10 +10,13 @@ import kotlinx.coroutines.test.runTest
 import my.naqibrafiqi.pustaka.data.library.epub.OpenFailure
 import my.naqibrafiqi.pustaka.data.library.epub.ReadiumToolkit
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
+import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultBookRepository
+import my.naqibrafiqi.pustaka.data.repository.DefaultHighlightRepository
+import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
@@ -36,6 +39,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.readium.r2.shared.publication.Locator
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -58,6 +62,7 @@ class ReaderViewModelTest {
     private lateinit var books: BookRepository
     private lateinit var reading: ReadingRepository
     private lateinit var series: SeriesRepository
+    private lateinit var highlights: HighlightRepository
     private val readerSettings = FakeReaderSettings()
     private val toolkit = ReadiumToolkit(ApplicationProvider.getApplicationContext())
 
@@ -67,6 +72,7 @@ class ReaderViewModelTest {
         books = DefaultBookRepository(db, clock)
         reading = DefaultReadingRepository(db, clock)
         series = DefaultSeriesRepository(db, clock)
+        highlights = DefaultHighlightRepository(db, clock)
     }
 
     @After
@@ -305,6 +311,56 @@ class ReaderViewModelTest {
         assertEquals(ReaderSettings(), viewModel.settings.value)
     }
 
+    @Test
+    fun selectedTextIsHighlightedInTheColourUsedLast() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val other = books.addBook(book("Other.epub"))
+        highlights.addHighlight(other, locator = "{}", text = "Elsewhere", note = null, color = HighlightColor.BLUE)
+        val viewModel = viewModel(bookId)
+        val page = viewModel.ready().positions[1]
+
+        viewModel.addHighlight(page.copy(text = Locator.Text(before = "the ", highlight = " a quote ", after = " here")))
+
+        val highlight = viewModel.highlights.first { it.isNotEmpty() }.single()
+        assertEquals("a quote", highlight.highlight.text)
+        assertEquals(HighlightColor.BLUE, highlight.highlight.color)
+        // The text around it is kept, so the reader can find the passage again.
+        assertEquals("the ", highlight.locator.text.before)
+        assertEquals(page.href, highlight.locator.href)
+    }
+
+    @Test
+    fun aSelectionWithoutTextIsntHighlighted() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val page = viewModel.ready().positions[0]
+
+        viewModel.addHighlight(page.copy(text = Locator.Text(highlight = "   ")))
+        viewModel.addHighlight(page)
+
+        assertTrue(highlights.observeHighlights(bookId).first().isEmpty())
+    }
+
+    @Test
+    fun aTappedHighlightCanBeChangedAndDeleted() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val page = viewModel.ready().positions[0]
+        viewModel.addHighlight(page.copy(text = Locator.Text(highlight = "a quote")))
+        val id = viewModel.highlights.first { it.isNotEmpty() }.single().id
+
+        viewModel.openHighlight(id)
+        assertEquals(id, viewModel.openHighlightId.value)
+
+        viewModel.updateHighlight(id, HighlightColor.PINK, note = "  Good line ")
+        val changed = viewModel.highlights.first { it.single().highlight.color == HighlightColor.PINK }.single()
+        assertEquals("Good line", changed.highlight.note)
+
+        viewModel.deleteHighlight(id)
+        assertNull(viewModel.openHighlightId.value)
+        assertTrue(viewModel.highlights.first { it.isEmpty() }.isEmpty())
+    }
+
     /**
      * Readium counts pages from each chapter's size inside the zip, so the text is varied enough
      * not to compress away, giving the book several pages.
@@ -327,6 +383,7 @@ class ReaderViewModelTest {
         toolkit = toolkit,
         seriesRepository = series,
         readerSettings = readerSettings,
+        highlightRepository = highlights,
         clock = clock,
     )
 

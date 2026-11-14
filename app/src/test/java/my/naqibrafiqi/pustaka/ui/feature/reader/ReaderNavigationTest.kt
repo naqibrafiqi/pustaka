@@ -3,6 +3,8 @@ package my.naqibrafiqi.pustaka.ui.feature.reader
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.readium.r2.shared.publication.Link
 import org.readium.r2.shared.util.Url
@@ -94,4 +96,22 @@ class ReaderNavigationTest {
 
     private fun link(href: String, title: String?, children: List<Link> = emptyList()) =
         Link(href = checkNotNull(Url(href)), title = title, children = children)
+
+    @Test
+    fun aTapOnAHighlightNearTheEdgeTurnsThePage() {
+        assertFalse(highlightTapOpens(x = 50f, width = 1000, scroll = false))
+        assertFalse(highlightTapOpens(x = 950f, width = 1000, scroll = false))
+        assertTrue(highlightTapOpens(x = 500f, width = 1000, scroll = false))
+    }
+
+    @Test
+    fun whenScrollingAnyTapOnAHighlightOpensIt() {
+        assertTrue(highlightTapOpens(x = 50f, width = 1000, scroll = true))
+    }
+
+    @Test
+    fun sharedTextNamesTheBook() {
+        assertEquals("\u201CA quote\u201D\n\u2014 Brunhild, Vol. 01", shareText("A quote", "Brunhild, Vol. 01"))
+        assertEquals("\u201CA quote\u201D", shareText("A quote", null))
+    }
 }

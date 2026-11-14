@@ -31,6 +31,21 @@ enum class TapZone {
 }
 
 /**
+ * Whether a tap on a highlight opens it. When pages turn, a tap on a highlight near the edge of the
+ * page still turns the page, so only a tap in the middle opens it. When scrolling, any tap does.
+ *
+ * @param x the tap's distance from the left of the page, in pixels.
+ */
+fun highlightTapOpens(x: Float, width: Int, scroll: Boolean, rightToLeft: Boolean = false): Boolean =
+    scroll || TapZone.of(x, width, rightToLeft) == TapZone.MENU
+
+/** Selected text to share: the quote in curly quotes, and the book it's from when there is one. */
+fun shareText(quote: String, bookTitle: String?): String {
+    val quoted = "\u201C$quote\u201D"
+    return if (bookTitle.isNullOrBlank()) quoted else "$quoted\n\u2014 $bookTitle"
+}
+
+/**
  * One line of the table of contents.
  *
  * @property depth 0 for a top-level chapter, 1 for a section inside it, and so on.

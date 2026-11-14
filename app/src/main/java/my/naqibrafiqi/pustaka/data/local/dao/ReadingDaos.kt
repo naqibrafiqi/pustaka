@@ -53,6 +53,10 @@ interface HighlightDao {
     @Query("SELECT * FROM highlights WHERE id = :id")
     suspend fun getById(id: Long): HighlightEntity?
 
+    /** The colour of the highlight made or changed most recently, or null when there are none. */
+    @Query("SELECT color FROM highlights ORDER BY updatedAt DESC, id DESC LIMIT 1")
+    suspend fun lastUsedColor(): Int?
+
     @Insert
     suspend fun insert(highlight: HighlightEntity): Long
 
