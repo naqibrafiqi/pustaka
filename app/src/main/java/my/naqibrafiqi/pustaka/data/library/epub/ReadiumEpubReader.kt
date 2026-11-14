@@ -1,23 +1,15 @@
 package my.naqibrafiqi.pustaka.data.library.epub
 
-import android.content.Context
 import android.util.Size
 import androidx.core.text.HtmlCompat
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import my.naqibrafiqi.pustaka.data.model.BookDetails
 import my.naqibrafiqi.pustaka.data.model.Creator
 import org.readium.r2.shared.publication.Contributor
 import org.readium.r2.shared.publication.Metadata
-import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.publication.services.coverFitting
 import org.readium.r2.shared.publication.services.positions
-import org.readium.r2.shared.util.asset.AssetRetriever
-import org.readium.r2.shared.util.getOrElse
-import org.readium.r2.shared.util.http.DefaultHttpClient
-import org.readium.r2.streamer.PublicationOpener
-import org.readium.r2.streamer.parser.DefaultPublicationParser
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,31 +18,16 @@ import kotlin.time.ExperimentalTime
 /** Reads EPUB details with the Readium Kotlin Toolkit, which is also the reader engine. */
 @Singleton
 class ReadiumEpubReader @Inject constructor(
-    @ApplicationContext context: Context,
+    private val toolkit: ReadiumToolkit,
     private val coverStore: CoverStore,
 ) : EpubReader {
 
-    private val httpClient = DefaultHttpClient()
-    private val assetRetriever = AssetRetriever(context.contentResolver, httpClient)
-    private val publicationOpener = PublicationOpener(
-        publicationParser = DefaultPublicationParser(
-            context = context,
-            httpClient = httpClient,
-            assetRetriever = assetRetriever,
-            pdfFactory = null,
-        ),
-    )
-
     override suspend fun read(file: File, fingerprint: String): EpubMetadata? =
         withContext(Dispatchers.IO) {
-            val asset = assetRetriever.retrieve(file).getOrElse { return@withContext null }
-            val publication = publicationOpener.open(asset, allowUserInteraction = false)
-                .getOrElse {
-                    asset.close()
-                    return@withContext null
-                }
+            val opened = toolkit.open(file, allowProtected = true) as? OpenResult.Opened
+                ?: return@withContext null
+            val publication = opened.publication
             try {
-                if (!publication.conformsTo(Publication.Profile.EPUB)) return@withContext null
                 val metadata = publication.metadata
                 val creators = OpfCreators.read(file) ?: creatorsFrom(metadata)
                 val coverPath = runCatching { publication.coverFitting(MAX_COVER_SIZE) }

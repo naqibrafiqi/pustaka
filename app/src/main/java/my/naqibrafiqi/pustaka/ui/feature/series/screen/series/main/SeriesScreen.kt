@@ -50,6 +50,7 @@ fun SeriesScreen(
     onRetry: () -> Unit,
     onOpenSeries: (Long) -> Unit,
     onOpenBook: (Long) -> Unit,
+    onReadBook: (Long) -> Unit,
     createDialog: CreateSeriesDialog?,
     onNewSeries: () -> Unit,
     onNewNameChange: (String) -> Unit,
@@ -63,6 +64,7 @@ fun SeriesScreen(
         onRetry = onRetry,
         onOpenSeries = onOpenSeries,
         onOpenBook = onOpenBook,
+        onReadBook = onReadBook,
         onNewSeries = onNewSeries,
     )
 
@@ -86,6 +88,7 @@ private fun SeriesScreenContent(
     onRetry: () -> Unit,
     onOpenSeries: (Long) -> Unit,
     onOpenBook: (Long) -> Unit,
+    onReadBook: (Long) -> Unit,
     onNewSeries: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -160,8 +163,7 @@ private fun SeriesScreenContent(
                         items(items = state.series, key = { it.id }) { series ->
                             BookSeriesCard(
                                 series = series,
-                                // Opens the volume's details for now. The reader arrives in Phase 4.
-                                onContinueReading = { series.continueBookId?.let(onOpenBook) },
+                                onContinueReading = { series.continueBookId?.let(onReadBook) },
                                 onViewSeries = { onOpenSeries(series.id) },
                                 onOpenVolume = onOpenBook,
                                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -204,6 +206,7 @@ private fun SeriesScreenPreview() {
             onRetry = {},
             onOpenSeries = {},
             onOpenBook = {},
+            onReadBook = {},
             onNewSeries = {},
         )
     }

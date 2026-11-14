@@ -20,6 +20,9 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D3 | What "Offline Storage: X of Y files synced" on Series Details means | **"Indexed"**: the files the app has found and checked on disk. The label changes to "X of Y files indexed". There's no cloud sync in v1. |
 | D5 | Languages | **English only** for v1. All text still moves into the string resource file (Phase 7), so a translation can be added later. |
 | D7 | What "Remove from library" does | **Hides** the series or book so it doesn't come back on the next scan. It can be restored from Settings → Hidden items. "Delete folder/files" is offered as a separate choice. |
+| D8 | Reader settings for each book, or one set for all | **One set for every book.** Phase 6's "Default reader settings" edits the same set. |
+| D9 | How pages turn | **Paged by default**: swipe, or tap the left or right edge of the page. A **Scroll** switch in reader settings changes to continuous scrolling. |
+| D10 | What happens at the end of a volume | The book is **marked Finished** and a card offers the **next volume** ("Read next" or "Close"). Nothing opens until you tap. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md). No decisions are open right now.
 
@@ -97,7 +100,10 @@ Replace the placeholder data. This phase is split into two pull requests:
 **Done when:** every screen that's already designed shows real data and no hard-coded sample text remains.
 
 ### Phase 4: Reader (L)
-The core feature, built on Readium's reader view. Readium's reader is an older Android Fragment, so it is wrapped for use in Compose.
+The core feature, built on Readium's reader view. Readium's reader is an older Android Fragment, so it is wrapped for use in Compose. This phase is split into two pull requests:
+1. Opening a book, page turning, the table of contents, the progress bar, and saving and resuming the position. ✅ Done in PR 1.
+2. Reading sessions, reader settings, and finishing a book.
+
 - Open a book from "Resume", "Continue From Page N" or "Read From Beginning".
 - Page turning, a table of contents, and a progress bar.
 - Save the reading position all the time and resume from it.
@@ -145,8 +151,8 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 | 0. Housekeeping | Done |
 | 1. Data foundation | Done |
 | 2. Library folder and scanning | Done |
-| 3. Connect screens to data | In review (two PRs into `1.0.0`) |
-| 4. Reader | Not started |
+| 3. Connect screens to data | Done |
+| 4. Reader | In progress (PR 1 in review) |
 | 5. Highlights | Not started |
 | 6. Settings, search and sorting | Not started |
 | 7. Polish and release | Not started |
