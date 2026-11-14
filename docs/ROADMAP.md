@@ -55,7 +55,10 @@ Build the database and the layer that screens will read data through.
 **Done when:** the data layer is covered by tests and nothing in the UI changes yet.
 
 ### Phase 2: Library folder and scanning (L)
-Connect the app to real files, following [local_storage_and_library.md](local_storage_and_library.md).
+Connect the app to real files, following [local_storage_and_library.md](local_storage_and_library.md). This phase is split into two pull requests:
+1. The scanner and reading book details with Readium.
+2. The permission and first-launch screens, and when scans run.
+
 - **Permissions and first launch:**
   - A welcome screen that explains the "All files access" permission, then opens the system screen to turn it on. Android 10 uses the older storage permissions instead.
   - Create `Pustaka/` once access is granted. If access is refused, show a screen with a "Grant access" button.
@@ -64,9 +67,11 @@ Connect the app to real files, following [local_storage_and_library.md](local_st
   - Only open files that are new or changed, judging by size and last-modified time.
   - Recognise moved or renamed books by fingerprint, so their progress is kept.
   - Mark books whose files have gone as missing, and restore them if the file comes back.
+  - ✅ Done in PR 1, including series folders that are renamed.
 - **Reading book details with Readium:**
   - Read title, creators with their roles, publisher, date, identifier, language, description, subjects and series position from `content.opf`.
   - Save the cover to the app's cache and count the total pages.
+  - ✅ Done in PR 1 with Readium 3.3.0. Readium 3.4.0 needs Kotlin 2.4, and the project is on Kotlin 2.2, so upgrading is left for later.
 - **Volume order:** the user's own number first, then the number in the EPUB, then a number in the filename, then the filename (10 after 9).
 - **When scans run:** every time the app opens or comes back to the foreground, on pull-to-refresh, and from Settings. Scans run as a background job (WorkManager) and report a result like "3 new books found".
 
@@ -133,8 +138,8 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 | Phase | Status |
 |---|---|
 | 0. Housekeeping | Done |
-| 1. Data foundation | In review (PR into `1.0.0`) |
-| 2. Library folder and scanning | Not started (design agreed) |
+| 1. Data foundation | Done |
+| 2. Library folder and scanning | In progress: PR 1 of 2 (scanner and book details) in review |
 | 3. Connect screens to data | Not started |
 | 4. Reader | Not started |
 | 5. Highlights | Not started |
