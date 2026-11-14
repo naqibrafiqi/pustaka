@@ -17,6 +17,9 @@ interface ReadingRepository {
 
     fun observeProgress(bookId: Long): Flow<ReadingProgress?>
 
+    /** The reading position of every book that has one, by book id. */
+    fun observeAllProgress(): Flow<Map<Long, ReadingProgress>>
+
     /**
      * Saves where the reader is.
      *
@@ -44,6 +47,9 @@ class DefaultReadingRepository @Inject constructor(
 
     override fun observeProgress(bookId: Long): Flow<ReadingProgress?> =
         progressDao.observe(bookId).map { it?.toModel() }
+
+    override fun observeAllProgress(): Flow<Map<Long, ReadingProgress>> =
+        progressDao.observeAll().map { rows -> rows.associate { it.bookId to it.toModel() } }
 
     override suspend fun saveProgress(
         bookId: Long,

@@ -19,12 +19,39 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import my.naqibrafiqi.pustaka.ui.model.BookItem
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+
+/** Books whose file has gone are shown faded. */
+private const val DIMMED_ALPHA = 0.5f
+
+/** A card for [book]. The subtitle is its volume label if it has one, otherwise its credits. */
+@Composable
+fun BookCard(
+    book: BookItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isGrid: Boolean = true,
+    subtitle: String? = book.volumeLabel ?: book.credits,
+) {
+    BookCard(
+        onClick = onClick,
+        title = book.title,
+        modifier = modifier,
+        subtitle = subtitle,
+        isGrid = isGrid,
+        imageUrl = book.coverPath,
+        progress = book.progress,
+        statusLabel = book.state.label,
+        isDimmed = book.isMissing,
+    )
+}
 
 @Composable
 fun BookCard(
@@ -34,12 +61,15 @@ fun BookCard(
     subtitle: String? = null,
     isGrid: Boolean = true,
     imageUrl: String? = null,
-    progress: Float = 0f
+    progress: Float = 0f,
+    statusLabel: String = "Unread",
+    isDimmed: Boolean = false,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
+            .alpha(if (isDimmed) DIMMED_ALPHA else 1f)
             .animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
@@ -98,7 +128,7 @@ fun BookCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Reading",
+                                text = statusLabel,
                                 fontWeight = FontWeight.SemiBold,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -166,7 +196,7 @@ fun BookCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Reading",
+                                text = statusLabel,
                                 fontWeight = FontWeight.SemiBold,
                                 style = MaterialTheme.typography.labelLarge
                             )

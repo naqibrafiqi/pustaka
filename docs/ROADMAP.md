@@ -80,7 +80,9 @@ Connect the app to real files, following [local_storage_and_library.md](local_st
 **Done when:** you can copy a standalone EPUB and a folder of volumes into `Pustaka/`, pull to refresh, and see them with the right details and in the right order. Renaming one of the files keeps its progress.
 
 ### Phase 3: Connect the existing screens to real data (L)
-Replace the placeholder data.
+Replace the placeholder data. This phase is split into two pull requests:
+1. The four screens on real data, with their ViewModels, empty, loading and error states, and "More info". ✅ Done in PR 1.
+2. Editing series and books, deleting, and "Create series".
 - Give each screen a ViewModel and a UI state type: Library, Series, Series Details and Book Details.
 - **Library:** the "Currently Reading" card, "Recently Added", and the All / Currently reading / Unread filters with real counts.
 - **Series:** the list of series, the volume preview, and "Continue reading".
@@ -141,8 +143,8 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 |---|---|
 | 0. Housekeeping | Done |
 | 1. Data foundation | Done |
-| 2. Library folder and scanning | In review (two PRs into `1.0.0`) |
-| 3. Connect screens to data | Not started |
+| 2. Library folder and scanning | Done |
+| 3. Connect screens to data | In progress |
 | 4. Reader | Not started |
 | 5. Highlights | Not started |
 | 6. Settings | Not started |

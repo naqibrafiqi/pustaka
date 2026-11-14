@@ -1,11 +1,8 @@
 package my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -27,347 +27,373 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.components.BookCover
-import my.naqibrafiqi.pustaka.ui.components.GenreChip
+import my.naqibrafiqi.pustaka.ui.components.ErrorState
+import my.naqibrafiqi.pustaka.ui.components.LoadingState
+import my.naqibrafiqi.pustaka.ui.components.MessageState
+import my.naqibrafiqi.pustaka.ui.components.SynopsisSection
 import my.naqibrafiqi.pustaka.ui.components.TagChip
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.components.menu.DropdownMenuButton
 import my.naqibrafiqi.pustaka.ui.components.menu.MenuItem
+import my.naqibrafiqi.pustaka.ui.model.BookState
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
 fun BookDetailsScreen(
-    onNavigateBack: () -> Unit
+    state: BookDetailsUiState,
+    onNavigateBack: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     BookDetailsScreenContent(
-        onNavigateBack = onNavigateBack
+        state = state,
+        onNavigateBack = onNavigateBack,
+        onRetry = onRetry,
     )
 }
 
 @Composable
-fun BookDetailsScreenContent(
+private fun BookDetailsScreenContent(
+    state: BookDetailsUiState,
     onNavigateBack: () -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val genres = listOf("Drama", "Fantasy", "Action", "Romance", "Ecchi")
+    val ready = state as? BookDetailsUiState.Ready
 
     var openMenu by remember { mutableStateOf(false) }
 
-    var expandSynopsis by remember { mutableStateOf(false) }
-
-    val listState = rememberLazyListState()
+    var showInfo by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
         topBar = {
             TopBar(
                 title = "Book Details",
-                subtitle = "Playing Death Games to Put Food on the Table, Volume 1",
+                subtitle = ready?.let { it.seriesLine ?: it.title },
                 onNavigateBack = onNavigateBack,
-                actionButtons = {
-                    DropdownMenuButton(
-                        expanded = openMenu,
-                        openMenu = {
-                            openMenu = true
-                        },
-                        closeMenu = {
-                            openMenu = false
+                actionButtons = if (ready == null) null else {
+                    {
+                        // "Edit details" and "Delete book" join this menu in Phase 3's second part.
+                        DropdownMenuButton(
+                            expanded = openMenu,
+                            openMenu = {
+                                openMenu = true
+                            },
+                            closeMenu = {
+                                openMenu = false
+                            }
+                        ) {
+                            MenuItem(
+                                onClick = {
+                                    openMenu = false
+                                    showInfo = true
+                                },
+                                text = "More info",
+                                leadingIconResId = R.drawable.info
+                            )
                         }
-                    ) {
-                        MenuItem(
-                            onClick = {
-                                openMenu = false
-                                /* TODO: ??? */
-                            },
-                            text = "More info",
-                            leadingIconResId = R.drawable.info
-                        )
-
-                        MenuItem(
-                            onClick = {
-                                openMenu = false
-                                /* TODO: ??? */
-                            },
-                            text = "Edit details",
-                            leadingIconResId = R.drawable.edit
-                        )
-
-                        MenuItem(
-                            onClick = {
-                                openMenu = false
-                                /* TODO: ??? */
-                            },
-                            text = "Delete book",
-                            leadingIconResId = R.drawable.delete
-                        )
                     }
                 }
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()),
-            state = listState,
-            contentPadding = PaddingValues(bottom = innerPadding.calculateTopPadding()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    BookCover(
-                        modifier = Modifier.fillMaxWidth(.5f),
-                        imageUrl = null
-                    )
-                }
+        val contentModifier = Modifier
+            .fillMaxSize()
+            .padding(top = innerPadding.calculateTopPadding())
+
+        when (state) {
+            BookDetailsUiState.Loading -> LoadingState(modifier = contentModifier)
+            is BookDetailsUiState.Error -> ErrorState(
+                message = state.message,
+                onRetry = onRetry,
+                modifier = contentModifier,
+            )
+            BookDetailsUiState.NotFound -> MessageState(
+                title = "Book not found",
+                message = "This book is no longer in your library.",
+                iconRes = R.drawable.book_5,
+                modifier = contentModifier,
+                actionLabel = "Go back",
+                onAction = onNavigateBack,
+            )
+            is BookDetailsUiState.Ready -> ReadyContent(
+                state = state,
+                contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 16.dp),
+                modifier = contentModifier,
+            )
+        }
+    }
+
+    if (showInfo && ready != null) {
+        MoreInfoDialog(rows = ready.info, onDismiss = { showInfo = false })
+    }
+}
+
+@Composable
+private fun ReadyContent(
+    state: BookDetailsUiState.Ready,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState()
+
+    LazyColumn(
+        modifier = modifier,
+        state = listState,
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                BookCover(
+                    modifier = Modifier.fillMaxWidth(.5f),
+                    imageUrl = state.coverPath
+                )
             }
+        }
 
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    Text(
-                        text = "Playing Death Games to Put Food on the Table, Volume 1",
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = state.title,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleLarge
+                )
 
+                state.credits?.let { credits ->
                     Text(
-                        text = "Yushi Ukai, Nekometaru",
+                        text = credits,
                         color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
                         fontWeight = FontWeight.Medium,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
             }
+        }
 
+        if (state.genres.isNotEmpty() || !state.synopsis.isNullOrBlank()) {
             item {
-                Column(
+                SynopsisSection(genres = state.genres, synopsis = state.synopsis)
+            }
+        }
+
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ProgressSection(state)
+
+                ReadButtons(state)
+            }
+        }
+
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    if (expandSynopsis) {
-                        FlowRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            genres.forEach { genre ->
-                                GenreChip(text = genre)
-                            }
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            genres.forEach { genre ->
-                                GenreChip(text = genre)
-                            }
-                        }
-                    }
-
-                    Surface(
-                        onClick = {
-                            expandSynopsis = !expandSynopsis
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        tonalElevation = 4.dp
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateContentSize()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "Yuki wakes up to find herself in an unfamiliar manor, wearing a maid uniform and lying on a luxurious bed. Soon, she discovers five more girls, all dressed the same as her. This is the Ghost House, and the only way they can survive is to make it through the traps that lie in wait-deadly games full of blowguns, buzz saws, locked rooms, and weapons. It’s a hopeless, terrifying situation for everyone there…well, everyone except Yuki. After all, this is her career at seventeen. Do you think that’s odd? She would agree. But that’s how some people are-they earn their living playing death games.",
-                                fontWeight = FontWeight.Light,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = if (expandSynopsis) Int.MAX_VALUE else 4,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-
-                            Text(
-                                text = if (expandSynopsis) "Read Less" else "Read More",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold,
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-                    }
-                }
-            }
-
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "58%",
-                                    fontWeight = FontWeight.SemiBold,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-
-                                TagChip(
-                                    text = "In Progress",
-                                    color = MaterialTheme.colorScheme.tertiary
-                                )
-                            }
-
-                            Text(
-                                text = "Page 116 of 200",
-                                fontWeight = FontWeight.Normal,
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-
-                        LinearProgressIndicator(
-                            progress = { .58f },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(12.dp),
-                            gapSize = 0.dp
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = {/* TODO: ??? */ },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.book_5),
-                                    contentDescription = "Continue reading"
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Text(text = "Continue From Page 116")
-                            }
-                        }
-
-                        OutlinedButton(
-                            onClick = {/* TODO: ??? */ },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.menu_book),
-                                    contentDescription = "Read from beginning"
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Text(text = "Read From Beginning")
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        BasicStatisticsTile(
-                            labelText = "Page Count",
-                            labelIconRes = R.drawable.article,
-                            valueText = "200 pages",
-                            modifier = Modifier.weight(1f),
-                            labelIconDescription = "Page count"
-                        )
-
-                        BasicStatisticsTile(
-                            labelText = "Velocity",
-                            labelIconRes = R.drawable.speed,
-                            valueText = "Avg. 240 wpm",
-                            modifier = Modifier.weight(1f),
-                            labelIconDescription = "Velocity"
-                        )
-                    }
+                    BasicStatisticsTile(
+                        labelText = "Page Count",
+                        labelIconRes = R.drawable.article,
+                        valueText = state.pageCount,
+                        modifier = Modifier.weight(1f),
+                    )
 
                     BasicStatisticsTile(
-                        labelText = "Estimated Left",
-                        labelIconRes = R.drawable.schedule,
-                        valueText = "~2h 15m",
-                        modifier = Modifier.fillMaxWidth(),
-                        labelIconDescription = "Estimated left"
+                        labelText = "Velocity",
+                        labelIconRes = R.drawable.speed,
+                        valueText = state.velocity,
+                        modifier = Modifier.weight(1f),
                     )
                 }
+
+                BasicStatisticsTile(
+                    labelText = "Estimated Left",
+                    labelIconRes = R.drawable.schedule,
+                    valueText = state.timeLeft,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
+}
+
+@Composable
+private fun ProgressSection(state: BookDetailsUiState.Ready) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${state.percent}%",
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                TagChip(
+                    text = statusChipLabel(state.state),
+                    color = statusChipColor(state.state)
+                )
+            }
+
+            state.pageLabel?.let { label ->
+                Text(
+                    text = label,
+                    fontWeight = FontWeight.Normal,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+
+        LinearProgressIndicator(
+            progress = { state.percent / 100f },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp),
+            gapSize = 0.dp
+        )
+    }
+}
+
+/** The reader arrives in Phase 4, so these buttons stay disabled until then. */
+@Composable
+private fun ReadButtons(state: BookDetailsUiState.Ready) {
+    val readerAvailable = false
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Button(
+            onClick = { /* Opens the reader from Phase 4. */ },
+            enabled = readerAvailable && state.canRead,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ButtonContent(
+                iconRes = R.drawable.book_5,
+                text = state.continuePage?.let { "Continue From Page $it" } ?: "Start Reading"
+            )
+        }
+
+        if (state.continuePage != null) {
+            OutlinedButton(
+                onClick = { /* Opens the reader from Phase 4. */ },
+                enabled = readerAvailable && state.canRead,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                ButtonContent(iconRes = R.drawable.menu_book, text = "Read From Beginning")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ButtonContent(@DrawableRes iconRes: Int, text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(text = text)
+    }
+}
+
+private fun statusChipLabel(state: BookState): String = when (state) {
+    BookState.UNREAD -> "Not Started"
+    BookState.READING -> "In Progress"
+    BookState.FINISHED -> "Finished"
+    BookState.MISSING -> "File not found"
+}
+
+@Composable
+private fun statusChipColor(state: BookState): Color = when (state) {
+    BookState.MISSING -> MaterialTheme.colorScheme.errorContainer
+    BookState.FINISHED -> MaterialTheme.colorScheme.primaryContainer
+    else -> MaterialTheme.colorScheme.tertiary
+}
+
+@Composable
+private fun MoreInfoDialog(rows: List<InfoRow>, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+        title = { Text("More info") },
+        text = {
+            SelectionContainer {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rows.forEach { row ->
+                        Column {
+                            Text(
+                                text = row.label,
+                                color = MaterialTheme.colorScheme.secondary,
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Text(text = row.value, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable
@@ -376,7 +402,6 @@ private fun BasicStatisticsTile(
     @DrawableRes labelIconRes: Int,
     valueText: String,
     modifier: Modifier = Modifier,
-    labelIconDescription: String? = null
 ) {
     Surface(
         modifier = modifier,
@@ -395,7 +420,7 @@ private fun BasicStatisticsTile(
             ) {
                 Icon(
                     painter = painterResource(id = labelIconRes),
-                    contentDescription = labelIconDescription,
+                    contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -422,7 +447,24 @@ private fun BasicStatisticsTile(
 private fun BookDetailsScreenPreview() {
     PustakaTheme {
         BookDetailsScreenContent(
-            onNavigateBack = {}
+            state = BookDetailsUiState.Ready(
+                title = "Playing Death Games, Vol. 01",
+                seriesLine = "Playing Death Games · Volume 1",
+                credits = "Yushi Ukai, Nekometaru",
+                coverPath = null,
+                genres = listOf("Drama", "Fantasy", "Action"),
+                synopsis = "Yuki wakes up to find herself in an unfamiliar manor.",
+                state = BookState.READING,
+                percent = 58,
+                pageLabel = "Page 116 of 200",
+                continuePage = 116,
+                pageCount = "200 pages",
+                velocity = "Avg. 42 pages/h",
+                timeLeft = "~2h 15m",
+                info = emptyList(),
+            ),
+            onNavigateBack = {},
+            onRetry = {},
         )
     }
 }

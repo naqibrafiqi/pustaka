@@ -7,22 +7,26 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import my.naqibrafiqi.pustaka.ui.feature.library.api.LibraryRoute
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryScreen
+import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryViewModel
 import my.naqibrafiqi.pustaka.ui.feature.series.api.BookDetailsRoute
 import my.naqibrafiqi.pustaka.ui.scan.LibraryScanViewModel
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
 
-fun EntryProviderScope<NavKey>.libraryEntryBuilder() {
+fun EntryProviderScope<NavKey>.libraryEntryBuilder(scanViewModel: LibraryScanViewModel) {
     entry<LibraryRoute> {
         val navigator = LocalAppNavigator.current
-        val scanViewModel: LibraryScanViewModel = hiltViewModel()
+        val viewModel: LibraryViewModel = hiltViewModel()
+        val state by viewModel.state.collectAsStateWithLifecycle()
         val isRefreshing by scanViewModel.isRefreshing.collectAsStateWithLifecycle()
 
         LibraryScreen(
-            onNavigateToBookDetail = { bookId ->
-                navigator.add(BookDetailsRoute(bookId))
-            },
+            state = state,
             isRefreshing = isRefreshing,
             onRefresh = scanViewModel::refresh,
+            onSelectFilter = viewModel::selectFilter,
+            onToggleLayout = viewModel::toggleLayout,
+            onRetry = viewModel::retry,
+            onOpenBook = { bookId -> navigator.add(BookDetailsRoute(bookId)) },
         )
     }
 }

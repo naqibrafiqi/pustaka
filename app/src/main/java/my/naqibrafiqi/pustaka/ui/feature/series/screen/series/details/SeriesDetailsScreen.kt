@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,10 +29,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -41,128 +39,160 @@ import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.components.BookCard
 import my.naqibrafiqi.pustaka.ui.components.BookCoverFan
+import my.naqibrafiqi.pustaka.ui.components.ErrorState
+import my.naqibrafiqi.pustaka.ui.components.LoadingState
+import my.naqibrafiqi.pustaka.ui.components.MessageState
+import my.naqibrafiqi.pustaka.ui.components.SynopsisSection
 import my.naqibrafiqi.pustaka.ui.components.TopBar
-import my.naqibrafiqi.pustaka.ui.components.menu.DropdownMenuButton
-import my.naqibrafiqi.pustaka.ui.components.menu.MenuItem
+import my.naqibrafiqi.pustaka.ui.model.BookItem
+import my.naqibrafiqi.pustaka.ui.model.BookState
+import my.naqibrafiqi.pustaka.ui.model.volumesLabel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
 fun SeriesDetailsScreen(
-    onNavigateBack: () -> Unit
+    state: SeriesDetailsUiState,
+    onNavigateBack: () -> Unit,
+    onToggleLayout: () -> Unit,
+    onRetry: () -> Unit,
+    onOpenBook: (Long) -> Unit,
 ) {
     SeriesDetailsScreenContent(
-        // TODO: Pass series details parameters
-        onNavigateBack = onNavigateBack
+        state = state,
+        onNavigateBack = onNavigateBack,
+        onToggleLayout = onToggleLayout,
+        onRetry = onRetry,
+        onOpenBook = onOpenBook,
     )
 }
 
 @Composable
 private fun SeriesDetailsScreenContent(
+    state: SeriesDetailsUiState,
     onNavigateBack: () -> Unit,
+    onToggleLayout: () -> Unit,
+    onRetry: () -> Unit,
+    onOpenBook: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tags = listOf("Action", "Battle royale", "Drama", "Mystery", "Psychological", "Thriller")
-
-    var openMenu by remember { mutableStateOf(false) }
-
     val gridState = rememberLazyGridState()
-
-    var isGrid by remember { mutableStateOf(true) }
+    val ready = state as? SeriesDetailsUiState.Ready
+    val isGrid = ready?.isGrid ?: true
 
     Scaffold(
         modifier = modifier,
         topBar = {
+            // "Edit details" and "Delete series" join this bar's menu in Phase 3's second part.
             TopBar(
                 title = "Series Details",
-                subtitle = "Playing Death Games to Put Food on the Table",
+                subtitle = ready?.name,
                 onNavigateBack = onNavigateBack,
-                actionButtons = {
-                    DropdownMenuButton(
-                        expanded = openMenu,
-                        openMenu = {
-                            openMenu = true
-                        },
-                        closeMenu = {
-                            openMenu = false
-                        }
-                    ) {
-                        MenuItem(
-                            onClick = {
-                                openMenu = false
-                                /* TODO: ??? */
-                            },
-                            text = "Edit details",
-                            leadingIconResId = R.drawable.edit
-                        )
-
-                        MenuItem(
-                            onClick = {
-                                openMenu = false
-                                /* TODO: ??? */
-                            },
-                            text = "Delete series",
-                            leadingIconResId = R.drawable.delete
-                        )
-                    }
-                }
             )
         }
     ) { innerPadding ->
-        LazyVerticalGrid(
-            columns = if (isGrid) GridCells.Fixed(2) else GridCells.Fixed(1),
+        val contentModifier = Modifier
+            .fillMaxSize()
+            .padding(top = innerPadding.calculateTopPadding())
+
+        when (state) {
+            SeriesDetailsUiState.Loading -> LoadingState(modifier = contentModifier)
+            is SeriesDetailsUiState.Error -> ErrorState(
+                message = state.message,
+                onRetry = onRetry,
+                modifier = contentModifier,
+            )
+            SeriesDetailsUiState.NotFound -> MessageState(
+                title = "Series not found",
+                message = "This series is no longer in your library.",
+                iconRes = R.drawable.newsstand,
+                modifier = contentModifier,
+                actionLabel = "Go back",
+                onAction = onNavigateBack,
+            )
+            is SeriesDetailsUiState.Ready -> LazyVerticalGrid(
+                columns = if (isGrid) GridCells.Fixed(2) else GridCells.Fixed(1),
+                modifier = contentModifier,
+                state = gridState,
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = innerPadding.calculateBottomPadding() + 16.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                readyContent(state, onToggleLayout, onOpenBook)
+            }
+        }
+    }
+}
+
+private fun LazyGridScope.readyContent(
+    state: SeriesDetailsUiState.Ready,
+    onToggleLayout: () -> Unit,
+    onOpenBook: (Long) -> Unit,
+) {
+    item(span = { GridItemSpan(maxLineSpan) }) {
+        Header(
+            title = state.name,
+            author = state.author,
+            illustrator = state.illustrator,
+            totalVolume = state.volumeCount,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()),
-            state = gridState,
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                bottom = innerPadding.calculateTopPadding()
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Header(
-                    title = "Playing Death Games to Put Food on the Table",
-                    author = "Yushi Ukai",
-                    illustrator = "Nekometaru",
-                    totalVolume = 6,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    volumeCovers = listOf(null, null, null)
-                )
-            }
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            volumeCovers = state.headerCovers
+        )
+    }
 
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                ReadingStatistics(
-                    totalVolume = 6,
-                    currentVolume = 2,
-                    storageUri = "/storage/emulated/0/Pustaka/01a0b844-afbc-75b6-969a-f446fedefb8a",
-                    totalFilesSize = 14.2,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+    if (state.genres.isNotEmpty() || !state.synopsis.isNullOrBlank()) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            // The grid already pads the sides, so the section adds none of its own.
+            SynopsisSection(
+                genres = state.genres,
+                synopsis = state.synopsis,
+                horizontalPadding = 0.dp,
+            )
+        }
+    }
 
-            stickyHeader {
-                VolumesHeader(
-                    onChangeLayout = {
-                        isGrid = !isGrid
-                    }
-                )
-            }
+    item(span = { GridItemSpan(maxLineSpan) }) {
+        ReadingStatistics(
+            totalVolume = state.volumeCount,
+            finishedVolume = state.finishedCount,
+            percent = state.percent,
+            folderPath = state.folderPath,
+            totalSize = state.totalSize,
+            indexedCount = state.indexedCount,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 
-            items(count = 6) { index ->
-                BookCard(
-                    onClick = { /* TODO: ??? */ },
-                    title = "Volume ${index + 1}",
-                    modifier = Modifier.fillMaxWidth(1f),
-                    isGrid = isGrid,
-                    imageUrl = null,
-                    progress = 0f
-                )
-            }
+    stickyHeader {
+        VolumesHeader(
+            volumeCount = state.volumeCount,
+            isGrid = state.isGrid,
+            onChangeLayout = onToggleLayout
+        )
+    }
+
+    if (state.volumes.isEmpty()) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            MessageState(
+                title = "No volumes yet",
+                message = "Copy this series' EPUB files into ${state.folderPath}, then pull down to " +
+                    "refresh in Library or Series.",
+                iconRes = R.drawable.book_5,
+            )
+        }
+    } else {
+        items(items = state.volumes, key = { it.id }) { volume ->
+            BookCard(
+                book = volume,
+                onClick = { onOpenBook(volume.id) },
+                modifier = Modifier.fillMaxWidth(1f),
+                isGrid = state.isGrid,
+            )
         }
     }
 }
@@ -170,8 +200,8 @@ private fun SeriesDetailsScreenContent(
 @Composable
 private fun Header(
     title: String,
-    author: String,
-    illustrator: String,
+    author: String?,
+    illustrator: String?,
     totalVolume: Int,
     modifier: Modifier = Modifier,
     volumeCovers: List<String?> = emptyList()
@@ -200,18 +230,22 @@ private fun Header(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                DetailsWithIcon(
-                    text = author,
-                    iconRes = R.drawable.stylus_fountain_pen
-                )
+                author?.let {
+                    DetailsWithIcon(
+                        text = it,
+                        iconRes = R.drawable.stylus_fountain_pen
+                    )
+                }
+
+                illustrator?.let {
+                    DetailsWithIcon(
+                        text = it,
+                        iconRes = R.drawable.stylus_brush
+                    )
+                }
 
                 DetailsWithIcon(
-                    text = illustrator,
-                    iconRes = R.drawable.stylus_brush
-                )
-
-                DetailsWithIcon(
-                    text = "$totalVolume volumes",
+                    text = volumesLabel(totalVolume),
                     iconRes = R.drawable.book_5
                 )
             }
@@ -248,13 +282,13 @@ fun DetailsWithIcon(
 @Composable
 private fun ReadingStatistics(
     totalVolume: Int,
-    currentVolume: Int,
-    storageUri: String,
-    totalFilesSize: Double,
+    finishedVolume: Int,
+    percent: Int,
+    folderPath: String,
+    totalSize: String,
+    indexedCount: Int,
     modifier: Modifier = Modifier
 ) {
-    val volumePercentage = (currentVolume.toFloat() / totalVolume.toFloat()) * 100
-
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -295,7 +329,7 @@ private fun ReadingStatistics(
                         )
 
                         Text(
-                            text = "$currentVolume of $totalVolume volumes read",
+                            text = "$finishedVolume of $totalVolume volumes read",
                             fontWeight = FontWeight.Normal,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -303,14 +337,14 @@ private fun ReadingStatistics(
                 }
 
                 Text(
-                    text = "${volumePercentage.toInt()}%",
+                    text = "$percent%",
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleLarge
                 )
             }
 
             LinearProgressIndicator(
-                progress = { (volumePercentage / 100) },
+                progress = { percent / 100f },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
@@ -331,38 +365,32 @@ private fun ReadingStatistics(
                         horizontal = 16.dp,
                         vertical = 8.dp
                     ),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.padding(end = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.storage),
-                        contentDescription = "Book chapter",
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.tertiary
+                Icon(
+                    painter = painterResource(id = R.drawable.storage),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+
+                Column {
+                    Text(
+                        text = folderPath,
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = FontFamily.Monospace,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.labelMedium
                     )
 
-                    Column {
-                        Text(
-                            text = storageUri,
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            color = MaterialTheme.colorScheme.secondary,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = FontFamily.Monospace,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelMedium
-                        )
-
-                        Text(
-                            text = "$totalFilesSize MB",
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
+                    Text(
+                        text = "$totalSize · $indexedCount of $totalVolume files indexed",
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 }
             }
         }
@@ -371,45 +399,39 @@ private fun ReadingStatistics(
 
 @Composable
 private fun VolumesHeader(
+    volumeCount: Int,
+    isGrid: Boolean,
     onChangeLayout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.background),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .background(color = MaterialTheme.colorScheme.background)
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Volumes in Sequence",
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyLarge
-                )
+        Column {
+            Text(
+                text = "Volumes in Sequence",
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyLarge
+            )
 
-                Text(
-                    text = "6 Titles Indexed Locally",
-                    fontWeight = FontWeight.Normal,
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            IconButton(onClick = onChangeLayout) {
-                Icon(
-                    painter = painterResource(id = R.drawable.grid),
-                    contentDescription = "Grid list"
-                )
-            }
+            Text(
+                text = volumesLabel(volumeCount),
+                fontWeight = FontWeight.Normal,
+                style = MaterialTheme.typography.labelMedium
+            )
         }
 
-
+        IconButton(onClick = onChangeLayout) {
+            Icon(
+                painter = painterResource(id = if (isGrid) R.drawable.list else R.drawable.grid),
+                contentDescription = if (isGrid) "Show as list" else "Show as grid"
+            )
+        }
     }
 }
 
@@ -418,7 +440,36 @@ private fun VolumesHeader(
 private fun SeriesDetailsScreenPreview() {
     PustakaTheme {
         SeriesDetailsScreenContent(
-            onNavigateBack = {}
+            state = SeriesDetailsUiState.Ready(
+                name = "Playing Death Games to Put Food on the Table",
+                author = "Yushi Ukai",
+                illustrator = "Nekometaru",
+                synopsis = "Yuki wakes up to find herself in an unfamiliar manor.",
+                genres = listOf("Action", "Thriller"),
+                headerCovers = listOf(null, null, null),
+                volumeCount = 3,
+                finishedCount = 1,
+                percent = 33,
+                folderPath = "/storage/emulated/0/Pustaka/Playing Death Games",
+                totalSize = "14.2 MB",
+                indexedCount = 3,
+                volumes = List(3) { index ->
+                    BookItem(
+                        id = index.toLong(),
+                        title = "Playing Death Games, Vol. 0${index + 1}",
+                        credits = "Yushi Ukai",
+                        coverPath = null,
+                        state = if (index == 0) BookState.FINISHED else BookState.UNREAD,
+                        percent = if (index == 0) 100 else 0,
+                        volumeLabel = "Volume ${index + 1}",
+                    )
+                },
+                isGrid = true,
+            ),
+            onNavigateBack = {},
+            onToggleLayout = {},
+            onRetry = {},
+            onOpenBook = {},
         )
     }
 }
