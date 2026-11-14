@@ -1,9 +1,11 @@
 package my.naqibrafiqi.pustaka.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,7 +17,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -27,6 +28,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,23 +38,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.ui.model.BookState
+import my.naqibrafiqi.pustaka.ui.model.SeriesItem
+import my.naqibrafiqi.pustaka.ui.model.VolumePreviewItem
+import my.naqibrafiqi.pustaka.ui.model.volumesLabel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 @Composable
 fun BookSeriesCard(
-    title: String,
-    author: String,
-    illustrator: String,
-    totalVolume: Int,
-    genres: List<String>,
-    onStartReading: () -> Unit,
+    series: SeriesItem,
+    onContinueReading: () -> Unit,
     onViewSeries: () -> Unit,
+    onOpenVolume: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    latestBookCover: String? = null,
-    currentVolume: Int = 0,
     shape: Shape = RoundedCornerShape(16.dp)
 ) {
-    var showVolumePreview by rememberSaveable { mutableStateOf(false) }
+    var showVolumePreview by rememberSaveable(series.id) { mutableStateOf(false) }
 
     Card(
         onClick = {
@@ -72,25 +74,22 @@ fun BookSeriesCard(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             TopAction(
-                genres = genres,
-                totalVolume = totalVolume
+                genres = series.genres,
+                totalVolume = series.volumeCount
             )
 
-            Details(
-                title = title,
-                author = author,
-                illustrator = illustrator,
-                currentVolume = currentVolume,
-                totalVolume = totalVolume,
-                latestBookCover = latestBookCover
-            )
+            Details(series = series)
 
             AnimatedVisibility(visible = showVolumePreview) {
-                VolumePreview()
+                VolumePreview(
+                    volumes = series.preview,
+                    onOpenVolume = onOpenVolume
+                )
             }
 
             BottomAction(
-                onStartReading = onStartReading,
+                canContinue = series.continueBookId != null,
+                onStartReading = onContinueReading,
                 onViewSeries = onViewSeries
             )
         }
@@ -104,11 +103,13 @@ private fun TopAction(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        if (genres.isNotEmpty()) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -118,51 +119,35 @@ private fun TopAction(
                     color = MaterialTheme.colorScheme.secondary.copy(alpha = .2f)
                 )
 
-                Text(
-                    text = "+${genres.size - 1}",
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.labelLarge
-                )
+                if (genres.size > 1) {
+                    Text(
+                        text = "+${genres.size - 1}",
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
-
-            TagChip(
-                text = "$totalVolume volumes",
-                color = MaterialTheme.colorScheme.primary
-            )
         }
 
-        IconButton(onClick = { /* TODO: ??? */ }) {
-            Icon(
-                painter = painterResource(id = R.drawable.more_vert),
-                contentDescription = null
-            )
-        }
+        TagChip(
+            text = volumesLabel(totalVolume),
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
 @Composable
 private fun Details(
-    title: String,
-    author: String,
-    illustrator: String,
-    currentVolume: Int,
-    totalVolume: Int,
-    modifier: Modifier = Modifier,
-    latestBookCover: String? = null
+    series: SeriesItem,
+    modifier: Modifier = Modifier
 ) {
-    val progressPercentage = if (totalVolume > 0) {
-        (currentVolume / totalVolume) * 100
-    } else {
-        0
-    }
-
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         BookCover(
             modifier = Modifier.weight(1 / 2f),
-            imageUrl = latestBookCover
+            imageUrl = series.coverPath
         )
 
         Column(
@@ -171,7 +156,7 @@ private fun Details(
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = title,
+                    text = series.name,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Medium,
                     overflow = TextOverflow.Ellipsis,
@@ -181,7 +166,7 @@ private fun Details(
                 )
 
                 Text(
-                    text = "$author, $illustrator",
+                    text = series.credits ?: "Unknown author",
                     fontWeight = FontWeight.Normal,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -192,27 +177,21 @@ private fun Details(
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.book_5),
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f)
-                        )
+                    Icon(
+                        painter = painterResource(id = R.drawable.book_5),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f)
+                    )
 
-                        Text(
-                            text = "Reading: Volume $currentVolume",
-                            fontWeight = FontWeight.Medium,
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
+                    Text(
+                        text = series.currentLabel,
+                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
 
                 Row(
@@ -221,7 +200,7 @@ private fun Details(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     LinearProgressIndicator(
-                        progress = { (progressPercentage / 100).toFloat() },
+                        progress = { series.percent / 100f },
                         modifier = Modifier
                             .weight(1f)
                             .height(8.dp),
@@ -232,7 +211,7 @@ private fun Details(
                     )
 
                     Text(
-                        text = "$progressPercentage%",
+                        text = "${series.percent}%",
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -240,7 +219,7 @@ private fun Details(
             }
 
             Text(
-                text = "$currentVolume of $totalVolume read",
+                text = "${series.finishedCount} of ${series.volumeCount} read",
                 fontWeight = FontWeight.Normal,
                 style = MaterialTheme.typography.labelLarge
             )
@@ -250,6 +229,7 @@ private fun Details(
 
 @Composable
 private fun BottomAction(
+    canContinue: Boolean,
     onStartReading: () -> Unit,
     onViewSeries: () -> Unit,
     modifier: Modifier = Modifier
@@ -261,6 +241,7 @@ private fun BottomAction(
     ) {
         Button(
             onClick = onStartReading,
+            enabled = canContinue,
             modifier = Modifier.weight(1f)
         ) {
             Row(
@@ -269,7 +250,7 @@ private fun BottomAction(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.play_arrow),
-                    contentDescription = "Play",
+                    contentDescription = null,
                     modifier = Modifier.size(24.dp)
                 )
 
@@ -284,7 +265,7 @@ private fun BottomAction(
         FilledTonalIconButton(onClick = onViewSeries) {
             Icon(
                 painter = painterResource(id = R.drawable.list),
-                contentDescription = "List",
+                contentDescription = "View series",
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -293,6 +274,8 @@ private fun BottomAction(
 
 @Composable
 private fun VolumePreview(
+    volumes: List<VolumePreviewItem>,
+    onOpenVolume: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -304,82 +287,54 @@ private fun VolumePreview(
             thickness = Dp.Hairline
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Text(
+            text = "Volume sequence",
+            style = MaterialTheme.typography.labelLarge
+        )
+
+        if (volumes.isEmpty()) {
             Text(
-                text = "Volume sequence",
-                style = MaterialTheme.typography.labelLarge
+                text = "This folder has no EPUB files yet.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium
             )
+            return@Column
         }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                BookCover()
+            volumes.forEach { volume ->
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onOpenVolume(volume.bookId) }
+                        .alpha(if (volume.state == BookState.MISSING) .5f else 1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    BookCover(imageUrl = volume.coverPath)
 
-                Column(modifier = Modifier.padding(start = 8.dp)) {
-                    Text(
-                        text = "Volume 1",
-                        fontWeight = FontWeight.Normal,
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    Column(modifier = Modifier.padding(start = 8.dp)) {
+                        Text(
+                            text = volume.label,
+                            fontWeight = FontWeight.Normal,
+                            style = MaterialTheme.typography.labelLarge
+                        )
 
-                    Text(
-                        text = "Finished",
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                        Text(
+                            text = volume.state.label,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 }
             }
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                BookCover()
-
-                Column(modifier = Modifier.padding(start = 8.dp)) {
-                    Text(
-                        text = "Volume 2",
-                        fontWeight = FontWeight.Normal,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-
-                    Text(
-                        text = "Reading",
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                BookCover()
-
-                Column(modifier = Modifier.padding(start = 8.dp)) {
-                    Text(
-                        text = "Volume 3",
-                        fontWeight = FontWeight.Normal,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-
-                    Text(
-                        text = "Ready",
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
+            // Keeps covers the same size when there are fewer than three volumes.
+            repeat(3 - volumes.size) {
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
@@ -390,15 +345,27 @@ private fun VolumePreview(
 private fun BookSeriesCardPreview() {
     PustakaTheme {
         BookSeriesCard(
-            title = "Playing Death Game to Put Food On The Table",
-            author = "Yushi Ukai",
-            illustrator = "Nekometaru",
-            totalVolume = 6,
-            genres = listOf("Action", "Adventure"),
-            onStartReading = {},
+            series = SeriesItem(
+                id = 1,
+                name = "Playing Death Games to Put Food on the Table",
+                author = "Yushi Ukai",
+                illustrator = "Nekometaru",
+                genres = listOf("Action", "Adventure"),
+                coverPath = null,
+                volumeCount = 6,
+                finishedCount = 1,
+                percent = 16,
+                currentLabel = "Reading: Volume 2",
+                continueBookId = 2,
+                preview = listOf(
+                    VolumePreviewItem(1, "Volume 1", null, BookState.FINISHED),
+                    VolumePreviewItem(2, "Volume 2", null, BookState.READING),
+                    VolumePreviewItem(3, "Volume 3", null, BookState.UNREAD),
+                ),
+            ),
+            onContinueReading = {},
             onViewSeries = {},
-            latestBookCover = null,
-            currentVolume = 2
+            onOpenVolume = {},
         )
     }
 }

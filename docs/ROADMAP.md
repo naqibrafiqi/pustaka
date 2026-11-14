@@ -80,7 +80,9 @@ Connect the app to real files, following [local_storage_and_library.md](local_st
 **Done when:** you can copy a standalone EPUB and a folder of volumes into `Pustaka/`, pull to refresh, and see them with the right details and in the right order. Renaming one of the files keeps its progress.
 
 ### Phase 3: Connect the existing screens to real data (L)
-Replace the placeholder data.
+Replace the placeholder data. This phase is split into two pull requests:
+1. The four screens on real data, with their ViewModels, empty, loading and error states, and "More info". ✅ Done in PR 1.
+2. Editing series and books, deleting, and "Create series". ✅ Done in PR 2.
 - Give each screen a ViewModel and a UI state type: Library, Series, Series Details and Book Details.
 - **Library:** the "Currently Reading" card, "Recently Added", and the All / Currently reading / Unread filters with real counts.
 - **Series:** the list of series, the volume preview, and "Continue reading".
@@ -110,9 +112,10 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 - **Highlights tab:** highlights grouped by series and book, with search. Tapping one opens the reader at that spot.
 - Edit and delete highlights, and export them as Markdown.
 
-### Phase 6: Settings (S–M)
+### Phase 6: Settings, search and sorting (M)
 - The Pustaka folder: change it (for example to `Download/Pustaka`) and rescan.
 - Hidden items: a list of series and books removed from the library, with a button to restore each one.
+- Search, sorting and layout: the search, sort/filter and grid buttons already in the Library and Series top bars. Search finds series and books by name, author and genre. Series can be sorted by name, recently added or recently read, and shown as cards or a compact grid. (Decided in Phase 3: the buttons were designed but not in any phase.)
 - App theme (system, light or dark, with an option to use the phone's dynamic colours).
 - Default reader settings.
 - Storage usage and clearing the cover cache.
@@ -141,9 +144,9 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 |---|---|
 | 0. Housekeeping | Done |
 | 1. Data foundation | Done |
-| 2. Library folder and scanning | In review (two PRs into `1.0.0`) |
-| 3. Connect screens to data | Not started |
+| 2. Library folder and scanning | Done |
+| 3. Connect screens to data | In review (two PRs into `1.0.0`) |
 | 4. Reader | Not started |
 | 5. Highlights | Not started |
-| 6. Settings | Not started |
+| 6. Settings, search and sorting | Not started |
 | 7. Polish and release | Not started |
