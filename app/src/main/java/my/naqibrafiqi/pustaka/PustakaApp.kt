@@ -7,13 +7,18 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
@@ -27,10 +32,18 @@ import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.impl.seriesEntryBuilder
 import my.naqibrafiqi.pustaka.ui.feature.settings.api.SettingsRoute
 import my.naqibrafiqi.pustaka.ui.feature.settings.impl.settingsEntryBuilder
+import my.naqibrafiqi.pustaka.ui.scan.LibraryScanViewModel
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
 
 @Composable
 fun PustakaApp() {
+    // Shared by the whole app, so the screens' pull-to-refresh and this message use the same one.
+    val scanViewModel: LibraryScanViewModel = hiltViewModel()
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(scanViewModel) {
+        scanViewModel.messages.collect { snackbarHostState.showSnackbar(it) }
+    }
+
     val libraryBackStack = rememberNavBackStack(LibraryRoute)
     val seriesBackStack = rememberNavBackStack(SeriesRoute)
     val highlightsBackStack = rememberNavBackStack(HighlightsRoute)
@@ -58,6 +71,7 @@ fun PustakaApp() {
 
     CompositionLocalProvider(LocalAppNavigator provides currentBackStack) {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 AnimatedVisibility(
                     visible = isMainScreen,

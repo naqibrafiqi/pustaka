@@ -1,6 +1,6 @@
 # Local storage and library
 
-_Last updated: 2026-11-13_
+_Last updated: 2026-11-14_
 
 Pustaka builds its library from a folder that the user manages. The user adds, removes and organises EPUB files with any file manager or sync tool, and the app reads that folder and shows what it finds. **The app never renames, moves or edits the user's files.** The only time it changes the folder is when the user explicitly asks to delete something (see [Deleting](#deleting)).
 
@@ -46,6 +46,8 @@ The app is distributed through GitHub (sideloaded), not the Play Store, so it us
 2. Once access is granted, the app creates `Pustaka/` if it doesn't exist and runs the first scan.
 3. If access is refused, the app shows a screen with a "Grant access" button instead of the library.
 
+Access is checked again every time the app comes back to the foreground, since the user can turn it off in the system settings at any time. Without access, the app shows the "Grant access" screen again.
+
 Android doesn't let an app run anything when it's installed, so the folder is created on first launch, after access is granted.
 
 ---
@@ -64,7 +66,11 @@ Android doesn't let an app run anything when it's installed, so the folder is cr
 4. Mark books whose files have disappeared as **missing** (see [Missing files](#missing-files)).
 5. Show a short result, for example "3 new books found" or "Library is up to date".
 
-Large scans run in a background job, so they keep going if the user leaves the app.
+Scans run in a background job (WorkManager), so they keep going if the user leaves the app. Only one scan runs at a time: asking for a scan while one is waiting or running joins that one.
+
+The result is shown as a short message. Scans the user asks for (pull-to-refresh or "Rescan library") always show one, even if it's only "Library is up to date". Automatic scans (when the app opens or comes back) only show one when something changed, so opening the app stays quiet.
+
+Each scan also creates the library folder if it's missing, as long as the app has access to the files.
 
 ---
 
@@ -77,6 +83,10 @@ The ID stored inside the EPUB (`dc:identifier` in `content.opf`) is saved too, b
 **On each scan:**
 - A new path with a **known** fingerprint is treated as a move or rename. The app updates the book's path and keeps its progress, highlights and edited details.
 - A new path with an **unknown** fingerprint is a new book.
+- An exact copy of a book that's still in its old place is a second book, because both files exist.
+- A file that keeps its path but changes (its size or last-modified time is different) is read again. It keeps its progress and edited details.
+
+**Series folders** are matched by their path. When a series folder is renamed, its books turn up under a new path with known fingerprints, so the app treats the folder as the same series. It keeps the series' edited name and details, and whether it's hidden. A series whose folder has gone is removed once it has no books left. While it still has missing books, it stays.
 
 ---
 
@@ -99,12 +109,16 @@ The EPUB files are read with the **[Readium Kotlin Toolkit](https://github.com/r
 | Cover | the manifest item marked as the cover | Cover images, saved in the app's cache |
 | Total pages | Readium's position list | "Page X of Y" |
 
+Readium counts every `dc:creator` as an author, whatever its role, so an illustrator listed as `<dc:creator opf:role="ill">` would show up as an author. Pustaka reads the creators and their roles from `content.opf` itself: the `opf:role` attribute in EPUB 2, and `<meta property="role" refines="…">` in EPUB 3. A `dc:contributor` with no role is saved with the role `ctb` ("contributor"), so it isn't taken for an author.
+
+A file that can't be opened, for example because it's damaged, is still added to the library with its filename as its name. It's read again when the file changes.
+
 ### Default names and editing
 - **Series name** is the folder name by default.
 - **Book name** is the filename without `.epub` by default.
 - The user can edit every series and book detail, names included. Edits are saved in the app's database and **never written into the files**. Each field can be reset to its default.
 - On the "Edit details" screen, a "Use details from file" button fills the fields from the EPUB's own details. This helps when a filename is untidy, such as `[Group] Series v04 (Digital).epub`.
-- Series details other than the name (author, illustrator, synopsis, genres) are filled from the series' first volume by default.
+- Series details other than the name are filled from the series' first volume by default, using the details in that volume's file: its authors and illustrators, its description as the synopsis, its first subject as the main genre and the other subjects as tags, and its cover.
 
 ---
 

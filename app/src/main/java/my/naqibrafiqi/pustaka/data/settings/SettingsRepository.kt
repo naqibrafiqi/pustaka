@@ -2,6 +2,7 @@ package my.naqibrafiqi.pustaka.data.settings
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,8 @@ import javax.inject.Qualifier
 data class AppSettings(
     /** The folder the library is read from, `/storage/emulated/0/Pustaka` by default. */
     val libraryFolderPath: String,
+    /** Whether the welcome screen has been shown, so a refusal leads to the "Grant access" screen. */
+    val hasSeenWelcome: Boolean = false,
 )
 
 interface SettingsRepository {
@@ -24,6 +27,8 @@ interface SettingsRepository {
 
     /** Goes back to the default library folder. */
     suspend fun resetLibraryFolderPath()
+
+    suspend fun setHasSeenWelcome()
 }
 
 /** The default library folder path. */
@@ -40,6 +45,7 @@ class DataStoreSettingsRepository @Inject constructor(
         .map { preferences ->
             AppSettings(
                 libraryFolderPath = preferences[Keys.LIBRARY_FOLDER_PATH] ?: defaultLibraryFolderPath,
+                hasSeenWelcome = preferences[Keys.HAS_SEEN_WELCOME] ?: false,
             )
         }
         .distinctUntilChanged()
@@ -54,7 +60,12 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it.remove(Keys.LIBRARY_FOLDER_PATH) }
     }
 
+    override suspend fun setHasSeenWelcome() {
+        dataStore.edit { it[Keys.HAS_SEEN_WELCOME] = true }
+    }
+
     private object Keys {
         val LIBRARY_FOLDER_PATH = stringPreferencesKey("library_folder_path")
+        val HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
     }
 }

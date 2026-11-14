@@ -55,20 +55,27 @@ Build the database and the layer that screens will read data through.
 **Done when:** the data layer is covered by tests and nothing in the UI changes yet.
 
 ### Phase 2: Library folder and scanning (L)
-Connect the app to real files, following [local_storage_and_library.md](local_storage_and_library.md).
+Connect the app to real files, following [local_storage_and_library.md](local_storage_and_library.md). This phase is split into two pull requests:
+1. The scanner and reading book details with Readium.
+2. The permission and first-launch screens, and when scans run.
+
 - **Permissions and first launch:**
   - A welcome screen that explains the "All files access" permission, then opens the system screen to turn it on. Android 10 uses the older storage permissions instead.
   - Create `Pustaka/` once access is granted. If access is refused, show a screen with a "Grant access" button.
+  - ✅ Done in PR 2. Access is checked again whenever the app comes back, because it can be turned off in the system settings.
 - **Scanner:**
   - Read `Pustaka/` one level deep: EPUBs directly inside become standalone books, folders become series (even if empty), and anything deeper or starting with `.` is ignored.
   - Only open files that are new or changed, judging by size and last-modified time.
   - Recognise moved or renamed books by fingerprint, so their progress is kept.
   - Mark books whose files have gone as missing, and restore them if the file comes back.
+  - ✅ Done in PR 1, including series folders that are renamed.
 - **Reading book details with Readium:**
   - Read title, creators with their roles, publisher, date, identifier, language, description, subjects and series position from `content.opf`.
   - Save the cover to the app's cache and count the total pages.
+  - ✅ Done in PR 1 with Readium 3.3.0. Readium 3.4.0 needs Kotlin 2.4, and the project is on Kotlin 2.2, so upgrading is left for later.
 - **Volume order:** the user's own number first, then the number in the EPUB, then a number in the filename, then the filename (10 after 9).
 - **When scans run:** every time the app opens or comes back to the foreground, on pull-to-refresh, and from Settings. Scans run as a background job (WorkManager) and report a result like "3 new books found".
+  - ✅ Done in PR 2. Settings only has the library section for now ("Library folder" and "Rescan library"). The rest of Settings comes in Phase 6.
 
 **Done when:** you can copy a standalone EPUB and a folder of volumes into `Pustaka/`, pull to refresh, and see them with the right details and in the right order. Renaming one of the files keeps its progress.
 
@@ -133,8 +140,8 @@ The core feature, built on Readium's reader view. Readium's reader is an older A
 | Phase | Status |
 |---|---|
 | 0. Housekeeping | Done |
-| 1. Data foundation | In review (PR into `1.0.0`) |
-| 2. Library folder and scanning | Not started (design agreed) |
+| 1. Data foundation | Done |
+| 2. Library folder and scanning | In review (two PRs into `1.0.0`) |
 | 3. Connect screens to data | Not started |
 | 4. Reader | Not started |
 | 5. Highlights | Not started |
