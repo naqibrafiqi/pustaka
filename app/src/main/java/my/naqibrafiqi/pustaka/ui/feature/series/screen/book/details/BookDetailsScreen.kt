@@ -25,6 +25,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -59,11 +61,17 @@ fun BookDetailsScreen(
     state: BookDetailsUiState,
     onNavigateBack: () -> Unit,
     onRetry: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     BookDetailsScreenContent(
         state = state,
         onNavigateBack = onNavigateBack,
         onRetry = onRetry,
+        onEdit = onEdit,
+        onDelete = onDelete,
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -72,6 +80,9 @@ private fun BookDetailsScreenContent(
     state: BookDetailsUiState,
     onNavigateBack: () -> Unit,
     onRetry: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
     val ready = state as? BookDetailsUiState.Ready
@@ -82,6 +93,7 @@ private fun BookDetailsScreenContent(
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopBar(
                 title = "Book Details",
@@ -89,7 +101,6 @@ private fun BookDetailsScreenContent(
                 onNavigateBack = onNavigateBack,
                 actionButtons = if (ready == null) null else {
                     {
-                        // "Edit details" and "Delete book" join this menu in Phase 3's second part.
                         DropdownMenuButton(
                             expanded = openMenu,
                             openMenu = {
@@ -106,6 +117,24 @@ private fun BookDetailsScreenContent(
                                 },
                                 text = "More info",
                                 leadingIconResId = R.drawable.info
+                            )
+
+                            MenuItem(
+                                onClick = {
+                                    openMenu = false
+                                    onEdit()
+                                },
+                                text = "Edit details",
+                                leadingIconResId = R.drawable.edit
+                            )
+
+                            MenuItem(
+                                onClick = {
+                                    openMenu = false
+                                    onDelete()
+                                },
+                                text = "Delete book",
+                                leadingIconResId = R.drawable.delete
                             )
                         }
                     }
@@ -465,6 +494,9 @@ private fun BookDetailsScreenPreview() {
             ),
             onNavigateBack = {},
             onRetry = {},
+            onEdit = {},
+            onDelete = {},
+            snackbarHostState = SnackbarHostState(),
         )
     }
 }

@@ -7,10 +7,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +50,11 @@ fun SeriesScreen(
     onRetry: () -> Unit,
     onOpenSeries: (Long) -> Unit,
     onOpenBook: (Long) -> Unit,
+    createDialog: CreateSeriesDialog?,
+    onNewSeries: () -> Unit,
+    onNewNameChange: (String) -> Unit,
+    onCreateSeries: () -> Unit,
+    onDismissCreate: () -> Unit,
 ) {
     SeriesScreenContent(
         state = state,
@@ -40,7 +63,18 @@ fun SeriesScreen(
         onRetry = onRetry,
         onOpenSeries = onOpenSeries,
         onOpenBook = onOpenBook,
+        onNewSeries = onNewSeries,
     )
+
+    if (createDialog != null) {
+        CreateSeriesDialogContent(
+            dialog = createDialog,
+            libraryFolderPath = (state as? SeriesUiState.Ready)?.libraryFolderPath,
+            onNameChange = onNewNameChange,
+            onCreate = onCreateSeries,
+            onDismiss = onDismissCreate,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,12 +86,22 @@ private fun SeriesScreenContent(
     onRetry: () -> Unit,
     onOpenSeries: (Long) -> Unit,
     onOpenBook: (Long) -> Unit,
+    onNewSeries: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
 
     Scaffold(
         modifier = modifier,
+        floatingActionButton = {
+            if (state is SeriesUiState.Ready && state.series.isNotEmpty()) {
+                ExtendedFloatingActionButton(
+                    onClick = onNewSeries,
+                    icon = { Icon(painter = painterResource(R.drawable.add), contentDescription = null) },
+                    text = { Text("New series") },
+                )
+            }
+        },
         topBar = {
             TopBar(
                 title = "Series",
@@ -95,7 +139,8 @@ private fun SeriesScreenContent(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = listState,
-                contentPadding = PaddingValues(top = 8.dp, bottom = innerPadding.calculateBottomPadding() + 16.dp),
+                // Leaves room under the last card for the "New series" button.
+                contentPadding = PaddingValues(top = 8.dp, bottom = innerPadding.calculateBottomPadding() + 88.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 when (state) {
@@ -107,6 +152,8 @@ private fun SeriesScreenContent(
                                 message = "Each folder inside ${state.libraryFolderPath} becomes a series, " +
                                     "with its EPUB files as the volumes. Pull down to refresh.",
                                 iconRes = R.drawable.newsstand,
+                                actionLabel = "New series",
+                                onAction = onNewSeries,
                             )
                         }
                     } else {
@@ -157,6 +204,55 @@ private fun SeriesScreenPreview() {
             onRetry = {},
             onOpenSeries = {},
             onOpenBook = {},
+            onNewSeries = {},
         )
     }
+}
+
+@Composable
+private fun CreateSeriesDialogContent(
+    dialog: CreateSeriesDialog,
+    libraryFolderPath: String?,
+    onNameChange: (String) -> Unit,
+    onCreate: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("New series") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Creates an empty folder in ${libraryFolderPath ?: "your library folder"}. " +
+                        "Copy the volumes into it, then pull down to refresh.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                OutlinedTextField(
+                    value = dialog.name,
+                    onValueChange = onNameChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    label = { Text("Folder name") },
+                    singleLine = true,
+                    isError = dialog.error != null,
+                    supportingText = dialog.error?.let { error -> { Text(error) } },
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { onCreate() }),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onCreate, enabled = !dialog.isCreating && dialog.name.isNotBlank()) {
+                Text("Create")
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }

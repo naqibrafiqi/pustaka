@@ -7,7 +7,10 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +21,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.data.library.DeleteResult
+import my.naqibrafiqi.pustaka.data.library.LibraryFiles
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
 import my.naqibrafiqi.pustaka.data.model.ReadingSession
@@ -25,6 +31,7 @@ import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import my.naqibrafiqi.pustaka.ui.model.BookState
+import my.naqibrafiqi.pustaka.ui.model.DetailsEvent
 import my.naqibrafiqi.pustaka.ui.model.ReadingStats
 import my.naqibrafiqi.pustaka.ui.model.SeriesProgress
 import my.naqibrafiqi.pustaka.ui.model.creditLine
@@ -34,9 +41,25 @@ import my.naqibrafiqi.pustaka.ui.model.pagesLabel
 import my.naqibrafiqi.pustaka.ui.model.percentRead
 import my.naqibrafiqi.pustaka.ui.model.timeLeftLabel
 import my.naqibrafiqi.pustaka.ui.model.velocityLabel
+import java.io.File
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+/** The steps of "Delete book". See "Deleting" in `docs/local_storage_and_library.md`. */
+sealed interface BookDeleteDialog {
+    val name: String
+    val fileName: String
+
+    /** "Remove from library" or "Delete file". */
+    data class Choose(override val name: String, override val fileName: String) : BookDeleteDialog
+
+    /** The last check before the file is deleted. */
+    data class ConfirmDeleteFile(override val name: String, override val fileName: String) : BookDeleteDialog
+
+    /** The file has gone already, so only the book's data is left to remove. */
+    data class ConfirmForget(override val name: String, override val fileName: String) : BookDeleteDialog
+}
 
 /** One line in the "More info" dialog. */
 data class InfoRow(val label: String, val value: String)
@@ -81,6 +104,7 @@ class BookDetailsViewModel @AssistedInject constructor(
     private val books: BookRepository,
     private val reading: ReadingRepository,
     private val seriesRepository: SeriesRepository,
+    private val libraryFiles: LibraryFiles,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -103,6 +127,64 @@ class BookDetailsViewModel @AssistedInject constructor(
             }.catch { emit(BookDetailsUiState.Error("Couldn't load this book.")) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), BookDetailsUiState.Loading)
+
+    private val _deleteDialog = MutableStateFlow<BookDeleteDialog?>(null)
+
+    /** The delete dialog that's showing, if any. */
+    val deleteDialog: StateFlow<BookDeleteDialog?> = _deleteDialog.asStateFlow()
+
+    private val _events = Channel<DetailsEvent>(Channel.BUFFERED)
+    val events: Flow<DetailsEvent> = _events.receiveAsFlow()
+
+    /**
+     * "Delete book". A book whose file has gone can only be removed for good. Otherwise the user
+     * picks between removing it from the library and deleting its file.
+     */
+    fun requestDelete() {
+        viewModelScope.launch {
+            val book = books.getBook(bookId) ?: return@launch
+            val fileName = File(book.filePath).name
+            _deleteDialog.value = if (book.isMissing) {
+                BookDeleteDialog.ConfirmForget(book.name.value, fileName)
+            } else {
+                BookDeleteDialog.Choose(book.name.value, fileName)
+            }
+        }
+    }
+
+    fun chooseDeleteFile() {
+        val choose = _deleteDialog.value as? BookDeleteDialog.Choose ?: return
+        _deleteDialog.value = BookDeleteDialog.ConfirmDeleteFile(choose.name, choose.fileName)
+    }
+
+    /** Hides the book. Its file isn't touched. */
+    fun removeFromLibrary() = finish { books.setHidden(bookId, true) }
+
+    /** Deletes the book's data. Only offered once its file has gone. */
+    fun forget() = finish { books.deleteBook(bookId) }
+
+    /** Deletes the file, after the user has confirmed. */
+    fun deleteFile() {
+        _deleteDialog.value = null
+        viewModelScope.launch {
+            when (val result = libraryFiles.deleteBookFile(bookId)) {
+                DeleteResult.Deleted -> _events.send(DetailsEvent.Closed)
+                is DeleteResult.Failed -> _events.send(DetailsEvent.Message(result.message))
+            }
+        }
+    }
+
+    fun dismissDeleteDialog() {
+        _deleteDialog.value = null
+    }
+
+    private fun finish(action: suspend () -> Unit) {
+        _deleteDialog.value = null
+        viewModelScope.launch {
+            action()
+            _events.send(DetailsEvent.Closed)
+        }
+    }
 
     fun retry() {
         attempt.value++
