@@ -31,6 +31,10 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D16 | What happens to books from the old folder after switching | They're **kept as missing**, with their progress and highlights. If the same files turn up in the new folder, they're matched by fingerprint and come back. |
 | D17 | How search works | **One search screen**, opened from the search button in Library or Series, with results grouped into Series and Books. It matches name, author and genre. |
 | D18 | Whether sort order and layout are remembered | **Yes.** The Series sort and layout and the Library grid/list choice are saved with the other settings. |
+| D19 | Pustaka's own colour scheme | **Warm paper:** an amber-brown primary (`#8B5A2B`), cream surfaces and a muted green accent, with deep brown surfaces in dark mode. The app icon uses the same palette. |
+| D20 | Whether dynamic colour is on by default | **Off.** Pustaka's own colours show out of the box, and wallpaper colours can be switched on in Settings (Android 12 and newer). |
+| D21 | Who creates the release signing key | **The PM.** Claude provides the `keytool` command. The keystore and its passwords stay outside git, in a `keystore.properties` file the build reads. Claude never sees the passwords. |
+| D22 | How 1.0.0 is published | **The PM publishes it.** Claude builds the signed APK and writes the release notes in the repo. The PM creates the GitHub Release and uploads the APK. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md). No decisions are open right now.
 
@@ -144,6 +148,11 @@ This phase is split into two pull requests:
 - About screen and open-source licences.
 
 ### Phase 7: Polish and release (M)
+This phase is split into three pull requests:
+1. Pustaka's colour scheme (D19, D20), the app icon, and a contrast check.
+2. All text moved into the string resource file, and the accessibility pass.
+3. R8 code shrinking, UI tests for the main flows, the signed release build (D21) and the 1.0.0 release notes (D22).
+
 - Move all hard-coded text into the string resource file.
 - Accessibility pass: content descriptions, touch targets, contrast.
 - Pustaka's own colour scheme to replace the default purple template colours.
@@ -170,5 +179,5 @@ This phase is split into two pull requests:
 | 3. Connect screens to data | Done |
 | 4. Reader | Done |
 | 5. Highlights | Done |
-| 6. Settings, search and sorting | In review (PR 1 merged, PR 2 into `1.0.0`) |
-| 7. Polish and release | Not started |
+| 6. Settings, search and sorting | Done |
+| 7. Polish and release | In progress (PR 1 of 3 in review) |

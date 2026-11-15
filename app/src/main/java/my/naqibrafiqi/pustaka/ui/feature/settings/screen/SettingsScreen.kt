@@ -293,7 +293,7 @@ private fun SettingsScreenPreview() {
                 hiddenSeries = 1,
                 hiddenBooks = 2,
                 appTheme = AppTheme.SYSTEM,
-                dynamicColor = true,
+                dynamicColor = false,
             ),
             storage = StorageReport(bookFiles = 182_400_000, bookCount = 8, covers = 3_400_000, appData = 512_000),
             isScanning = false,
