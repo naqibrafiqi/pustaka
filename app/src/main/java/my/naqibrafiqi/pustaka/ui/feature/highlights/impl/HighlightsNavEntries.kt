@@ -9,10 +9,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.feature.highlights.api.HighlightsRoute
 import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.HighlightsEvent
 import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.HighlightsScreen
@@ -29,14 +31,15 @@ fun EntryProviderScope<NavKey>.highlightsEntryBuilder() {
         val state by viewModel.state.collectAsStateWithLifecycle()
         val openHighlightId by viewModel.openHighlightId.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
+        val resources = LocalResources.current
 
         LaunchedEffect(viewModel) {
             viewModel.events.collect { event ->
                 when (event) {
                     is HighlightsEvent.Share -> {
-                        if (!shareFile(context, event)) snackbarHostState.showSnackbar("No app can receive the file.")
+                        if (!shareFile(context, event)) snackbarHostState.showSnackbar(resources.getString(R.string.highlights_export_no_app))
                     }
-                    is HighlightsEvent.Message -> snackbarHostState.showSnackbar(event.text)
+                    is HighlightsEvent.Message -> snackbarHostState.showSnackbar(resources.getString(event.text))
                 }
             }
         }
@@ -76,7 +79,7 @@ private fun shareFile(context: Context, share: HighlightsEvent.Share): Boolean {
     // Lets the share sheet show the file's name and preview.
     send.clipData = ClipData.newRawUri(share.fileName, share.uri)
     return try {
-        context.startActivity(Intent.createChooser(send, "Export highlights"))
+        context.startActivity(Intent.createChooser(send, context.getString(R.string.highlights_export_chooser)))
         true
     } catch (_: ActivityNotFoundException) {
         false

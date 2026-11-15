@@ -32,6 +32,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +48,8 @@ import my.naqibrafiqi.pustaka.ui.model.SeriesItem
 import my.naqibrafiqi.pustaka.ui.model.VolumePreviewItem
 import my.naqibrafiqi.pustaka.ui.model.volumesLabel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
+import my.naqibrafiqi.pustaka.util.text.asUiText
 
 @Composable
 fun BookSeriesCard(
@@ -54,12 +61,15 @@ fun BookSeriesCard(
     shape: Shape = RoundedCornerShape(16.dp)
 ) {
     var showVolumePreview by rememberSaveable(series.id) { mutableStateOf(false) }
+    val previewState = stringResource(if (showVolumePreview) R.string.series_card_volumes_shown else R.string.series_card_volumes_hidden)
 
     Card(
         onClick = {
             showVolumePreview = !showVolumePreview
         },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics { stateDescription = previewState },
         shape = shape,
         colors = CardDefaults.cardColors(),
         elevation = CardDefaults.cardElevation()
@@ -120,8 +130,11 @@ private fun TopAction(
                 )
 
                 if (genres.size > 1) {
+                    val more = genres.size - 1
+                    val moreDescription = pluralStringResource(R.plurals.series_card_more_genres, more, more)
                     Text(
-                        text = "+${genres.size - 1}",
+                        text = stringResource(R.string.series_card_more_genres_short, more),
+                        modifier = Modifier.semantics { contentDescription = moreDescription },
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -130,7 +143,7 @@ private fun TopAction(
         }
 
         TagChip(
-            text = volumesLabel(totalVolume),
+            text = volumesLabel(totalVolume).asString(),
             color = MaterialTheme.colorScheme.primary
         )
     }
@@ -166,7 +179,7 @@ private fun Details(
                 )
 
                 Text(
-                    text = series.credits ?: "Unknown author",
+                    text = series.credits ?: stringResource(R.string.series_unknown_author),
                     fontWeight = FontWeight.Normal,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -188,7 +201,7 @@ private fun Details(
                     )
 
                     Text(
-                        text = series.currentLabel,
+                        text = series.currentLabel.asString(),
                         fontWeight = FontWeight.Medium,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -211,7 +224,7 @@ private fun Details(
                     )
 
                     Text(
-                        text = "${series.percent}%",
+                        text = stringResource(R.string.common_percent, series.percent),
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -219,7 +232,7 @@ private fun Details(
             }
 
             Text(
-                text = "${series.finishedCount} of ${series.volumeCount} read",
+                text = pluralStringResource(R.plurals.series_card_finished_of_total, series.volumeCount, series.finishedCount, series.volumeCount),
                 fontWeight = FontWeight.Normal,
                 style = MaterialTheme.typography.labelLarge
             )
@@ -255,7 +268,7 @@ private fun BottomAction(
                 )
 
                 Text(
-                    text = "Continue reading",
+                    text = stringResource(R.string.series_continue_reading),
                     fontWeight = FontWeight.Medium,
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -265,7 +278,7 @@ private fun BottomAction(
         FilledTonalIconButton(onClick = onViewSeries) {
             Icon(
                 painter = painterResource(id = R.drawable.list),
-                contentDescription = "View series",
+                contentDescription = stringResource(R.string.series_card_view_series),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -288,13 +301,13 @@ private fun VolumePreview(
         )
 
         Text(
-            text = "Volume sequence",
+            text = stringResource(R.string.series_card_volume_sequence),
             style = MaterialTheme.typography.labelLarge
         )
 
         if (volumes.isEmpty()) {
             Text(
-                text = "This folder has no EPUB files yet.",
+                text = stringResource(R.string.series_no_epubs),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -310,7 +323,7 @@ private fun VolumePreview(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { onOpenVolume(volume.bookId) }
+                        .clickable(onClickLabel = stringResource(R.string.book_open_details)) { onOpenVolume(volume.bookId) }
                         .alpha(if (volume.state == BookState.MISSING) .5f else 1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -318,13 +331,13 @@ private fun VolumePreview(
 
                     Column(modifier = Modifier.padding(start = 8.dp)) {
                         Text(
-                            text = volume.label,
+                            text = volume.label.asString(),
                             fontWeight = FontWeight.Normal,
                             style = MaterialTheme.typography.labelLarge
                         )
 
                         Text(
-                            text = volume.state.label,
+                            text = stringResource(volume.state.label),
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.labelMedium
                         )
@@ -355,12 +368,12 @@ private fun BookSeriesCardPreview() {
                 volumeCount = 6,
                 finishedCount = 1,
                 percent = 16,
-                currentLabel = "Reading: Volume 2",
+                currentLabel = "Reading: Volume 2".asUiText(),
                 continueBookId = 2,
                 preview = listOf(
-                    VolumePreviewItem(1, "Volume 1", null, BookState.FINISHED),
-                    VolumePreviewItem(2, "Volume 2", null, BookState.READING),
-                    VolumePreviewItem(3, "Volume 3", null, BookState.UNREAD),
+                    VolumePreviewItem(1, "Volume 1".asUiText(), null, BookState.FINISHED),
+                    VolumePreviewItem(2, "Volume 2".asUiText(), null, BookState.READING),
+                    VolumePreviewItem(3, "Volume 3".asUiText(), null, BookState.UNREAD),
                 ),
             ),
             onContinueReading = {},

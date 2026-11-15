@@ -2,11 +2,12 @@ package my.naqibrafiqi.pustaka.ui.model
 
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.Series
+import my.naqibrafiqi.pustaka.util.text.UiText
 
 /** A volume in the series card's preview strip. */
 data class VolumePreviewItem(
     val bookId: Long,
-    val label: String,
+    val label: UiText,
     val coverPath: String?,
     val state: BookState,
 )
@@ -25,7 +26,7 @@ data class SeriesItem(
     /** Finished volumes out of all volumes, from 0 to 100. */
     val percent: Int,
     /** "Reading: Volume 2", "Up next: Volume 3", ... */
-    val currentLabel: String,
+    val currentLabel: UiText,
     /** The volume "Continue reading" goes to, or null when there's none to read. */
     val continueBookId: Long?,
     val preview: List<VolumePreviewItem>,

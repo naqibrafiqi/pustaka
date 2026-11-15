@@ -13,9 +13,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,15 +34,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.fragment.compose.AndroidFragment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.theme.AppearanceViewModel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 import my.naqibrafiqi.pustaka.ui.theme.isDark
@@ -95,7 +97,7 @@ class ReaderActivity : AppCompatActivity() {
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 when (val current = state) {
                     ReaderUiState.Loading -> ReaderLoading()
-                    is ReaderUiState.Failed -> ReaderFailed(message = current.message, onClose = ::finish)
+                    is ReaderUiState.Failed -> ReaderFailed(message = stringResource(current.message), onClose = ::finish)
                     is ReaderUiState.Ready -> Reader(current, appDark)
                 }
             }
@@ -303,9 +305,9 @@ class ReaderActivity : AppCompatActivity() {
      */
     private val selectionMenu = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-            menu.add(Menu.NONE, MENU_HIGHLIGHT, 0, "Highlight")
+            menu.add(Menu.NONE, MENU_HIGHLIGHT, 0, R.string.reader_highlight)
             menu.add(Menu.NONE, MENU_COPY, 1, android.R.string.copy)
-            menu.add(Menu.NONE, MENU_SHARE, 2, "Share")
+            menu.add(Menu.NONE, MENU_SHARE, 2, R.string.common_share)
             return true
         }
 
@@ -333,7 +335,7 @@ class ReaderActivity : AppCompatActivity() {
 
     private fun copy(text: String) {
         // Android shows its own message that the text was copied.
-        getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("Quote", text))
+        getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(getString(R.string.reader_clip_label), text))
     }
 
     private fun share(text: String) {

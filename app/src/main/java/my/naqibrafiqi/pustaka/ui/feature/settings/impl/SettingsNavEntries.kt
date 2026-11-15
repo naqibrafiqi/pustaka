@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalResources
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
@@ -30,6 +31,7 @@ import my.naqibrafiqi.pustaka.ui.feature.settings.screen.reader.ReaderDefaultsVi
 import my.naqibrafiqi.pustaka.ui.feature.settings.screen.rememberFolderPicker
 import my.naqibrafiqi.pustaka.ui.scan.LibraryScanViewModel
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
+import my.naqibrafiqi.pustaka.util.text.resolve
 
 fun EntryProviderScope<NavKey>.settingsEntryBuilder(scanViewModel: LibraryScanViewModel) {
     entry<SettingsRoute> {
@@ -45,10 +47,11 @@ fun EntryProviderScope<NavKey>.settingsEntryBuilder(scanViewModel: LibraryScanVi
             onUnavailable = viewModel::onFolderPickerUnavailable,
         )
 
+        val resources = LocalResources.current
         LaunchedEffect(viewModel) {
             viewModel.events.collect { event ->
                 when (event) {
-                    is SettingsEvent.Message -> snackbarHostState.showSnackbar(event.text)
+                    is SettingsEvent.Message -> snackbarHostState.showSnackbar(resources.getString(event.text))
                     SettingsEvent.Rescan -> scanViewModel.refresh()
                 }
             }
@@ -86,8 +89,9 @@ fun EntryProviderScope<NavKey>.settingsEntryBuilder(scanViewModel: LibraryScanVi
         val viewModel: HiddenItemsViewModel = hiltViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }
+        val resources = LocalResources.current
         LaunchedEffect(viewModel) {
-            viewModel.messages.collect { snackbarHostState.showSnackbar(it) }
+            viewModel.messages.collect { snackbarHostState.showSnackbar(it.resolve(resources)) }
         }
 
         HiddenItemsScreen(

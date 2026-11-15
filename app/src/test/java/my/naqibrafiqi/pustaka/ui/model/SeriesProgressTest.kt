@@ -4,10 +4,14 @@ import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.testing.T0
 import my.naqibrafiqi.pustaka.testing.book
+import my.naqibrafiqi.pustaka.testing.text
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class SeriesProgressTest {
 
     private fun volume(
@@ -39,7 +43,7 @@ class SeriesProgressTest {
 
         assertEquals(0, progress.percent)
         assertNull(progress.current)
-        assertEquals("No volumes yet", progress.currentLabel)
+        assertEquals("No volumes yet", progress.currentLabel.text())
         assertEquals(emptyList<Book>(), progress.preview())
     }
 
@@ -54,7 +58,7 @@ class SeriesProgressTest {
         )
 
         assertEquals(2L, progress.current?.id)
-        assertEquals("Reading: Volume 2", progress.currentLabel)
+        assertEquals("Reading: Volume 2", progress.currentLabel.text())
     }
 
     @Test
@@ -64,7 +68,7 @@ class SeriesProgressTest {
         )
 
         assertEquals(3L, progress.current?.id)
-        assertEquals("Up next: Volume 3", progress.currentLabel)
+        assertEquals("Up next: Volume 3", progress.currentLabel.text())
     }
 
     @Test
@@ -82,7 +86,7 @@ class SeriesProgressTest {
 
         assertNull(progress.current)
         assertEquals(100, progress.percent)
-        assertEquals("All volumes read", progress.currentLabel)
+        assertEquals("All volumes read", progress.currentLabel.text())
     }
 
     @Test
@@ -92,9 +96,9 @@ class SeriesProgressTest {
         val numbered = book("Side story.epub", seriesId = 1, id = 3, volumeInFile = 4.5)
         val progress = SeriesProgress(listOf(first, second, numbered))
 
-        assertEquals("Volume 1", progress.labelOf(first))
-        assertEquals("Volume 2", progress.labelOf(second))
-        assertEquals("Volume 4.5", progress.labelOf(numbered))
+        assertEquals("Volume 1", progress.labelOf(first).text())
+        assertEquals("Volume 2", progress.labelOf(second).text())
+        assertEquals("Volume 4.5", progress.labelOf(numbered).text())
     }
 
     @Test

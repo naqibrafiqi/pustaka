@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.settings.screen.hidden
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,10 +16,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.Series
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.uiText
 import javax.inject.Inject
 
 /** A series or book removed from the library, which can be put back. */
@@ -27,7 +31,7 @@ data class HiddenItem(
     val isSeries: Boolean,
     val name: String,
     /** "Folder: Brunhild", "Standalone book" or "In Brunhild". */
-    val description: String,
+    val description: UiText,
     val coverPath: String?,
 )
 
@@ -35,7 +39,7 @@ sealed interface HiddenItemsUiState {
 
     data object Loading : HiddenItemsUiState
 
-    data class Error(val message: String) : HiddenItemsUiState
+    data class Error(@param:StringRes val message: Int) : HiddenItemsUiState
 
     data class Ready(val series: List<HiddenItem>, val books: List<HiddenItem>) : HiddenItemsUiState {
         val isEmpty: Boolean get() = series.isEmpty() && books.isEmpty()
@@ -64,20 +68,20 @@ class HiddenItemsViewModel @Inject constructor(
                     series = hiddenSeries.map { it.toHiddenItem() },
                     books = hiddenBooks.map { it.toHiddenItem(seriesNames[it.seriesId]) },
                 ) as HiddenItemsUiState
-            }.catch { emit(HiddenItemsUiState.Error("Couldn't load the hidden items.")) }
+            }.catch { emit(HiddenItemsUiState.Error(R.string.hidden_error)) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HiddenItemsUiState.Loading)
 
-    private val _messages = Channel<String>(Channel.BUFFERED)
+    private val _messages = Channel<UiText>(Channel.BUFFERED)
 
     /** "“Brunhild” is back in your library." */
-    val messages: Flow<String> = _messages.receiveAsFlow()
+    val messages: Flow<UiText> = _messages.receiveAsFlow()
 
     /** Puts the item back in the library. A restored series brings back its volumes too. */
     fun restore(item: HiddenItem) {
         viewModelScope.launch {
             if (item.isSeries) seriesRepository.setHidden(item.id, false) else books.setHidden(item.id, false)
-            _messages.send("“${item.name}” is back in your library.")
+            _messages.send(uiText(R.string.hidden_restored, item.name))
         }
     }
 
@@ -89,7 +93,7 @@ class HiddenItemsViewModel @Inject constructor(
         id = id,
         isSeries = true,
         name = name.value,
-        description = "Folder: $folderName",
+        description = uiText(R.string.hidden_folder, folderName),
         coverPath = details.coverPath,
     )
 
@@ -98,9 +102,9 @@ class HiddenItemsViewModel @Inject constructor(
         isSeries = false,
         name = name.value,
         description = when {
-            isStandalone -> "Standalone book"
-            seriesName != null -> "In $seriesName"
-            else -> "Volume of a series"
+            isStandalone -> uiText(R.string.hidden_standalone_book)
+            seriesName != null -> uiText(R.string.search_in_series, seriesName)
+            else -> uiText(R.string.hidden_volume_of_series)
         },
         coverPath = details.coverPath,
     )

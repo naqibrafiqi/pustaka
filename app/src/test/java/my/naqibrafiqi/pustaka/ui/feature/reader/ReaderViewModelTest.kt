@@ -7,21 +7,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.epub.OpenFailure
 import my.naqibrafiqi.pustaka.data.library.epub.ReadiumToolkit
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
+import my.naqibrafiqi.pustaka.data.model.SeriesDetails
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultBookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultHighlightRepository
-import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
-import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
+import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
+import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
-import my.naqibrafiqi.pustaka.data.model.SeriesDetails
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettings
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.ReaderTheme
@@ -30,7 +31,10 @@ import my.naqibrafiqi.pustaka.testing.T0
 import my.naqibrafiqi.pustaka.testing.TestClock
 import my.naqibrafiqi.pustaka.testing.book
 import my.naqibrafiqi.pustaka.testing.inMemoryDatabase
+import my.naqibrafiqi.pustaka.testing.string
+import my.naqibrafiqi.pustaka.testing.text
 import my.naqibrafiqi.pustaka.testing.writeEpub
+import my.naqibrafiqi.pustaka.util.text.uiText
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -39,9 +43,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.readium.r2.shared.publication.Locator
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
+import org.readium.r2.shared.publication.Locator
 import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.time.Duration
@@ -160,7 +164,7 @@ class ReaderViewModelTest {
         assertEquals(saved.percent, position.percent)
         assertEquals("Chapter 1", position.chapterTitle)
         assertEquals(0, position.tocIndex)
-        assertEquals("Page ${ready.pageCount} of ${ready.pageCount}", position.pageLabel)
+        assertEquals("Page ${ready.pageCount} of ${ready.pageCount}", position.pageLabel?.text())
     }
 
     @Test
@@ -169,7 +173,7 @@ class ReaderViewModelTest {
 
         val failed = viewModel(bookId).failed()
 
-        assertTrue(failed.message.contains("missing"))
+        assertTrue(string(failed.message).contains("missing"))
     }
 
     @Test
@@ -245,7 +249,7 @@ class ReaderViewModelTest {
 
         val card = viewModel.card()
         assertEquals("Brunhild, Vol. 01", card.title)
-        assertEquals(NextVolume(second, "Brunhild, Vol. 02", "Volume 2", fromStart = false), card.next)
+        assertEquals(NextVolume(second, "Brunhild, Vol. 02", uiText(R.string.volume_label, "2"), fromStart = false), card.next)
         assertEquals(ReadingStatus.FINISHED, books.getBook(first)?.readingStatus)
 
         // Turning back and forth on the last page doesn't show it again once closed.

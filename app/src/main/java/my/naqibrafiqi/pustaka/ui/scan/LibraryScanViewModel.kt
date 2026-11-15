@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.data.library.scan.CompletedScan
 import my.naqibrafiqi.pustaka.data.library.scan.LibraryScans
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
+import my.naqibrafiqi.pustaka.util.text.UiText
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
@@ -49,8 +50,8 @@ class LibraryScanViewModel @Inject constructor(
         .map { it.libraryFolderPath }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private val _messages = Channel<String>(Channel.BUFFERED)
-    val messages: Flow<String> = _messages.receiveAsFlow()
+    private val _messages = Channel<UiText>(Channel.BUFFERED)
+    val messages: Flow<UiText> = _messages.receiveAsFlow()
 
     init {
         viewModelScope.launch {

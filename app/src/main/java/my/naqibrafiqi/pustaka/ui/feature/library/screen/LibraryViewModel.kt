@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.library.screen
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,10 +11,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.VolumeOrder
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
@@ -26,14 +28,15 @@ import my.naqibrafiqi.pustaka.ui.model.SeriesProgress
 import my.naqibrafiqi.pustaka.ui.model.pageLabel
 import my.naqibrafiqi.pustaka.ui.model.readAgoLabel
 import my.naqibrafiqi.pustaka.ui.model.toItem
+import my.naqibrafiqi.pustaka.util.text.UiText
 import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
 
-enum class LibraryFilter(val label: String) {
-    ALL("All books"),
-    READING("Currently reading"),
-    UNREAD("Unread");
+enum class LibraryFilter(@param:StringRes val label: Int) {
+    ALL(R.string.library_filter_all),
+    READING(R.string.library_filter_reading),
+    UNREAD(R.string.library_filter_unread);
 
     fun matches(book: Book): Boolean = when (this) {
         ALL -> true
@@ -46,16 +49,16 @@ enum class LibraryFilter(val label: String) {
 data class CurrentlyReading(
     val book: BookItem,
     /** "Read 32m ago". */
-    val readAgo: String?,
+    val readAgo: UiText?,
     /** "Page 214 of 312". */
-    val pageLabel: String?,
+    val pageLabel: UiText?,
 )
 
 sealed interface LibraryUiState {
 
     data object Loading : LibraryUiState
 
-    data class Error(val message: String) : LibraryUiState
+    data class Error(@param:StringRes val message: Int) : LibraryUiState
 
     data class Ready(
         val currentlyReading: CurrentlyReading?,
@@ -94,7 +97,7 @@ class LibraryViewModel @Inject constructor(
                 filter,
             ) { library, progress, appSettings, selected ->
                 buildState(library, progress, appSettings.libraryFolderPath, selected, appSettings.libraryGrid)
-            }.catch<LibraryUiState> { emit(LibraryUiState.Error("Couldn't load your library.")) }
+            }.catch<LibraryUiState> { emit(LibraryUiState.Error(R.string.library_error)) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), LibraryUiState.Loading)
 
@@ -137,7 +140,7 @@ class LibraryViewModel @Inject constructor(
     private fun currentlyReading(
         library: List<Book>,
         progress: Map<Long, ReadingProgress>,
-        volumeLabels: Map<Long, String>,
+        volumeLabels: Map<Long, UiText>,
     ): CurrentlyReading? {
         val book = library
             .filter { it.readingStatus == ReadingStatus.READING && !it.isMissing }
@@ -152,7 +155,7 @@ class LibraryViewModel @Inject constructor(
     }
 
     /** "Volume 4" for each volume of a series, by book id. */
-    private fun volumeLabels(library: List<Book>): Map<Long, String> =
+    private fun volumeLabels(library: List<Book>): Map<Long, UiText> =
         library.filter { !it.isStandalone }
             .groupBy { it.seriesId }
             .values

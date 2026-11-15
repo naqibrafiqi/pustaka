@@ -1,6 +1,7 @@
 package my.naqibrafiqi.pustaka.ui.feature.highlights.screen
 
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.export.ExportFiles
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
@@ -32,7 +34,7 @@ sealed interface HighlightsUiState {
 
     data object Loading : HighlightsUiState
 
-    data class Error(val message: String) : HighlightsUiState
+    data class Error(@param:StringRes val message: Int) : HighlightsUiState
 
     /**
      * @property allGroups every highlight in the library, grouped by series and book.
@@ -54,7 +56,7 @@ sealed interface HighlightsEvent {
     /** Opens the share sheet with an exported file (decision D11). */
     data class Share(val uri: Uri, val fileName: String) : HighlightsEvent
 
-    data class Message(val text: String) : HighlightsEvent
+    data class Message(@param:StringRes val text: Int) : HighlightsEvent
 }
 
 /** The Highlights tab: every highlight, grouped by series and book, with search and export. */
@@ -65,6 +67,7 @@ class HighlightsViewModel @Inject constructor(
     books: BookRepository,
     series: SeriesRepository,
     private val exportFiles: ExportFiles,
+    private val markdown: HighlightsMarkdown,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -81,7 +84,7 @@ class HighlightsViewModel @Inject constructor(
             ) { all, library, allSeries, query ->
                 val groups = groupHighlights(all, library, allSeries)
                 HighlightsUiState.Ready(allGroups = groups, groups = groups.search(query), query = query) as HighlightsUiState
-            }.catch { emit(HighlightsUiState.Error("Couldn't load your highlights.")) }
+            }.catch { emit(HighlightsUiState.Error(R.string.highlights_error)) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HighlightsUiState.Loading)
 
@@ -126,7 +129,7 @@ class HighlightsViewModel @Inject constructor(
     fun exportAll() {
         val groups = currentGroups()
         if (groups.isEmpty()) return
-        export(groups, HighlightsMarkdown.fileName(null))
+        export(groups, markdown.fileName(null))
     }
 
     /** Exports one book's highlights (decision D12). */
@@ -135,7 +138,7 @@ class HighlightsViewModel @Inject constructor(
             group.books.filter { it.bookId == bookId }.takeIf { it.isNotEmpty() }?.let { group.copy(books = it) }
         }
         val title = groups.firstOrNull()?.books?.firstOrNull()?.title ?: return
-        export(groups, HighlightsMarkdown.fileName(title))
+        export(groups, markdown.fileName(title))
     }
 
     fun retry() {
@@ -144,10 +147,10 @@ class HighlightsViewModel @Inject constructor(
 
     private fun export(groups: List<SeriesHighlights>, fileName: String) {
         viewModelScope.launch {
-            val markdown = HighlightsMarkdown.build(groups, clock.instant().atZone(ZoneId.systemDefault()).toLocalDate())
-            val uri = exportFiles.write(fileName, markdown)
+            val text = markdown.build(groups, clock.instant().atZone(ZoneId.systemDefault()).toLocalDate())
+            val uri = exportFiles.write(fileName, text)
             _events.send(
-                if (uri != null) HighlightsEvent.Share(uri, fileName) else HighlightsEvent.Message("Couldn't export your highlights.")
+                if (uri != null) HighlightsEvent.Share(uri, fileName) else HighlightsEvent.Message(R.string.highlights_export_failed)
             )
         }
     }

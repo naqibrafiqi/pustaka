@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.data.settings
 
+import androidx.annotation.StringRes
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -8,31 +9,32 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import my.naqibrafiqi.pustaka.R
 import javax.inject.Inject
 import javax.inject.Qualifier
 
 /** Light or dark for the app itself. The reader has its own theme, whose "Auto" follows this one. */
-enum class AppTheme(val label: String) {
-    SYSTEM("System default"),
-    LIGHT("Light"),
-    DARK("Dark"),
+enum class AppTheme(@param:StringRes val label: Int) {
+    SYSTEM(R.string.app_theme_system),
+    LIGHT(R.string.app_theme_light),
+    DARK(R.string.app_theme_dark),
 }
 
 /** How the Series tab is sorted (decision D18 keeps the choice). */
-enum class SeriesSort(val label: String) {
-    NAME("Name"),
+enum class SeriesSort(@param:StringRes val label: Int) {
+    NAME(R.string.series_sort_name),
     /** The series whose newest volume was added most recently first. */
-    RECENTLY_ADDED("Recently added"),
+    RECENTLY_ADDED(R.string.series_sort_recently_added),
     /** The series with the volume opened most recently first. Series never read come last. */
-    RECENTLY_READ("Recently read"),
+    RECENTLY_READ(R.string.series_sort_recently_read),
 }
 
 /** How the Series tab shows each series. */
-enum class SeriesLayout(val label: String) {
+enum class SeriesLayout {
     /** A card with the details and a strip of volumes. */
-    CARDS("Cards"),
+    CARDS,
     /** Covers in a grid, with the name and number of volumes. */
-    GRID("Compact grid"),
+    GRID,
 }
 
 /** App settings. */

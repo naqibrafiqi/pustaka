@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.reader
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.epub.OpenFailure
 import my.naqibrafiqi.pustaka.data.library.epub.OpenResult
 import my.naqibrafiqi.pustaka.data.library.epub.ReadiumToolkit
@@ -24,13 +26,15 @@ import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.Highlight
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
+import my.naqibrafiqi.pustaka.data.repository.BookRepository
+import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
+import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettings
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.ui.model.SeriesProgress
-import my.naqibrafiqi.pustaka.data.repository.BookRepository
-import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
-import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.uiText
 import org.json.JSONObject
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
@@ -44,7 +48,7 @@ sealed interface ReaderUiState {
 
     data object Loading : ReaderUiState
 
-    data class Failed(val message: String) : ReaderUiState
+    data class Failed(@param:StringRes val message: Int) : ReaderUiState
 
     /**
      * The book is open.
@@ -76,7 +80,7 @@ data class ReaderPosition(
     val tocIndex: Int? = null,
 ) {
     /** "Page 12 of 240". */
-    val pageLabel: String? get() = page?.let { "Page $it of $pageCount" }
+    val pageLabel: UiText? get() = page?.let { uiText(R.string.page_of_total, it, pageCount) }
 }
 
 /**
@@ -94,7 +98,7 @@ data class FinishCard(
  * @property label "Volume 2".
  * @property fromStart a finished volume is read again from its first page.
  */
-data class NextVolume(val bookId: Long, val title: String, val label: String, val fromStart: Boolean)
+data class NextVolume(val bookId: Long, val title: String, val label: UiText, val fromStart: Boolean)
 
 /** A highlight in the book being read, with its place in the book ready for the reader to draw. */
 data class ReaderHighlight(val highlight: Highlight, val locator: Locator) {
@@ -270,8 +274,8 @@ class ReaderViewModel @Inject constructor(
 
     private suspend fun open() {
         val book = books.getBook(bookId)
-        if (book == null) return fail("This book is no longer in your library.")
-        if (book.isMissing) return fail("The file for this book is missing. It may have been moved or deleted.")
+        if (book == null) return fail(R.string.reader_error_not_in_library)
+        if (book.isMissing) return fail(R.string.reader_error_missing)
 
         val opened = when (val result = toolkit.open(File(book.filePath))) {
             is OpenResult.Failed -> return fail(messageFor(result.reason))
@@ -345,7 +349,7 @@ class ReaderViewModel @Inject constructor(
         )
     }
 
-    private fun fail(message: String) {
+    private fun fail(@StringRes message: Int) {
         _state.value = ReaderUiState.Failed(message)
     }
 
@@ -357,10 +361,11 @@ class ReaderViewModel @Inject constructor(
     companion object {
         const val SAVE_DELAY_MS = 500L
 
-        fun messageFor(reason: OpenFailure): String = when (reason) {
-            OpenFailure.NOT_READABLE -> "Pustaka can't read this file. Check that it's still in your library folder."
-            OpenFailure.NOT_EPUB -> "This file isn't a valid EPUB, or it's damaged."
-            OpenFailure.PROTECTED -> "This book is protected with DRM, so Pustaka can't open it."
+        @StringRes
+        fun messageFor(reason: OpenFailure): Int = when (reason) {
+            OpenFailure.NOT_READABLE -> R.string.reader_error_not_readable
+            OpenFailure.NOT_EPUB -> R.string.reader_error_not_epub
+            OpenFailure.PROTECTED -> R.string.reader_error_protected
         }
 
         /** A saved locator that can't be read any more just means starting from the beginning. */

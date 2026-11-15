@@ -22,11 +22,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 /**
@@ -112,7 +114,7 @@ fun SynopsisSection(
                     )
 
                     Text(
-                        text = if (expanded) "Read Less" else "Read More",
+                        text = stringResource(if (expanded) R.string.common_label_read_less else R.string.common_label_read_more),
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge

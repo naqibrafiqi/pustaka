@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.reader
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,13 +26,17 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.settings.ReaderFont
 import my.naqibrafiqi.pustaka.data.settings.ReaderLineSpacing
 import my.naqibrafiqi.pustaka.data.settings.ReaderMargins
@@ -60,11 +65,13 @@ fun ReaderSettingsSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Reading settings",
+                    text = stringResource(R.string.reader_settings_title),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { heading() },
                 )
-                TextButton(onClick = onReset, enabled = settings != ReaderSettings()) { Text("Reset") }
+                TextButton(onClick = onReset, enabled = settings != ReaderSettings()) { Text(stringResource(R.string.common_reset)) }
             }
             ReaderSettingsForm(settings, onChange, Modifier.padding(top = 20.dp))
         }
@@ -88,13 +95,13 @@ fun ReaderSettingsForm(
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
 
-        Choice("Theme", ReaderTheme.entries, settings.theme, { it.label }) { onChange(settings.copy(theme = it)) }
-        Choice("Font", ReaderFont.entries, settings.font, { it.label }) { onChange(settings.copy(font = it)) }
+        Choice(R.string.reader_setting_theme, ReaderTheme.entries, settings.theme, { it.label }) { onChange(settings.copy(theme = it)) }
+        Choice(R.string.reader_setting_font, ReaderFont.entries, settings.font, { it.label }) { onChange(settings.copy(font = it)) }
         TextSize(settings, onChange)
-        Choice("Line spacing", ReaderLineSpacing.entries, settings.lineSpacing, { it.label }) {
+        Choice(R.string.reader_setting_line_spacing, ReaderLineSpacing.entries, settings.lineSpacing, { it.label }) {
             onChange(settings.copy(lineSpacing = it))
         }
-        Choice("Margins", ReaderMargins.entries, settings.margins, { it.label }) { onChange(settings.copy(margins = it)) }
+        Choice(R.string.reader_setting_margins, ReaderMargins.entries, settings.margins, { it.label }) { onChange(settings.copy(margins = it)) }
 
         Row(
             modifier = Modifier
@@ -107,9 +114,9 @@ fun ReaderSettingsForm(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Scroll", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.reader_setting_scroll), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    text = "Scroll through each chapter instead of turning pages.",
+                    text = stringResource(R.string.reader_setting_scroll_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -121,14 +128,14 @@ fun ReaderSettingsForm(
 
 @Composable
 private fun <T> Choice(
-    title: String,
+    @StringRes title: Int,
     options: List<T>,
     selected: T,
-    label: (T) -> String,
+    label: (T) -> Int,
     onSelect: (T) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(title), style = MaterialTheme.typography.titleSmall)
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             options.forEachIndexed { index, option ->
                 SegmentedButton(
@@ -137,7 +144,7 @@ private fun <T> Choice(
                     shape = SegmentedButtonDefaults.itemShape(index, options.size),
                     icon = {},
                 ) {
-                    Text(label(option), maxLines = 1, style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(label(option)), maxLines = 1, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -147,17 +154,24 @@ private fun <T> Choice(
 @Composable
 private fun TextSize(settings: ReaderSettings, onChange: (ReaderSettings) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Text size", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.reader_setting_text_size), style = MaterialTheme.typography.titleSmall)
+        val smaller = stringResource(R.string.reader_text_smaller)
+        val bigger = stringResource(R.string.reader_text_bigger)
         Row(verticalAlignment = Alignment.CenterVertically) {
             FilledTonalIconButton(
                 onClick = { onChange(settings.withTextSize(-1)) },
                 enabled = settings.canMakeTextSmaller,
-                modifier = Modifier.semantics { contentDescription = "Smaller text" },
+                modifier = Modifier.semantics { contentDescription = smaller },
             ) {
-                Text("A", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = stringResource(R.string.reader_text_size_glyph),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clearAndSetSemantics {},
+                )
             }
             Text(
-                text = settings.textSizeLabel,
+                text = stringResource(R.string.common_percent, settings.textSizePercent),
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -167,9 +181,14 @@ private fun TextSize(settings: ReaderSettings, onChange: (ReaderSettings) -> Uni
             FilledTonalIconButton(
                 onClick = { onChange(settings.withTextSize(1)) },
                 enabled = settings.canMakeTextBigger,
-                modifier = Modifier.semantics { contentDescription = "Bigger text" },
+                modifier = Modifier.semantics { contentDescription = bigger },
             ) {
-                Text("A", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = stringResource(R.string.reader_text_size_glyph),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clearAndSetSemantics {},
+                )
             }
         }
     }
