@@ -133,7 +133,7 @@ This phase is split into two pull requests:
 ### Phase 6: Settings, search and sorting (M)
 This phase is split into two pull requests:
 1. The Settings screen: library folder, hidden items, app theme, default reader settings, storage, and About with the open-source licences. ✅ Done in PR 1. The licences are listed by hand, because AboutLibraries needs Kotlin 2.4.
-2. Search, sorting and layout in the Library and Series top bars.
+2. Search, sorting and layout in the Library and Series top bars. ✅ Done in PR 2.
 
 - The Pustaka folder: change it (for example to `Download/Pustaka`) and rescan.
 - Hidden items: a list of series and books removed from the library, with a button to restore each one.
@@ -170,5 +170,5 @@ This phase is split into two pull requests:
 | 3. Connect screens to data | Done |
 | 4. Reader | Done |
 | 5. Highlights | Done |
-| 6. Settings, search and sorting | In review (PR 1 into `1.0.0`; PR 2 not started) |
+| 6. Settings, search and sorting | In review (PR 1 merged, PR 2 into `1.0.0`) |
 | 7. Polish and release | Not started |

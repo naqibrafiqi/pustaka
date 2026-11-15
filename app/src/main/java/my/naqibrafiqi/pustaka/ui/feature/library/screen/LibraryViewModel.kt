@@ -11,8 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.data.library.VolumeOrder
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
@@ -82,7 +83,6 @@ class LibraryViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val filter = savedState.getMutableStateFlow(KEY_FILTER, LibraryFilter.ALL)
-    private val isGrid = savedState.getMutableStateFlow(KEY_GRID, true)
     private val attempt = MutableStateFlow(0)
 
     val state: StateFlow<LibraryUiState> = attempt
@@ -90,11 +90,10 @@ class LibraryViewModel @Inject constructor(
             combine(
                 books.observeLibraryBooks(),
                 reading.observeAllProgress(),
-                settings.settings.map { it.libraryFolderPath },
+                settings.settings,
                 filter,
-                isGrid,
-            ) { library, progress, folderPath, selected, grid ->
-                buildState(library, progress, folderPath, selected, grid)
+            ) { library, progress, appSettings, selected ->
+                buildState(library, progress, appSettings.libraryFolderPath, selected, appSettings.libraryGrid)
             }.catch<LibraryUiState> { emit(LibraryUiState.Error("Couldn't load your library.")) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), LibraryUiState.Loading)
@@ -103,8 +102,12 @@ class LibraryViewModel @Inject constructor(
         filter.value = selected
     }
 
+    /** Switches between grid and list. The choice is saved (decision D18). */
     fun toggleLayout() {
-        isGrid.value = !isGrid.value
+        viewModelScope.launch {
+            val grid = (state.value as? LibraryUiState.Ready)?.isGrid ?: settings.settings.first().libraryGrid
+            settings.setLibraryGrid(!grid)
+        }
     }
 
     fun retry() {
@@ -162,7 +165,6 @@ class LibraryViewModel @Inject constructor(
 
     private companion object {
         const val KEY_FILTER = "filter"
-        const val KEY_GRID = "grid"
         const val STOP_TIMEOUT_MS = 5_000L
     }
 }

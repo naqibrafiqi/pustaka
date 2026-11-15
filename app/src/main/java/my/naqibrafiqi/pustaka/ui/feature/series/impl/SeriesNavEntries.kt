@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.ui.feature.reader.rememberReaderLauncher
+import my.naqibrafiqi.pustaka.ui.feature.search.api.SearchRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.BookDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.EditBookRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.EditSeriesRoute
@@ -59,6 +60,9 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanView
             onNewNameChange = viewModel::changeNewName,
             onCreateSeries = viewModel::createSeries,
             onDismissCreate = viewModel::dismissCreateDialog,
+            onSearch = { navigator.add(SearchRoute) },
+            onSelectSort = viewModel::selectSort,
+            onToggleLayout = viewModel::toggleLayout,
         )
     }
 

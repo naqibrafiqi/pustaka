@@ -52,6 +52,24 @@ class SettingsRepositoryTest {
     }
 
     @Test
+    fun savesTheSortAndLayout() = runTest {
+        val settings = repository()
+        val defaults = settings.settings.first()
+        assertEquals(SeriesSort.NAME, defaults.seriesSort)
+        assertEquals(SeriesLayout.CARDS, defaults.seriesLayout)
+        assertTrue(defaults.libraryGrid)
+
+        settings.setSeriesSort(SeriesSort.RECENTLY_READ)
+        settings.setSeriesLayout(SeriesLayout.GRID)
+        settings.setLibraryGrid(false)
+
+        val saved = settings.settings.first()
+        assertEquals(SeriesSort.RECENTLY_READ, saved.seriesSort)
+        assertEquals(SeriesLayout.GRID, saved.seriesLayout)
+        assertFalse(saved.libraryGrid)
+    }
+
+    @Test
     fun savesTheAppTheme() = runTest {
         val settings = repository()
         assertEquals(AppTheme.SYSTEM, settings.settings.first().appTheme)
