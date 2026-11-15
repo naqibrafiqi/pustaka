@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.settings.screen
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.access.PickedFolder
 import my.naqibrafiqi.pustaka.data.library.scan.LibraryScans
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
@@ -27,6 +29,9 @@ import my.naqibrafiqi.pustaka.data.settings.DefaultLibraryFolder
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import my.naqibrafiqi.pustaka.data.storage.StorageReport
 import my.naqibrafiqi.pustaka.data.storage.StorageUsage
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.pluralText
+import my.naqibrafiqi.pustaka.util.text.uiText
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -39,13 +44,16 @@ data class SettingsUiState(
     val dynamicColor: Boolean,
 ) {
     /** "2 series and 1 book", or "Nothing hidden". */
-    val hiddenLabel: String
+    val hiddenLabel: UiText
         get() {
-            val parts = listOfNotNull(
-                hiddenSeries.takeIf { it > 0 }?.let { "$it series" },
-                hiddenBooks.takeIf { it > 0 }?.let { if (it == 1) "1 book" else "$it books" },
-            )
-            return if (parts.isEmpty()) "Nothing hidden" else parts.joinToString(" and ")
+            val series = pluralText(R.plurals.series_count, hiddenSeries)
+            val books = pluralText(R.plurals.books_count, hiddenBooks)
+            return when {
+                hiddenSeries > 0 && hiddenBooks > 0 -> uiText(R.string.settings_hidden_both, series, books)
+                hiddenSeries > 0 -> series
+                hiddenBooks > 0 -> books
+                else -> uiText(R.string.settings_hidden_none)
+            }
         }
 }
 
@@ -53,7 +61,7 @@ data class SettingsUiState(
 data class FolderChange(val path: String, val isDefault: Boolean)
 
 sealed interface SettingsEvent {
-    data class Message(val text: String) : SettingsEvent
+    data class Message(@param:StringRes val text: Int) : SettingsEvent
 
     /** The library should be scanned, with the result shown to the user. */
     data object Rescan : SettingsEvent
@@ -110,11 +118,9 @@ class SettingsViewModel @Inject constructor(
     fun onFolderPicked(picked: PickedFolder) {
         viewModelScope.launch {
             when (picked) {
-                PickedFolder.NotInternalStorage -> send(
-                    "Choose a folder on the phone's internal storage. SD cards and cloud folders can't be used."
-                )
+                PickedFolder.NotInternalStorage -> send(R.string.settings_folder_not_internal)
                 is PickedFolder.Path -> if (picked.path == settings.settings.first().libraryFolderPath) {
-                    send("That's already your library folder.")
+                    send(R.string.settings_folder_already_used)
                 } else {
                     _folderChange.value = FolderChange(picked.path, isDefault = picked.path == defaultLibraryFolderPath)
                 }
@@ -123,7 +129,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onFolderPickerUnavailable() {
-        viewModelScope.launch { send("This phone has no folder picker.") }
+        viewModelScope.launch { send(R.string.settings_folder_no_picker) }
     }
 
     fun useDefaultFolder() {
@@ -166,7 +172,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { _storage.value = runCatching { storageUsage.measure() }.getOrNull() }
     }
 
-    private suspend fun send(message: String) = _events.send(SettingsEvent.Message(message))
+    private suspend fun send(@StringRes message: Int) = _events.send(SettingsEvent.Message(message))
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L

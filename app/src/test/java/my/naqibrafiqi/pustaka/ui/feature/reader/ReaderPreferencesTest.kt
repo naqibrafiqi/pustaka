@@ -66,7 +66,7 @@ class ReaderPreferencesTest {
         var settings = ReaderSettings()
         repeat(3) { settings = settings.withTextSize(1) }
         assertEquals(1.3, settings.textSize, 0.0)
-        assertEquals("130%", settings.textSizeLabel)
+        assertEquals(130, settings.textSizePercent)
 
         repeat(100) { settings = settings.withTextSize(-1) }
         assertEquals(0.5, settings.textSize, 0.0)

@@ -2,11 +2,15 @@ package my.naqibrafiqi.pustaka.ui.feature.highlights.screen
 
 import my.naqibrafiqi.pustaka.data.model.Highlight
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
+import my.naqibrafiqi.pustaka.testing.testResources
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.time.Instant
 import java.time.LocalDate
 
+@RunWith(RobolectricTestRunner::class)
 class HighlightsMarkdownTest {
 
     @Test
@@ -33,7 +37,7 @@ class HighlightsMarkdownTest {
             ),
         )
 
-        val markdown = HighlightsMarkdown.build(groups, LocalDate.of(2026, 11, 14))
+        val markdown = HighlightsMarkdown(testResources).build(groups, LocalDate.of(2026, 11, 14))
 
         assertEquals(
             """
@@ -70,9 +74,10 @@ class HighlightsMarkdownTest {
 
     @Test
     fun fileNamesLeaveOutCharactersFilesCantHave() {
-        assertEquals("Pustaka highlights.md", HighlightsMarkdown.fileName(null))
-        assertEquals("Brunhild, Vol. 01 highlights.md", HighlightsMarkdown.fileName("Brunhild, Vol. 01"))
-        assertEquals("Re Zero 1 highlights.md", HighlightsMarkdown.fileName("Re: Zero / 1?"))
+        val markdown = HighlightsMarkdown(testResources)
+        assertEquals("Pustaka highlights.md", markdown.fileName(null))
+        assertEquals("Brunhild, Vol. 01 highlights.md", markdown.fileName("Brunhild, Vol. 01"))
+        assertEquals("Re Zero 1 highlights.md", markdown.fileName("Re: Zero / 1?"))
     }
 
     private fun item(text: String, page: Int? = null, note: String? = null) = HighlightItem(

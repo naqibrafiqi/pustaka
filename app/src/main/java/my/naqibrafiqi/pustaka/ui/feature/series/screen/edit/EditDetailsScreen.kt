@@ -31,6 +31,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -69,9 +72,16 @@ fun EditDetailsScreen(
                 actionButtons = if (ready == null) null else {
                     {
                         if (ready.isSaving) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp).padding(end = 8.dp), strokeWidth = 2.dp)
+                            val saving = stringResource(R.string.edit_saving)
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .padding(end = 8.dp)
+                                    .semantics { contentDescription = saving },
+                                strokeWidth = 2.dp,
+                            )
                         } else {
-                            TextButton(onClick = onSave) { Text("Save") }
+                            TextButton(onClick = onSave) { Text(stringResource(R.string.common_save)) }
                         }
                     }
                 },
@@ -85,11 +95,11 @@ fun EditDetailsScreen(
         when (state) {
             EditUiState.Loading -> LoadingState(modifier = contentModifier)
             EditUiState.NotFound -> MessageState(
-                title = "Nothing to edit",
-                message = "This is no longer in your library.",
+                title = stringResource(R.string.edit_not_found_title),
+                message = stringResource(R.string.edit_not_found_message),
                 iconRes = R.drawable.edit,
                 modifier = contentModifier,
-                actionLabel = "Go back",
+                actionLabel = stringResource(R.string.common_go_back),
                 onAction = onNavigateBack,
             )
             is EditUiState.Ready -> LazyColumn(
@@ -104,7 +114,7 @@ fun EditDetailsScreen(
             ) {
                 item {
                     Text(
-                        text = "Edits are saved in Pustaka only. Your files are never changed.",
+                        text = stringResource(R.string.edit_explanation),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -115,14 +125,14 @@ fun EditDetailsScreen(
                         OutlinedButton(onClick = onUseDetailsFromFile, modifier = Modifier.fillMaxWidth()) {
                             Icon(painter = painterResource(R.drawable.article), contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Use details from file")
+                            Text(stringResource(R.string.edit_use_file_details))
                         }
                     }
                 }
 
                 state.error?.let { error ->
                     item {
-                        Text(text = error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                        Text(text = stringResource(error), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
 
@@ -136,16 +146,16 @@ fun EditDetailsScreen(
     if (confirmDiscard) {
         AlertDialog(
             onDismissRequest = { confirmDiscard = false },
-            title = { Text("Discard changes?") },
-            text = { Text("Your changes haven't been saved.") },
+            title = { Text(stringResource(R.string.edit_discard_title)) },
+            text = { Text(stringResource(R.string.edit_discard_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDiscard = false
                     onNavigateBack()
-                }) { Text("Discard") }
+                }) { Text(stringResource(R.string.edit_discard)) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDiscard = false }) { Text("Keep editing") }
+                TextButton(onClick = { confirmDiscard = false }) { Text(stringResource(R.string.edit_keep_editing)) }
             },
         )
     }
@@ -163,7 +173,7 @@ private fun FieldInput(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (field.multiline) Modifier.heightIn(min = 120.dp) else Modifier),
-        label = { Text(field.label) },
+        label = { Text(stringResource(field.label)) },
         singleLine = !field.multiline,
         isError = field.error != null,
         keyboardOptions = KeyboardOptions(
@@ -173,7 +183,7 @@ private fun FieldInput(
         trailingIcon = if (field.isEdited) {
             {
                 IconButton(onClick = { onReset(field.key) }) {
-                    Icon(painter = painterResource(R.drawable.undo), contentDescription = "Reset ${field.label.lowercase()}")
+                    Icon(painter = painterResource(R.drawable.undo), contentDescription = stringResource(R.string.edit_reset_field, stringResource(field.label)))
                 }
             }
         } else {
@@ -185,13 +195,18 @@ private fun FieldInput(
 
 /** The error, or what the field resets to once it's edited, or its hint. */
 private fun supportingText(field: EditField): (@Composable () -> Unit)? {
-    val text = when {
-        field.error != null -> field.error
-        field.isEdited && field.default.isNotBlank() -> "Default: ${field.default.lineSequence().first()}"
-        field.isEdited -> "Default: empty"
-        else -> field.hint
-    } ?: return null
-    return { Text(text = text, maxLines = 1) }
+    val error = field.error
+    val hint = field.hint
+    if (error == null && !field.isEdited && hint == null) return null
+    return {
+        val text = when {
+            error != null -> stringResource(error)
+            field.isEdited && field.default.isNotBlank() -> stringResource(R.string.edit_default_value, field.default.lineSequence().first())
+            field.isEdited -> stringResource(R.string.edit_default_empty)
+            else -> stringResource(hint!!)
+        }
+        Text(text = text, maxLines = 1)
+    }
 }
 
 @Preview(showBackground = true)
@@ -203,10 +218,10 @@ private fun EditDetailsScreenPreview() {
             state = EditUiState.Ready(
                 subtitle = "Harbour Tales",
                 fields = listOf(
-                    EditField("name", "Name", "Harbour Tales", "[Group] Harbour Tales (Digital)"),
-                    EditField("author", "Author", "Ren Okada", "Ren Okada"),
-                    EditField("tags", "Tags", "Comedy", "Comedy", hint = "Separate tags with commas"),
-                    EditField("synopsis", "Synopsis", "Three friends start a club.", "", multiline = true),
+                    EditField("name", R.string.edit_field_name, "Harbour Tales", "[Group] Harbour Tales (Digital)"),
+                    EditField("author", R.string.details_author, "Ren Okada", "Ren Okada"),
+                    EditField("tags", R.string.edit_field_tags, "Comedy", "Comedy", hint = R.string.edit_hint_tags),
+                    EditField("synopsis", R.string.edit_field_synopsis, "Three friends start a club.", "", multiline = true),
                 ),
                 canUseFileDetails = true,
             ),

@@ -15,6 +15,9 @@ import coil3.compose.AsyncImage
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
+/**
+ * A book's cover. It's decorative: the title is always shown next to it, so screen readers skip it.
+ */
 @Composable
 fun BookCover(
     modifier: Modifier = Modifier,
@@ -24,7 +27,7 @@ fun BookCover(
 ) {
     AsyncImage(
         model = imageUrl,
-        contentDescription = "Book cover",
+        contentDescription = null,
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(coverRatio)

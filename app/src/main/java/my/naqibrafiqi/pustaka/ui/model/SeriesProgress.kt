@@ -1,7 +1,10 @@
 package my.naqibrafiqi.pustaka.ui.model
 
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.uiText
 import java.math.BigDecimal
 
 /**
@@ -30,21 +33,21 @@ class SeriesProgress(private val volumes: List<Book>) {
     }
 
     /** "Volume 4" for [book], using its number, or its place in the series when it has none. */
-    fun labelOf(book: Book): String {
-        val number = book.volumeNumber
-        return if (number != null) "Volume ${formatVolumeNumber(number)}" else "Volume ${volumes.indexOf(book) + 1}"
+    fun labelOf(book: Book): UiText {
+        val number = book.volumeNumber?.let(::formatVolumeNumber) ?: (volumes.indexOf(book) + 1).toString()
+        return uiText(R.string.volume_label, number)
     }
 
     /** "Reading: Volume 2", "Up next: Volume 3", "All volumes read" or "No volumes yet". */
-    val currentLabel: String
+    val currentLabel: UiText
         get() {
             val book = current
             return when {
-                total == 0 -> "No volumes yet"
-                book == null && finished == total -> "All volumes read"
-                book == null -> "No readable volumes"
-                book.readingStatus == ReadingStatus.READING -> "Reading: ${labelOf(book)}"
-                else -> "Up next: ${labelOf(book)}"
+                total == 0 -> uiText(R.string.series_progress_no_volumes)
+                book == null && finished == total -> uiText(R.string.series_progress_all_read)
+                book == null -> uiText(R.string.series_progress_none_readable)
+                book.readingStatus == ReadingStatus.READING -> uiText(R.string.series_progress_reading, labelOf(book))
+                else -> uiText(R.string.series_progress_up_next, labelOf(book))
             }
         }
 

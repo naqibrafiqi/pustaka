@@ -6,6 +6,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.VolumeOrder
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.BookDetails
@@ -47,36 +48,36 @@ class EditBookViewModel @AssistedInject constructor(
         val source = found.sourceDetails
 
         val fields = buildList {
-            add(EditField(NAME, "Name", found.name.value, found.name.default))
+            add(EditField(NAME, R.string.edit_field_name, found.name.value, found.name.default))
             if (!found.isStandalone) {
                 add(
                     EditField(
-                        VOLUME, "Volume number",
+                        VOLUME, R.string.edit_field_volume,
                         found.volumeNumber?.let(::formatVolumeNumber).orEmpty(),
                         defaultVolume()?.let(::formatVolumeNumber).orEmpty(),
                         isNumber = true,
-                        hint = "Sets the order of the volumes in the series",
+                        hint = R.string.edit_hint_volume,
                     )
                 )
             }
-            add(EditField(AUTHORS, "Authors", joinList(shown.authors), joinList(source.authors), hint = NAMES_HINT))
+            add(EditField(AUTHORS, R.string.edit_field_authors, joinList(shown.authors), joinList(source.authors), hint = NAMES_HINT))
             add(
                 EditField(
-                    ILLUSTRATORS, "Illustrators", joinList(shown.illustrators), joinList(source.illustrators),
+                    ILLUSTRATORS, R.string.edit_field_illustrators, joinList(shown.illustrators), joinList(source.illustrators),
                     hint = NAMES_HINT,
                 )
             )
-            add(EditField(DESCRIPTION, "Description", shown.description.orEmpty(), source.description.orEmpty(), multiline = true))
+            add(EditField(DESCRIPTION, R.string.edit_field_description, shown.description.orEmpty(), source.description.orEmpty(), multiline = true))
             add(
                 EditField(
-                    SUBJECTS, "Genres", joinList(shown.subjects), joinList(source.subjects),
-                    hint = "Separate genres with commas",
+                    SUBJECTS, R.string.edit_field_genres, joinList(shown.subjects), joinList(source.subjects),
+                    hint = R.string.edit_hint_genres,
                 )
             )
-            add(EditField(PUBLISHER, "Publisher", shown.publisher.orEmpty(), source.publisher.orEmpty()))
-            add(EditField(PUBLISHED, "Published", shown.publishedDate.orEmpty(), source.publishedDate.orEmpty()))
-            add(EditField(LANGUAGE, "Language", shown.language.orEmpty(), source.language.orEmpty()))
-            add(EditField(IDENTIFIER, "Identifier", shown.identifier.orEmpty(), source.identifier.orEmpty()))
+            add(EditField(PUBLISHER, R.string.book_info_publisher, shown.publisher.orEmpty(), source.publisher.orEmpty()))
+            add(EditField(PUBLISHED, R.string.book_info_published, shown.publishedDate.orEmpty(), source.publishedDate.orEmpty()))
+            add(EditField(LANGUAGE, R.string.book_info_language, shown.language.orEmpty(), source.language.orEmpty()))
+            add(EditField(IDENTIFIER, R.string.book_info_identifier, shown.identifier.orEmpty(), source.identifier.orEmpty()))
         }
         mutableState.value = EditUiState.Ready(
             subtitle = found.name.value,
@@ -105,10 +106,10 @@ class EditBookViewModel @AssistedInject constructor(
         )
     }
 
-    override fun validate(form: EditUiState.Ready): Map<String, String> {
+    override fun validate(form: EditUiState.Ready): Map<String, Int> {
         val volume = form.fields.firstOrNull { it.key == VOLUME }?.value?.trim().orEmpty()
         return if (volume.isNotEmpty() && volume.toDoubleOrNull()?.takeIf { it >= 0 } == null) {
-            mapOf(VOLUME to "Enter a number, such as 4 or 4.5")
+            mapOf(VOLUME to R.string.edit_error_volume)
         } else {
             emptyMap()
         }
@@ -170,6 +171,6 @@ class EditBookViewModel @AssistedInject constructor(
         const val LANGUAGE = "language"
         const val IDENTIFIER = "identifier"
 
-        private const val NAMES_HINT = "Separate names with commas"
+        private val NAMES_HINT = R.string.edit_hint_names
     }
 }

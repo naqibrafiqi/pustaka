@@ -1,63 +1,68 @@
 package my.naqibrafiqi.pustaka.ui.feature.series.screen.series.main
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.settings.SeriesLayout
 import my.naqibrafiqi.pustaka.data.settings.SeriesSort
 import my.naqibrafiqi.pustaka.ui.components.BookCover
-import my.naqibrafiqi.pustaka.ui.components.menu.MenuItem
-import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.components.BookSeriesCard
 import my.naqibrafiqi.pustaka.ui.components.ErrorState
 import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.MessageState
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.components.TopBarActionButton
+import my.naqibrafiqi.pustaka.ui.components.menu.MenuItem
 import my.naqibrafiqi.pustaka.ui.model.SeriesItem
+import my.naqibrafiqi.pustaka.ui.model.volumesLabel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
+import my.naqibrafiqi.pustaka.util.text.asUiText
 
 @Composable
 fun SeriesScreen(
@@ -129,24 +134,26 @@ private fun SeriesScreenContent(
                 ExtendedFloatingActionButton(
                     onClick = onNewSeries,
                     icon = { Icon(painter = painterResource(R.drawable.add), contentDescription = null) },
-                    text = { Text("New series") },
+                    text = { Text(stringResource(R.string.series_new)) },
                 )
             }
         },
         topBar = {
             TopBar(
-                title = "Series",
+                title = stringResource(R.string.series_title),
                 actionButtons = {
                     TopBarActionButton(
                         onClick = onSearch,
                         iconResId = R.drawable.search,
-                        contentDescription = "Search",
+                        contentDescription = stringResource(R.string.common_search),
                     )
 
                     TopBarActionButton(
                         onClick = onToggleLayout,
                         iconResId = if (layout == SeriesLayout.CARDS) R.drawable.grid else R.drawable.list,
-                        contentDescription = if (layout == SeriesLayout.CARDS) "Show as compact grid" else "Show as cards",
+                        contentDescription = stringResource(
+                            if (layout == SeriesLayout.CARDS) R.string.layout_show_compact_grid else R.string.layout_show_cards
+                        ),
                     )
 
                     SortMenu(selected = ready?.sort ?: SeriesSort.NAME, onSelect = onSelectSort)
@@ -174,15 +181,14 @@ private fun SeriesScreenContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 when (state) {
-                    is SeriesUiState.Error -> item { ErrorState(message = state.message, onRetry = onRetry) }
+                    is SeriesUiState.Error -> item { ErrorState(message = stringResource(state.message), onRetry = onRetry) }
                     is SeriesUiState.Ready -> if (state.series.isEmpty()) {
                         item {
                             MessageState(
-                                title = "No series yet",
-                                message = "Each folder inside ${state.libraryFolderPath} becomes a series, " +
-                                    "with its EPUB files as the volumes. Pull down to refresh.",
+                                title = stringResource(R.string.series_empty_title),
+                                message = stringResource(R.string.series_empty_message, state.libraryFolderPath),
                                 iconRes = R.drawable.newsstand,
-                                actionLabel = "New series",
+                                actionLabel = stringResource(R.string.series_new),
                                 onAction = onNewSeries,
                             )
                         }
@@ -232,7 +238,7 @@ private fun SortMenu(selected: SeriesSort, onSelect: (SeriesSort) -> Unit) {
         TopBarActionButton(
             onClick = { expanded = true },
             iconResId = R.drawable.sort,
-            contentDescription = "Sort series",
+            contentDescription = stringResource(R.string.series_sort),
         )
         DropdownMenu(
             expanded = expanded,
@@ -240,7 +246,7 @@ private fun SortMenu(selected: SeriesSort, onSelect: (SeriesSort) -> Unit) {
             shape = RoundedCornerShape(16.dp),
         ) {
             Text(
-                text = "Sort by",
+                text = stringResource(R.string.series_sort_by),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -251,7 +257,8 @@ private fun SortMenu(selected: SeriesSort, onSelect: (SeriesSort) -> Unit) {
                         expanded = false
                         onSelect(sort)
                     },
-                    text = sort.label,
+                    text = stringResource(sort.label),
+                    modifier = Modifier.semantics { this.selected = sort == selected },
                     trailingIconResId = if (sort == selected) R.drawable.check else null,
                 )
             }
@@ -265,7 +272,7 @@ private fun SeriesGridItem(series: SeriesItem, onClick: () -> Unit, modifier: Mo
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .clickable(onClickLabel = stringResource(R.string.series_card_view_series), onClick = onClick)
             .semantics(mergeDescendants = true) {},
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -278,15 +285,17 @@ private fun SeriesGridItem(series: SeriesItem, onClick: () -> Unit, modifier: Mo
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = "${volumesLabel(series.volumeCount)} · ${series.percent}%",
+            text = stringResource(
+                R.string.common_dot_separated,
+                volumesLabel(series.volumeCount).asString(),
+                stringResource(R.string.common_percent, series.percent),
+            ),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
         )
     }
 }
-
-private fun volumesLabel(count: Int) = if (count == 1) "1 volume" else "$count volumes"
 
 @Preview(showBackground = true)
 @Composable
@@ -305,7 +314,7 @@ private fun SeriesScreenPreview() {
                         volumeCount = 6,
                         finishedCount = 1,
                         percent = 16,
-                        currentLabel = "Reading: Volume 2",
+                        currentLabel = "Reading: Volume 2".asUiText(),
                         continueBookId = 2,
                         preview = emptyList(),
                     )
@@ -339,12 +348,14 @@ private fun CreateSeriesDialogContent(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New series") },
+        title = { Text(stringResource(R.string.series_new)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Creates an empty folder in ${libraryFolderPath ?: "your library folder"}. " +
-                        "Copy the volumes into it, then pull down to refresh.",
+                    text = stringResource(
+                        R.string.series_new_message,
+                        libraryFolderPath ?: stringResource(R.string.series_new_your_library_folder),
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 OutlinedTextField(
@@ -353,10 +364,10 @@ private fun CreateSeriesDialogContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester),
-                    label = { Text("Folder name") },
+                    label = { Text(stringResource(R.string.series_new_folder_name)) },
                     singleLine = true,
                     isError = dialog.error != null,
-                    supportingText = dialog.error?.let { error -> { Text(error) } },
+                    supportingText = dialog.error?.let { error -> { Text(error.asString()) } },
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
                         imeAction = ImeAction.Done,
@@ -367,9 +378,9 @@ private fun CreateSeriesDialogContent(
         },
         confirmButton = {
             TextButton(onClick = onCreate, enabled = !dialog.isCreating && dialog.name.isNotBlank()) {
-                Text("Create")
+                Text(stringResource(R.string.series_new_create))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

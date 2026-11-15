@@ -12,12 +12,13 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.rememberViewModelStoreProvider
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -42,14 +43,16 @@ import my.naqibrafiqi.pustaka.ui.feature.settings.api.SettingsRoute
 import my.naqibrafiqi.pustaka.ui.feature.settings.impl.settingsEntryBuilder
 import my.naqibrafiqi.pustaka.ui.scan.LibraryScanViewModel
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
+import my.naqibrafiqi.pustaka.util.text.resolve
 
 @Composable
 fun PustakaApp() {
     // Shared by the whole app, so the screens' pull-to-refresh and this message use the same one.
     val scanViewModel: LibraryScanViewModel = hiltViewModel()
     val snackbarHostState = remember { SnackbarHostState() }
+    val resources = LocalResources.current
     LaunchedEffect(scanViewModel) {
-        scanViewModel.messages.collect { snackbarHostState.showSnackbar(it) }
+        scanViewModel.messages.collect { snackbarHostState.showSnackbar(it.resolve(resources)) }
     }
 
     val libraryBackStack = rememberNavBackStack(LibraryRoute)

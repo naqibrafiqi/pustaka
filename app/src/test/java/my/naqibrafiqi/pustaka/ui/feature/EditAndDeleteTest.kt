@@ -24,6 +24,7 @@ import my.naqibrafiqi.pustaka.testing.MainDispatcherRule
 import my.naqibrafiqi.pustaka.testing.TestClock
 import my.naqibrafiqi.pustaka.testing.book
 import my.naqibrafiqi.pustaka.testing.inMemoryDatabase
+import my.naqibrafiqi.pustaka.testing.text
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details.BookDeleteDialog
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details.BookDetailsViewModel
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.edit.EditBookViewModel
@@ -110,15 +111,16 @@ class EditAndDeleteTest {
     fun aSeriesCantBeCreatedOverAnExistingFolder() = runTest {
         File(root, "Taken").mkdir()
 
-        assertEquals(CreateSeriesResult.Invalid("There's already a folder called \"Taken\"."), files.createSeries("Taken"))
+        val result = files.createSeries("Taken") as CreateSeriesResult.Invalid
+        assertEquals("There's already a folder called \"Taken\".", result.message.text())
     }
 
     @Test
     fun seriesNamesFollowTheFolderRules() {
         assertNull(SeriesNames.problemWith("Harbour Tales, Vol. 1-4"))
-        assertEquals("Enter a name.", SeriesNames.problemWith("   "))
+        assertEquals("Enter a name.", SeriesNames.problemWith("   ")?.text())
         assertNotNull(SeriesNames.problemWith(".hidden"))
-        assertEquals("The name can't contain / :", SeriesNames.problemWith("a/b:c"))
+        assertEquals("The name can't contain / :", SeriesNames.problemWith("a/b:c")?.text())
         assertNotNull(SeriesNames.problemWith("x".repeat(256)))
     }
 

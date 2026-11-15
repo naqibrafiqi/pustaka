@@ -23,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
@@ -40,7 +43,7 @@ fun AboutScreen(onOpenLicences: () -> Unit, onNavigateBack: () -> Unit) {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
     }
 
-    Scaffold(topBar = { TopBar(title = "About Pustaka", onNavigateBack = onNavigateBack) }) { innerPadding ->
+    Scaffold(topBar = { TopBar(title = stringResource(R.string.about_title), onNavigateBack = onNavigateBack) }) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -51,31 +54,32 @@ fun AboutScreen(onOpenLicences: () -> Unit, onNavigateBack: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text("Pustaka", style = MaterialTheme.typography.headlineMedium)
+                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
                 version?.let {
                     Text(
-                        text = "Version $it",
+                        text = stringResource(R.string.about_version, it),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(
-                    text = "An offline EPUB reader for books that come in series. It reads the EPUB files " +
-                        "in a folder you manage yourself, and never renames, moves or uploads them.",
+                    text = stringResource(R.string.about_description),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 12.dp),
                 )
             }
 
             ListItem(
-                headlineContent = { Text("Source code") },
+                headlineContent = { Text(stringResource(R.string.about_source_code)) },
                 supportingContent = { Text(SOURCE_CODE_URL.removePrefix("https://")) },
                 leadingContent = { Icon(painterResource(R.drawable.article), contentDescription = null) },
-                modifier = Modifier.clickable { runCatching { uriHandler.openUri(SOURCE_CODE_URL) } },
+                modifier = Modifier.clickable(onClickLabel = stringResource(R.string.about_open_in_browser)) {
+                    runCatching { uriHandler.openUri(SOURCE_CODE_URL) }
+                },
             )
             ListItem(
-                headlineContent = { Text("Open-source licences") },
-                supportingContent = { Text("The libraries Pustaka is built with") },
+                headlineContent = { Text(stringResource(R.string.licences_title)) },
+                supportingContent = { Text(stringResource(R.string.licences_summary)) },
                 leadingContent = { Icon(painterResource(R.drawable.info), contentDescription = null) },
                 modifier = Modifier.clickable(onClick = onOpenLicences),
             )
@@ -86,11 +90,13 @@ fun AboutScreen(onOpenLicences: () -> Unit, onNavigateBack: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text("How Pustaka is made", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "Pustaka is vibe coded. Its code, tests and docs are written by Claude, Anthropic's " +
-                        "AI model, working in Claude Code. The project owner decides what the app should do, " +
-                        "and reviews and tries out each part before it's added.",
+                    text = stringResource(R.string.about_how_made_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.semantics { heading() },
+                )
+                Text(
+                    text = stringResource(R.string.about_how_made),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -101,7 +107,7 @@ fun AboutScreen(onOpenLicences: () -> Unit, onNavigateBack: () -> Unit) {
 
 @Composable
 fun LicencesScreen(onOpenLibrary: (Int) -> Unit, onNavigateBack: () -> Unit) {
-    Scaffold(topBar = { TopBar(title = "Open-source licences", onNavigateBack = onNavigateBack) }) { innerPadding ->
+    Scaffold(topBar = { TopBar(title = stringResource(R.string.licences_title), onNavigateBack = onNavigateBack) }) { innerPadding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
@@ -111,7 +117,7 @@ fun LicencesScreen(onOpenLibrary: (Int) -> Unit, onNavigateBack: () -> Unit) {
         ) {
             item {
                 Text(
-                    text = "Pustaka is built with these open-source projects. Tap one to read its licence.",
+                    text = stringResource(R.string.licences_explanation),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -120,9 +126,9 @@ fun LicencesScreen(onOpenLibrary: (Int) -> Unit, onNavigateBack: () -> Unit) {
             itemsIndexed(OpenSourceLibraries, key = { _, library -> library.name }) { index, library ->
                 ListItem(
                     headlineContent = { Text(library.name) },
-                    overlineContent = { Text("${library.author} · ${library.licence.title}") },
-                    supportingContent = { Text(library.description) },
-                    modifier = Modifier.clickable { onOpenLibrary(index) },
+                    overlineContent = { Text(stringResource(R.string.common_dot_separated, library.author, library.licence.title)) },
+                    supportingContent = { Text(stringResource(library.description)) },
+                    modifier = Modifier.clickable(onClickLabel = stringResource(R.string.licences_read)) { onOpenLibrary(index) },
                 )
             }
         }
@@ -150,7 +156,9 @@ fun LicenceScreen(library: OpenSourceLibrary, onNavigateBack: () -> Unit) {
             ListItem(
                 headlineContent = { Text(library.author) },
                 supportingContent = { Text(library.url.removePrefix("https://")) },
-                modifier = Modifier.clickable { runCatching { uriHandler.openUri(library.url) } },
+                modifier = Modifier.clickable(onClickLabel = stringResource(R.string.about_open_in_browser)) {
+                    runCatching { uriHandler.openUri(library.url) }
+                },
             )
             SelectionContainer {
                 Text(

@@ -1,8 +1,13 @@
 package my.naqibrafiqi.pustaka.ui.feature.highlights.screen
 
+import android.content.Context
+import android.content.res.Resources
+import dagger.hilt.android.qualifiers.ApplicationContext
+import my.naqibrafiqi.pustaka.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import javax.inject.Inject
 
 /**
  * Writes highlights as Markdown, for exporting (decisions D11 and D12). Series and books are
@@ -24,20 +29,23 @@ import java.util.Locale
  * *Page 12*
  * ```
  */
-object HighlightsMarkdown {
+class HighlightsMarkdown(private val resources: Resources) {
+
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(context.resources)
 
     fun build(groups: List<SeriesHighlights>, exportedOn: LocalDate): String = buildString {
-        append("# Highlights\n\n")
-        append("Exported from Pustaka on ${DATE.format(exportedOn)}.\n")
+        append("# ${resources.getString(R.string.highlights_title)}\n\n")
+        append(resources.getString(R.string.highlights_export_date, DATE.format(exportedOn))).append('\n')
         for (group in groups) {
-            append("\n## ${group.name ?: STANDALONE}\n")
+            append("\n## ${group.name ?: resources.getString(R.string.highlights_standalone)}\n")
             for (book in group.books) {
                 append("\n### ${book.title}\n")
                 for (item in book.highlights) {
                     append('\n')
                     append(quote(item.highlight.text))
                     item.highlight.note?.let { note -> append("\n\n").append(note.trim()) }
-                    item.page?.let { page -> append("\n\n*Page $page*") }
+                    item.page?.let { page -> append("\n\n*${resources.getString(R.string.page_number, page)}*") }
                     append('\n')
                 }
             }
@@ -49,8 +57,9 @@ object HighlightsMarkdown {
      * everything. Characters that file names can't have are left out.
      */
     fun fileName(bookTitle: String?): String {
-        val base = bookTitle?.let { "$it highlights" } ?: "Pustaka highlights"
-        val safe = base.replace(UNSAFE, "").replace(Regex("\\s+"), " ").trim().ifEmpty { "Pustaka highlights" }
+        val everything = resources.getString(R.string.highlights_export_file_all)
+        val base = bookTitle?.let { resources.getString(R.string.highlights_export_file_book, it) } ?: everything
+        val safe = base.replace(UNSAFE, "").replace(Regex("\\s+"), " ").trim().ifEmpty { everything }
         return "$safe.md"
     }
 
@@ -58,7 +67,8 @@ object HighlightsMarkdown {
     private fun quote(text: String): String =
         text.trim().lines().joinToString("\n") { line -> if (line.isBlank()) ">" else "> ${line.trim()}" }
 
-    const val STANDALONE = "Standalone books"
-    private val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH)
-    private val UNSAFE = Regex("""[\\/:*?"<>|\u0000-\u001F]""")
+    private companion object {
+        val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH)
+        val UNSAFE = Regex("""[\\/:*?"<>|\u0000-\u001F]""")
+    }
 }

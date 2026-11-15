@@ -34,7 +34,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,6 +49,7 @@ import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.model.booksLabel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
 
 /** What the Settings screen can do. */
 interface SettingsActions {
@@ -77,7 +81,7 @@ fun SettingsScreen(
 
     Scaffold(
         modifier = modifier,
-        topBar = { TopBar(title = "Settings") },
+        topBar = { TopBar(title = stringResource(R.string.navigation_label_settings)) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         if (state == null) {
@@ -90,25 +94,25 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            SectionTitle("Library")
+            SectionTitle(stringResource(R.string.navigation_label_library))
             SettingsItem(
-                title = "Library folder",
+                title = stringResource(R.string.settings_library_folder),
                 summary = state.libraryFolderPath,
                 iconRes = R.drawable.folder_managed,
                 onClick = actions::chooseFolder,
             )
             if (!state.isDefaultLibraryFolder) {
                 SettingsItem(
-                    title = "Use default folder",
+                    title = stringResource(R.string.settings_use_default_folder),
                     summary = state.defaultLibraryFolderPath,
                     iconRes = R.drawable.undo,
                     onClick = actions::useDefaultFolder,
                 )
             }
             ListItem(
-                headlineContent = { Text("Rescan library") },
+                headlineContent = { Text(stringResource(R.string.settings_rescan)) },
                 supportingContent = {
-                    Text(if (isScanning) "Scanning…" else "Look for new, changed and missing books")
+                    Text(stringResource(if (isScanning) R.string.settings_scanning else R.string.settings_rescan_summary))
                 },
                 leadingContent = { Icon(painterResource(R.drawable.sync), contentDescription = null) },
                 trailingContent = if (isScanning) {
@@ -119,23 +123,23 @@ fun SettingsScreen(
                 modifier = Modifier.clickable(enabled = !isScanning, onClick = actions::rescan),
             )
             SettingsItem(
-                title = "Hidden items",
-                summary = state.hiddenLabel,
+                title = stringResource(R.string.settings_hidden_items),
+                summary = state.hiddenLabel.asString(),
                 iconRes = R.drawable.bookmark_remove,
                 onClick = actions::openHiddenItems,
             )
 
-            SectionTitle("Appearance")
+            SectionTitle(stringResource(R.string.settings_appearance))
             SettingsItem(
-                title = "Theme",
-                summary = state.appTheme.label,
+                title = stringResource(R.string.reader_setting_theme),
+                summary = stringResource(state.appTheme.label),
                 iconRes = R.drawable.donut_large,
                 onClick = { themeDialogOpen = true },
             )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 ListItem(
-                    headlineContent = { Text("Dynamic colours") },
-                    supportingContent = { Text("Use colours from your wallpaper") },
+                    headlineContent = { Text(stringResource(R.string.settings_dynamic_colours)) },
+                    supportingContent = { Text(stringResource(R.string.settings_dynamic_colours_summary)) },
                     leadingContent = { Icon(painterResource(R.drawable.stylus_brush), contentDescription = null) },
                     trailingContent = { Switch(checked = state.dynamicColor, onCheckedChange = null) },
                     modifier = Modifier.toggleable(
@@ -146,27 +150,27 @@ fun SettingsScreen(
                 )
             }
 
-            SectionTitle("Reading")
+            SectionTitle(stringResource(R.string.settings_reading))
             SettingsItem(
-                title = "Reader settings",
-                summary = "Theme, font, text size, spacing, margins and scrolling",
+                title = stringResource(R.string.settings_reader_settings),
+                summary = stringResource(R.string.settings_reader_settings_summary),
                 iconRes = R.drawable.menu_book,
                 onClick = actions::openReaderSettings,
             )
 
-            SectionTitle("Storage")
+            SectionTitle(stringResource(R.string.settings_storage))
             StorageItems(storage, isScanning, actions::clearCovers)
 
-            SectionTitle("About")
+            SectionTitle(stringResource(R.string.settings_about))
             SettingsItem(
-                title = "About Pustaka",
-                summary = "Version, source code and how Pustaka is made",
+                title = stringResource(R.string.about_title),
+                summary = stringResource(R.string.settings_about_summary),
                 iconRes = R.drawable.info,
                 onClick = actions::openAbout,
             )
             SettingsItem(
-                title = "Open-source licences",
-                summary = "The libraries Pustaka is built with",
+                title = stringResource(R.string.licences_title),
+                summary = stringResource(R.string.licences_summary),
                 iconRes = R.drawable.article,
                 onClick = actions::openLicences,
             )
@@ -187,36 +191,34 @@ fun SettingsScreen(
     folderChange?.let { change ->
         AlertDialog(
             onDismissRequest = onDismissFolderChange,
-            title = { Text(if (change.isDefault) "Use the default folder?" else "Use this folder?") },
-            text = {
-                Text(
-                    "Pustaka will read your library from ${change.path}.\n\n" +
-                        "Books that aren't in this folder stay in your library as missing, with their progress " +
-                        "and highlights, and come back if their files turn up here. Nothing is moved or deleted."
-                )
+            title = {
+                Text(stringResource(if (change.isDefault) R.string.settings_folder_change_default_title else R.string.settings_folder_change_title))
             },
-            confirmButton = { TextButton(onClick = onConfirmFolderChange) { Text("Use folder") } },
-            dismissButton = { TextButton(onClick = onDismissFolderChange) { Text("Cancel") } },
+            text = { Text(stringResource(R.string.settings_folder_change_message, change.path)) },
+            confirmButton = { TextButton(onClick = onConfirmFolderChange) { Text(stringResource(R.string.settings_folder_change_confirm)) } },
+            dismissButton = { TextButton(onClick = onDismissFolderChange) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }
 
 @Composable
 private fun StorageItems(storage: StorageReport?, isScanning: Boolean, onClearCovers: () -> Unit) {
-    val measuring = "Measuring…"
+    val measuring = stringResource(R.string.settings_measuring)
     SettingsItem(
-        title = "Books",
-        summary = storage?.let { "${formatBytes(it.bookFiles)} in ${booksLabel(it.bookCount)}" } ?: measuring,
+        title = stringResource(R.string.search_books),
+        summary = storage?.let {
+            stringResource(R.string.settings_storage_books, formatBytes(it.bookFiles), booksLabel(it.bookCount).asString())
+        } ?: measuring,
         iconRes = R.drawable.book_5,
     )
     ListItem(
-        headlineContent = { Text("Cover cache") },
+        headlineContent = { Text(stringResource(R.string.settings_cover_cache)) },
         supportingContent = {
             Text(
                 when {
                     storage == null -> measuring
-                    isScanning -> "${formatBytes(storage.covers)}. Covers are being read…"
-                    else -> "${formatBytes(storage.covers)}. Cleared covers come back on the next scan."
+                    isScanning -> stringResource(R.string.settings_cover_cache_reading, formatBytes(storage.covers))
+                    else -> stringResource(R.string.settings_cover_cache_summary, formatBytes(storage.covers))
                 }
             )
         },
@@ -225,12 +227,12 @@ private fun StorageItems(storage: StorageReport?, isScanning: Boolean, onClearCo
             TextButton(
                 onClick = onClearCovers,
                 enabled = storage != null && storage.covers > 0 && !isScanning,
-            ) { Text("Clear") }
+            ) { Text(stringResource(R.string.settings_cover_cache_clear)) }
         },
     )
     SettingsItem(
-        title = "App data",
-        summary = storage?.let { "${formatBytes(it.appData)}: progress, highlights, edits and settings" } ?: measuring,
+        title = stringResource(R.string.settings_app_data),
+        summary = storage?.let { stringResource(R.string.settings_app_data_summary, formatBytes(it.appData)) } ?: measuring,
         iconRes = R.drawable.storage,
     )
 }
@@ -242,7 +244,9 @@ private fun SectionTitle(title: String) {
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
+            .semantics { heading() },
     )
 }
 
@@ -260,7 +264,7 @@ private fun SettingsItem(title: String, summary: String, iconRes: Int, onClick: 
 private fun ThemeDialog(selected: AppTheme, onSelect: (AppTheme) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Theme") },
+        title = { Text(stringResource(R.string.reader_setting_theme)) },
         text = {
             Column(Modifier.selectableGroup()) {
                 AppTheme.entries.forEach { theme ->
@@ -272,12 +276,12 @@ private fun ThemeDialog(selected: AppTheme, onSelect: (AppTheme) -> Unit, onDism
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = theme == selected, onClick = null)
-                        Text(theme.label, modifier = Modifier.padding(start = 16.dp))
+                        Text(stringResource(theme.label), modifier = Modifier.padding(start = 16.dp))
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -293,7 +297,7 @@ private fun SettingsScreenPreview() {
                 hiddenSeries = 1,
                 hiddenBooks = 2,
                 appTheme = AppTheme.SYSTEM,
-                dynamicColor = true,
+                dynamicColor = false,
             ),
             storage = StorageReport(bookFiles = 182_400_000, bookCount = 8, covers = 3_400_000, appData = 512_000),
             isScanning = false,

@@ -1,7 +1,12 @@
 package my.naqibrafiqi.pustaka.ui.scan
 
+import androidx.annotation.PluralsRes
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.scan.ScanOutcome
 import my.naqibrafiqi.pustaka.data.library.scan.ScanResult
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.pluralText
+import my.naqibrafiqi.pustaka.util.text.uiText
 
 /**
  * The short message shown when a scan ends, such as "3 new books found".
@@ -11,40 +16,36 @@ import my.naqibrafiqi.pustaka.data.library.scan.ScanResult
  */
 object ScanMessages {
 
-    fun forOutcome(outcome: ScanOutcome, requestedByUser: Boolean): String? = when (outcome) {
+    fun forOutcome(outcome: ScanOutcome, requestedByUser: Boolean): UiText? = when (outcome) {
         is ScanOutcome.Finished -> when (val result = outcome.result) {
             is ScanResult.Success -> when {
                 result.hasChanges || result.unreadableFiles.isNotEmpty() -> summary(result)
-                requestedByUser -> "Library is up to date"
+                requestedByUser -> uiText(R.string.scan_up_to_date)
                 else -> null
             }
             is ScanResult.FolderUnavailable ->
-                if (requestedByUser) "Can't open the library folder ${result.folderPath}" else null
+                if (requestedByUser) uiText(R.string.scan_folder_unavailable, result.folderPath) else null
         }
         ScanOutcome.NoAccess ->
-            if (requestedByUser) "Pustaka needs access to your files to scan the library" else null
+            if (requestedByUser) uiText(R.string.scan_no_access) else null
         ScanOutcome.Failed ->
-            if (requestedByUser) "The scan didn't finish. Try again." else null
+            if (requestedByUser) uiText(R.string.scan_failed) else null
     }
 
     /** For example "3 new books found, 1 book missing". */
-    fun summary(result: ScanResult.Success): String {
+    fun summary(result: ScanResult.Success): UiText {
         val parts = listOfNotNull(
-            count(result.newBooks, "new book", "new books")?.let { "$it found" },
-            count(result.newSeries, "new series", "new series")?.takeIf { result.newBooks == 0 }?.let { "$it found" },
-            count(result.restoredBooks, "missing book is back", "missing books are back"),
-            count(result.movedBooks, "book renamed or moved", "books renamed or moved"),
-            count(result.updatedBooks, "book updated", "books updated"),
-            count(result.missingBooks, "book missing", "books missing"),
-            count(result.removedSeries, "series removed", "series removed"),
-            count(result.unreadableFiles.size, "file couldn't be read", "files couldn't be read"),
+            count(result.newBooks, R.plurals.scan_new_books),
+            count(result.newSeries, R.plurals.scan_new_series)?.takeIf { result.newBooks == 0 },
+            count(result.restoredBooks, R.plurals.scan_restored_books),
+            count(result.movedBooks, R.plurals.scan_moved_books),
+            count(result.updatedBooks, R.plurals.scan_updated_books),
+            count(result.missingBooks, R.plurals.scan_missing_books),
+            count(result.removedSeries, R.plurals.scan_removed_series),
+            count(result.unreadableFiles.size, R.plurals.scan_unreadable_files),
         )
-        return parts.joinToString(", ").ifEmpty { "Library is up to date" }
+        return if (parts.isEmpty()) uiText(R.string.scan_up_to_date) else UiText.Joined(parts)
     }
 
-    private fun count(n: Int, one: String, many: String): String? = when (n) {
-        0 -> null
-        1 -> "1 $one"
-        else -> "$n $many"
-    }
+    private fun count(n: Int, @PluralsRes id: Int): UiText? = if (n == 0) null else pluralText(id, n)
 }

@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.search.screen
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import javax.inject.Inject
@@ -20,7 +22,7 @@ sealed interface SearchUiState {
 
     data class Results(val query: String, val results: SearchResults) : SearchUiState
 
-    data class Error(val message: String) : SearchUiState
+    data class Error(@param:StringRes val message: Int) : SearchUiState
 }
 
 /** The search screen opened from Library and Series. Hidden series and books aren't searched. */
@@ -45,7 +47,7 @@ class SearchViewModel @Inject constructor(
             SearchUiState.Results(query.trim(), LibrarySearch.search(query, series, library))
         }
     }
-        .catch<SearchUiState> { emit(SearchUiState.Error("Couldn't search your library.")) }
+        .catch<SearchUiState> { emit(SearchUiState.Error(R.string.search_error)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), SearchUiState.Idle)
 
     fun changeQuery(query: String) {

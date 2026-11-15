@@ -41,7 +41,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,6 +54,8 @@ import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.MessageState
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
+import my.naqibrafiqi.pustaka.util.text.asUiText
 import kotlin.math.roundToInt
 
 /**
@@ -111,7 +117,7 @@ private fun ReaderTopBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onNavigateBack) {
-                Icon(painter = painterResource(R.drawable.arrow_back), contentDescription = "Close the book")
+                Icon(painter = painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.reader_close_book))
             }
             Column(
                 modifier = Modifier
@@ -135,10 +141,10 @@ private fun ReaderTopBar(
                 }
             }
             IconButton(onClick = onOpenContents) {
-                Icon(painter = painterResource(R.drawable.list), contentDescription = "Contents")
+                Icon(painter = painterResource(R.drawable.list), contentDescription = stringResource(R.string.reader_contents))
             }
             IconButton(onClick = onOpenSettings) {
-                Icon(painter = painterResource(R.drawable.settings), contentDescription = "Reading settings")
+                Icon(painter = painterResource(R.drawable.settings), contentDescription = stringResource(R.string.reader_settings_title))
             }
         }
     }
@@ -159,7 +165,13 @@ private fun ReaderBottomBar(position: ReaderPosition, onGoToPage: (Int) -> Unit)
                 .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
             if (position.pageCount > 1) {
+                val pageDescription = stringResource(R.string.reader_page_slider)
+                val pageState = stringResource(R.string.page_of_total, shownPage ?: 1, position.pageCount)
                 Slider(
+                    modifier = Modifier.semantics {
+                        contentDescription = pageDescription
+                        stateDescription = pageState
+                    },
                     value = (shownPage ?: 1).toFloat(),
                     onValueChange = { dragPage = it.roundToInt() },
                     onValueChangeFinished = {
@@ -174,13 +186,13 @@ private fun ReaderBottomBar(position: ReaderPosition, onGoToPage: (Int) -> Unit)
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = shownPage?.let { "Page $it of ${position.pageCount}" } ?: "",
+                    text = shownPage?.let { stringResource(R.string.page_of_total, it, position.pageCount) }.orEmpty(),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                 )
                 if (dragPage == null) {
                     Text(
-                        text = "${position.percent}%",
+                        text = stringResource(R.string.common_percent, position.percent),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -204,13 +216,13 @@ fun ContentsSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Text(
-            text = "Contents",
+            text = stringResource(R.string.reader_contents),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
         )
         if (entries.isEmpty()) {
             Text(
-                text = "This book doesn't have a table of contents.",
+                text = stringResource(R.string.reader_no_contents),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
@@ -234,7 +246,7 @@ private fun ContentsList(entries: List<TocEntry>, currentIndex: Int?, onSelect: 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(role = Role.Button, onClickLabel = "Go to chapter") { onSelect(entry) }
+                    .clickable(role = Role.Button, onClickLabel = stringResource(R.string.reader_go_to_chapter)) { onSelect(entry) }
                     .background(if (isCurrent) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)
                     .padding(start = 24.dp + 16.dp * entry.depth.coerceAtMost(MAX_INDENT), end = 24.dp)
                     .padding(vertical = 14.dp),
@@ -250,7 +262,7 @@ private fun ContentsList(entries: List<TocEntry>, currentIndex: Int?, onSelect: 
                 if (isCurrent) {
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        text = "Reading",
+                        text = stringResource(R.string.book_state_reading),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
@@ -287,7 +299,7 @@ fun FinishCardView(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = "Finished",
+                text = stringResource(R.string.book_state_finished),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -295,9 +307,9 @@ fun FinishCardView(
             val next = card.next
             Text(
                 text = when {
-                    next != null -> "Up next: ${next.label} · ${next.title}"
-                    card.seriesName != null -> "That was the last volume of ${card.seriesName}."
-                    else -> "You've reached the end of this book."
+                    next != null -> stringResource(R.string.reader_finish_up_next, next.label.asString(), next.title)
+                    card.seriesName != null -> stringResource(R.string.reader_finish_last_volume, card.seriesName)
+                    else -> stringResource(R.string.reader_finish_end_of_book)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -308,9 +320,9 @@ fun FinishCardView(
                     .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             ) {
-                TextButton(onClick = onClose) { Text("Close") }
+                TextButton(onClick = onClose) { Text(stringResource(R.string.common_close)) }
                 if (next != null) {
-                    Button(onClick = { onReadNext(next) }) { Text("Read next") }
+                    Button(onClick = { onReadNext(next) }) { Text(stringResource(R.string.reader_read_next)) }
                 }
             }
         }
@@ -331,10 +343,10 @@ fun ReaderFailed(message: String, onClose: () -> Unit, modifier: Modifier = Modi
         contentAlignment = Alignment.Center,
     ) {
         MessageState(
-            title = "Couldn't open this book",
+            title = stringResource(R.string.reader_error_title),
             message = message,
             iconRes = R.drawable.broken_image,
-            actionLabel = "Close",
+            actionLabel = stringResource(R.string.common_close),
             onAction = onClose,
         )
     }
@@ -366,7 +378,7 @@ private fun FinishCardPreview() {
             card = FinishCard(
                 title = "Brunhild, Vol. 01",
                 seriesName = "Brunhild",
-                next = NextVolume(bookId = 2, title = "Brunhild, Vol. 02", label = "Volume 2", fromStart = false),
+                next = NextVolume(bookId = 2, title = "Brunhild, Vol. 02", label = "Volume 2".asUiText(), fromStart = false),
             ),
             onReadNext = {},
             onClose = {},
@@ -378,6 +390,6 @@ private fun FinishCardPreview() {
 @Composable
 private fun ReaderFailedPreview() {
     PustakaTheme {
-        ReaderFailed(message = ReaderViewModel.messageFor(my.naqibrafiqi.pustaka.data.library.epub.OpenFailure.PROTECTED), onClose = {})
+        ReaderFailed(message = stringResource(ReaderViewModel.messageFor(my.naqibrafiqi.pustaka.data.library.epub.OpenFailure.PROTECTED)), onClose = {})
     }
 }

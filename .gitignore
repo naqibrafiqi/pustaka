@@ -13,3 +13,11 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Release signing (decision D21). Never commit these.
+keystore.properties
+*.jks
+*.keystore
+
+# Kotlin compiler caches
+.kotlin/

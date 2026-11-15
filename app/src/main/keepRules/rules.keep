@@ -1,12 +1,9 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
-#
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
+# Keep rules for R8, which shrinks the release build. AGP passes every file in src/main/keepRules
+# to R8, together with the libraries' own rules.
+# See https://d.android.com/r/tools/r8/keep-rules
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Readium's reader runs JavaScript in a WebView, which calls back into methods marked with
+# @JavascriptInterface. R8 can't see those calls, so the methods are kept.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}

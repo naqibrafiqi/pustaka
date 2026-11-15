@@ -1,18 +1,23 @@
 package my.naqibrafiqi.pustaka.ui.model
 
+import androidx.annotation.StringRes
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.BookDetails
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.data.model.authors
 import my.naqibrafiqi.pustaka.data.model.illustrators
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.pluralText
+import my.naqibrafiqi.pustaka.util.text.uiText
 
 /** Where a book is, as shown on cards and in Book Details. A missing file wins over the rest. */
-enum class BookState(val label: String) {
-    UNREAD("Unread"),
-    READING("Reading"),
-    FINISHED("Finished"),
-    MISSING("File not found");
+enum class BookState(@param:StringRes val label: Int) {
+    UNREAD(R.string.book_state_unread),
+    READING(R.string.book_state_reading),
+    FINISHED(R.string.book_state_finished),
+    MISSING(R.string.book_state_missing);
 
     companion object {
         fun of(book: Book): BookState = when {
@@ -35,13 +40,13 @@ data class BookItem(
     /** From 0 to 100. A finished book is always 100. */
     val percent: Int,
     /** "Volume 4", for a volume of a series. */
-    val volumeLabel: String?,
+    val volumeLabel: UiText?,
 ) {
     val progress: Float get() = percent / 100f
     val isMissing: Boolean get() = state == BookState.MISSING
 }
 
-fun Book.toItem(progress: ReadingProgress?, volumeLabel: String? = null): BookItem {
+fun Book.toItem(progress: ReadingProgress?, volumeLabel: UiText? = null): BookItem {
     val state = BookState.of(this)
     return BookItem(
         id = id,
@@ -66,15 +71,15 @@ fun BookDetails.creditLine(): String? =
     (authors + illustrators).distinct().joinToString(", ").ifEmpty { null }
 
 /** "Page 116 of 200", "Page 116" or "200 pages", or null when nothing is known. */
-fun pageLabel(position: Int?, totalPositions: Int?): String? = when {
-    position != null && totalPositions != null -> "Page $position of $totalPositions"
-    position != null -> "Page $position"
+fun pageLabel(position: Int?, totalPositions: Int?): UiText? = when {
+    position != null && totalPositions != null -> uiText(R.string.page_of_total, position, totalPositions)
+    position != null -> uiText(R.string.page_number, position)
     totalPositions != null -> pagesLabel(totalPositions)
     else -> null
 }
 
-fun pagesLabel(count: Int): String = if (count == 1) "1 page" else "$count pages"
+fun pagesLabel(count: Int): UiText = pluralText(R.plurals.pages_count, count)
 
-fun volumesLabel(count: Int): String = if (count == 1) "1 volume" else "$count volumes"
+fun volumesLabel(count: Int): UiText = pluralText(R.plurals.volumes_count, count)
 
-fun booksLabel(count: Int): String = if (count == 1) "1 book" else "$count books"
+fun booksLabel(count: Int): UiText = pluralText(R.plurals.books_count, count)

@@ -3,10 +3,13 @@ package my.naqibrafiqi.pustaka.data.library
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.scan.LibraryScans
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.uiText
 import java.io.File
 import javax.inject.Inject
 
@@ -17,14 +20,14 @@ sealed interface CreateSeriesResult {
     data class Created(val seriesId: Long) : CreateSeriesResult
 
     /** The name can't be used. [message] says why. */
-    data class Invalid(val message: String) : CreateSeriesResult
+    data class Invalid(val message: UiText) : CreateSeriesResult
 
-    data class Failed(val message: String) : CreateSeriesResult
+    data class Failed(val message: UiText) : CreateSeriesResult
 }
 
 sealed interface DeleteResult {
     data object Deleted : DeleteResult
-    data class Failed(val message: String) : DeleteResult
+    data class Failed(val message: UiText) : DeleteResult
 }
 
 /**
@@ -48,9 +51,9 @@ class LibraryFiles @Inject constructor(
         return withContext(Dispatchers.IO) {
             val folder = File(root, trimmed)
             when {
-                !root.isDirectory -> CreateSeriesResult.Failed("The library folder ${root.path} can't be found.")
-                folder.exists() -> CreateSeriesResult.Invalid("There's already a folder called \"$trimmed\".")
-                !folder.mkdir() -> CreateSeriesResult.Failed("Couldn't create the folder \"$trimmed\".")
+                !root.isDirectory -> CreateSeriesResult.Failed(uiText(R.string.create_series_no_library_folder, root.path))
+                folder.exists() -> CreateSeriesResult.Invalid(uiText(R.string.create_series_exists, trimmed))
+                !folder.mkdir() -> CreateSeriesResult.Failed(uiText(R.string.create_series_failed, trimmed))
                 else -> {
                     val id = seriesRepository.getSeriesByFolderPath(folder.path)?.id
                         ?: seriesRepository.addSeries(folder.path, folder.name)
@@ -77,7 +80,7 @@ class LibraryFiles @Inject constructor(
         val deleted = withContext(Dispatchers.IO) { !folder.exists() || folder.deleteRecursively() }
         if (!deleted) {
             scans.requestScan()
-            return DeleteResult.Failed("Some files in \"${folder.name}\" couldn't be deleted.")
+            return DeleteResult.Failed(uiText(R.string.delete_folder_failed, folder.name))
         }
         seriesRepository.deleteSeries(seriesId)
         return DeleteResult.Deleted
@@ -88,7 +91,7 @@ class LibraryFiles @Inject constructor(
         val book = books.getBook(bookId) ?: return DeleteResult.Deleted
         val file = File(book.filePath)
         val deleted = withContext(Dispatchers.IO) { !file.exists() || file.delete() }
-        if (!deleted) return DeleteResult.Failed("\"${file.name}\" couldn't be deleted.")
+        if (!deleted) return DeleteResult.Failed(uiText(R.string.delete_file_failed, file.name))
         books.deleteBook(bookId)
         // The series' details come from its first volume, which may have been this one.
         if (!book.isStandalone) scans.requestScan()
@@ -104,14 +107,14 @@ object SeriesNames {
     private const val MAX_LENGTH = 255
 
     /** Why [name] can't be a folder name, or null if it can. */
-    fun problemWith(name: String): String? {
+    fun problemWith(name: String): UiText? {
         val trimmed = name.trim()
         val bad = trimmed.filter { it in NOT_ALLOWED || it.isISOControl() }.toSet()
         return when {
-            trimmed.isEmpty() -> "Enter a name."
-            trimmed.startsWith('.') -> "The name can't start with a dot, or the folder would be ignored."
-            bad.isNotEmpty() -> "The name can't contain ${bad.joinToString(" ")}"
-            trimmed.toByteArray().size > MAX_LENGTH -> "The name is too long."
+            trimmed.isEmpty() -> uiText(R.string.series_name_empty)
+            trimmed.startsWith('.') -> uiText(R.string.series_name_dot)
+            bad.isNotEmpty() -> uiText(R.string.series_name_bad_characters, bad.joinToString(" "))
+            trimmed.toByteArray().size > MAX_LENGTH -> uiText(R.string.series_name_too_long)
             else -> null
         }
     }

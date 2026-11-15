@@ -2,6 +2,7 @@ package my.naqibrafiqi.pustaka.ui.feature.onboarding
 
 import android.os.Build
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,11 +37,11 @@ import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
 /** What the user does next, in the words of the system screen they'll see. */
-private val accessInstruction: String
-    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        "turn on \"Allow access to manage all files\" for Pustaka."
+private val accessInstruction: Int
+    @StringRes get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        R.string.access_instruction_all_files
     } else {
-        "allow Pustaka to access files on your device."
+        R.string.access_instruction_legacy
     }
 
 /** Shown on first launch, before the permission screen. */
@@ -49,12 +53,10 @@ fun WelcomeScreen(
 ) {
     AccessScreenLayout(
         iconResId = R.drawable.local_library,
-        title = "Welcome to Pustaka",
-        body = "Pustaka shows the EPUB books you keep in one folder on your phone. " +
-            "To read that folder, it needs access to your files. Next, $accessInstruction\n\n" +
-            "Pustaka never renames or moves your files, and only deletes them when you ask it to.",
+        title = stringResource(R.string.welcome_title),
+        body = stringResource(R.string.welcome_body, stringResource(accessInstruction)),
         libraryFolderPath = libraryFolderPath,
-        buttonLabel = "Continue",
+        buttonLabel = stringResource(R.string.welcome_continue),
         onButtonClick = onContinue,
         modifier = modifier,
     )
@@ -69,11 +71,10 @@ fun AccessNeededScreen(
 ) {
     AccessScreenLayout(
         iconResId = R.drawable.folder_managed,
-        title = "Pustaka needs access to your files",
-        body = "Without it, Pustaka can't find the books in your library folder. " +
-            "Tap Grant access and $accessInstruction",
+        title = stringResource(R.string.access_needed_title),
+        body = stringResource(R.string.access_needed_body, stringResource(accessInstruction)),
         libraryFolderPath = libraryFolderPath,
-        buttonLabel = "Grant access",
+        buttonLabel = stringResource(R.string.access_grant),
         onButtonClick = onGrantAccess,
         modifier = modifier,
     )
@@ -115,6 +116,7 @@ private fun AccessScreenLayout(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { heading() },
                 )
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -125,7 +127,7 @@ private fun AccessScreenLayout(
                 )
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    text = "Library folder",
+                    text = stringResource(R.string.settings_library_folder),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

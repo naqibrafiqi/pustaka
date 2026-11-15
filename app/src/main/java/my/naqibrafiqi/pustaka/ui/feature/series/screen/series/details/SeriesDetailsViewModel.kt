@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.series.screen.series.details
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,15 +12,16 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.DeleteResult
 import my.naqibrafiqi.pustaka.data.library.FolderContents
 import my.naqibrafiqi.pustaka.data.library.LibraryFiles
@@ -66,7 +68,7 @@ sealed interface SeriesDetailsUiState {
 
     data object Loading : SeriesDetailsUiState
 
-    data class Error(val message: String) : SeriesDetailsUiState
+    data class Error(@param:StringRes val message: Int) : SeriesDetailsUiState
 
     /** The series was deleted, for example because its folder went and it had no books left. */
     data object NotFound : SeriesDetailsUiState
@@ -122,7 +124,7 @@ class SeriesDetailsViewModel @AssistedInject constructor(
                 isGrid,
             ) { series, volumes, progress, grid ->
                 if (series == null) SeriesDetailsUiState.NotFound else buildState(series, volumes, progress, grid)
-            }.catch { emit(SeriesDetailsUiState.Error("Couldn't load this series.")) }
+            }.catch { emit(SeriesDetailsUiState.Error(R.string.series_details_error)) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), SeriesDetailsUiState.Loading)
 

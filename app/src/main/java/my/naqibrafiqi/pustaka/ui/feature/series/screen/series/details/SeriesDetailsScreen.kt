@@ -38,6 +38,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +60,8 @@ import my.naqibrafiqi.pustaka.ui.model.BookItem
 import my.naqibrafiqi.pustaka.ui.model.BookState
 import my.naqibrafiqi.pustaka.ui.model.volumesLabel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
+import my.naqibrafiqi.pustaka.util.text.asUiText
 
 @Composable
 fun SeriesDetailsScreen(
@@ -103,7 +109,7 @@ private fun SeriesDetailsScreenContent(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopBar(
-                title = "Series Details",
+                title = stringResource(R.string.series_details_title),
                 subtitle = ready?.name,
                 onNavigateBack = onNavigateBack,
                 actionButtons = if (ready == null) null else {
@@ -122,7 +128,7 @@ private fun SeriesDetailsScreenContent(
                                     openMenu = false
                                     onEdit()
                                 },
-                                text = "Edit details",
+                                text = stringResource(R.string.details_edit),
                                 leadingIconResId = R.drawable.edit
                             )
 
@@ -131,7 +137,7 @@ private fun SeriesDetailsScreenContent(
                                     openMenu = false
                                     onDelete()
                                 },
-                                text = "Delete series",
+                                text = stringResource(R.string.series_delete),
                                 leadingIconResId = R.drawable.delete
                             )
                         }
@@ -147,16 +153,16 @@ private fun SeriesDetailsScreenContent(
         when (state) {
             SeriesDetailsUiState.Loading -> LoadingState(modifier = contentModifier)
             is SeriesDetailsUiState.Error -> ErrorState(
-                message = state.message,
+                message = stringResource(state.message),
                 onRetry = onRetry,
                 modifier = contentModifier,
             )
             SeriesDetailsUiState.NotFound -> MessageState(
-                title = "Series not found",
-                message = "This series is no longer in your library.",
+                title = stringResource(R.string.series_details_not_found_title),
+                message = stringResource(R.string.series_details_not_found_message),
                 iconRes = R.drawable.newsstand,
                 modifier = contentModifier,
-                actionLabel = "Go back",
+                actionLabel = stringResource(R.string.common_go_back),
                 onAction = onNavigateBack,
             )
             is SeriesDetailsUiState.Ready -> LazyVerticalGrid(
@@ -229,9 +235,8 @@ private fun LazyGridScope.readyContent(
     if (state.volumes.isEmpty()) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             MessageState(
-                title = "No volumes yet",
-                message = "Copy this series' EPUB files into ${state.folderPath}, then pull down to " +
-                    "refresh in Library or Series.",
+                title = stringResource(R.string.series_progress_no_volumes),
+                message = stringResource(R.string.series_details_no_volumes_message, state.folderPath),
                 iconRes = R.drawable.book_5,
             )
         }
@@ -273,7 +278,8 @@ private fun Header(
             Text(
                 text = title,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.semantics { heading() },
             )
 
             Column(
@@ -283,19 +289,21 @@ private fun Header(
                 author?.let {
                     DetailsWithIcon(
                         text = it,
-                        iconRes = R.drawable.stylus_fountain_pen
+                        iconRes = R.drawable.stylus_fountain_pen,
+                        iconDescription = stringResource(R.string.details_author),
                     )
                 }
 
                 illustrator?.let {
                     DetailsWithIcon(
                         text = it,
-                        iconRes = R.drawable.stylus_brush
+                        iconRes = R.drawable.stylus_brush,
+                        iconDescription = stringResource(R.string.details_illustrator),
                     )
                 }
 
                 DetailsWithIcon(
-                    text = volumesLabel(totalVolume),
+                    text = volumesLabel(totalVolume).asString(),
                     iconRes = R.drawable.book_5
                 )
             }
@@ -307,16 +315,18 @@ private fun Header(
 fun DetailsWithIcon(
     text: String,
     @DrawableRes iconRes: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** What the line is, such as "Author", read out before [text] by screen readers. */
+    iconDescription: String? = null,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {},
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             painter = painterResource(id = iconRes),
-            contentDescription = null,
+            contentDescription = iconDescription,
             modifier = Modifier.size(20.dp),
             tint = MaterialTheme.colorScheme.primary
         )
@@ -373,13 +383,13 @@ private fun ReadingStatistics(
 
                     Column {
                         Text(
-                            text = "Series Progress",
+                            text = stringResource(R.string.series_details_progress),
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodyLarge
                         )
 
                         Text(
-                            text = "$finishedVolume of $totalVolume volumes read",
+                            text = pluralStringResource(R.plurals.series_details_volumes_read, totalVolume, finishedVolume, totalVolume),
                             fontWeight = FontWeight.Normal,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -387,7 +397,7 @@ private fun ReadingStatistics(
                 }
 
                 Text(
-                    text = "$percent%",
+                    text = stringResource(R.string.common_percent, percent),
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -437,7 +447,7 @@ private fun ReadingStatistics(
                     )
 
                     Text(
-                        text = "$totalSize · $indexedCount of $totalVolume files indexed",
+                        text = pluralStringResource(R.plurals.series_details_storage, totalVolume, totalSize, indexedCount, totalVolume),
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelMedium
                     )
@@ -464,13 +474,14 @@ private fun VolumesHeader(
     ) {
         Column {
             Text(
-                text = "Volumes in Sequence",
+                text = stringResource(R.string.series_details_volumes_heading),
                 fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.semantics { heading() },
             )
 
             Text(
-                text = volumesLabel(volumeCount),
+                text = volumesLabel(volumeCount).asString(),
                 fontWeight = FontWeight.Normal,
                 style = MaterialTheme.typography.labelMedium
             )
@@ -479,7 +490,7 @@ private fun VolumesHeader(
         IconButton(onClick = onChangeLayout) {
             Icon(
                 painter = painterResource(id = if (isGrid) R.drawable.list else R.drawable.grid),
-                contentDescription = if (isGrid) "Show as list" else "Show as grid"
+                contentDescription = stringResource(if (isGrid) R.string.layout_show_list else R.string.layout_show_grid)
             )
         }
     }
@@ -511,7 +522,7 @@ private fun SeriesDetailsScreenPreview() {
                         coverPath = null,
                         state = if (index == 0) BookState.FINISHED else BookState.UNREAD,
                         percent = if (index == 0) 100 else 0,
-                        volumeLabel = "Volume ${index + 1}",
+                        volumeLabel = "Volume ${index + 1}".asUiText(),
                     )
                 },
                 isGrid = true,

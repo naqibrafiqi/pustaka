@@ -17,6 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,8 +31,9 @@ import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 /** Shown while a screen's data is loading for the first time. */
 @Composable
 fun LoadingState(modifier: Modifier = Modifier) {
+    val loading = stringResource(R.string.common_loading)
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = loading })
     }
 }
 
@@ -60,6 +65,7 @@ fun MessageState(
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
         )
         Text(
             text = message,
@@ -79,11 +85,11 @@ fun MessageState(
 @Composable
 fun ErrorState(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     MessageState(
-        title = "Something went wrong",
+        title = stringResource(R.string.common_error_title),
         message = message,
         iconRes = R.drawable.broken_image,
         modifier = modifier,
-        actionLabel = "Try again",
+        actionLabel = stringResource(R.string.common_try_again),
         onAction = onRetry,
     )
 }

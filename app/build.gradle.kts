@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -5,6 +7,16 @@ plugins {
     alias(libs.plugins.google.dagger.hilt)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.androidx.room)
+}
+
+/**
+ * The release signing key's details, from `keystore.properties` at the project root. The file and
+ * the keystore stay out of git (decision D21). Without it, release builds are left unsigned.
+ * See docs/RELEASING.md.
+ */
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use(::load)
 }
 
 android {
@@ -23,11 +35,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (!keystoreProperties.isEmpty) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // R8 shrinks and optimises the code. Keep rules are in src/main/keepRules.
             optimization {
-                enable = false
+                enable = true
             }
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {

@@ -1,6 +1,7 @@
 package my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -40,6 +41,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +59,8 @@ import my.naqibrafiqi.pustaka.ui.components.menu.DropdownMenuButton
 import my.naqibrafiqi.pustaka.ui.components.menu.MenuItem
 import my.naqibrafiqi.pustaka.ui.model.BookState
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
+import my.naqibrafiqi.pustaka.util.text.asUiText
 
 @Composable
 fun BookDetailsScreen(
@@ -99,8 +105,8 @@ private fun BookDetailsScreenContent(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopBar(
-                title = "Book Details",
-                subtitle = ready?.let { it.seriesLine ?: it.title },
+                title = stringResource(R.string.book_details_title),
+                subtitle = ready?.let { it.seriesLine?.asString() ?: it.title },
                 onNavigateBack = onNavigateBack,
                 actionButtons = if (ready == null) null else {
                     {
@@ -118,7 +124,7 @@ private fun BookDetailsScreenContent(
                                     openMenu = false
                                     showInfo = true
                                 },
-                                text = "More info",
+                                text = stringResource(R.string.book_details_more_info),
                                 leadingIconResId = R.drawable.info
                             )
 
@@ -127,7 +133,7 @@ private fun BookDetailsScreenContent(
                                     openMenu = false
                                     onEdit()
                                 },
-                                text = "Edit details",
+                                text = stringResource(R.string.details_edit),
                                 leadingIconResId = R.drawable.edit
                             )
 
@@ -136,7 +142,7 @@ private fun BookDetailsScreenContent(
                                     openMenu = false
                                     onDelete()
                                 },
-                                text = "Delete book",
+                                text = stringResource(R.string.book_delete),
                                 leadingIconResId = R.drawable.delete
                             )
                         }
@@ -152,16 +158,16 @@ private fun BookDetailsScreenContent(
         when (state) {
             BookDetailsUiState.Loading -> LoadingState(modifier = contentModifier)
             is BookDetailsUiState.Error -> ErrorState(
-                message = state.message,
+                message = stringResource(state.message),
                 onRetry = onRetry,
                 modifier = contentModifier,
             )
             BookDetailsUiState.NotFound -> MessageState(
-                title = "Book not found",
-                message = "This book is no longer in your library.",
+                title = stringResource(R.string.book_details_not_found_title),
+                message = stringResource(R.string.book_details_not_found_message),
                 iconRes = R.drawable.book_5,
                 modifier = contentModifier,
-                actionLabel = "Go back",
+                actionLabel = stringResource(R.string.common_go_back),
                 onAction = onNavigateBack,
             )
             is BookDetailsUiState.Ready -> ReadyContent(
@@ -217,13 +223,14 @@ private fun ReadyContent(
                 Text(
                     text = state.title,
                     fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.semantics { heading() },
                 )
 
                 state.credits?.let { credits ->
                     Text(
                         text = credits,
-                        color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
+                        color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Medium,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -262,24 +269,24 @@ private fun ReadyContent(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     BasicStatisticsTile(
-                        labelText = "Page Count",
+                        labelText = stringResource(R.string.book_details_page_count),
                         labelIconRes = R.drawable.article,
-                        valueText = state.pageCount,
+                        valueText = state.pageCount.asString(),
                         modifier = Modifier.weight(1f),
                     )
 
                     BasicStatisticsTile(
-                        labelText = "Velocity",
+                        labelText = stringResource(R.string.book_details_velocity),
                         labelIconRes = R.drawable.speed,
-                        valueText = state.velocity,
+                        valueText = state.velocity.asString(),
                         modifier = Modifier.weight(1f),
                     )
                 }
 
                 BasicStatisticsTile(
-                    labelText = "Estimated Left",
+                    labelText = stringResource(R.string.book_details_time_left),
                     labelIconRes = R.drawable.schedule,
-                    valueText = state.timeLeft,
+                    valueText = state.timeLeft.asString(),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -303,20 +310,20 @@ private fun ProgressSection(state: BookDetailsUiState.Ready) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${state.percent}%",
+                    text = stringResource(R.string.common_percent, state.percent),
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleLarge
                 )
 
                 TagChip(
-                    text = statusChipLabel(state.state),
+                    text = stringResource(statusChipLabel(state.state)),
                     color = statusChipColor(state.state)
                 )
             }
 
             state.pageLabel?.let { label ->
                 Text(
-                    text = label,
+                    text = label.asString(),
                     fontWeight = FontWeight.Normal,
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -353,9 +360,9 @@ private fun ReadButtons(state: BookDetailsUiState.Ready, onRead: (fromStart: Boo
             ButtonContent(
                 iconRes = R.drawable.book_5,
                 text = when {
-                    finished -> "Read Again"
-                    state.continuePage != null -> "Continue From Page ${state.continuePage}"
-                    else -> "Start Reading"
+                    finished -> stringResource(R.string.book_read_again)
+                    state.continuePage != null -> stringResource(R.string.book_continue_from_page, state.continuePage)
+                    else -> stringResource(R.string.book_start_reading)
                 }
             )
         }
@@ -366,7 +373,7 @@ private fun ReadButtons(state: BookDetailsUiState.Ready, onRead: (fromStart: Boo
                 enabled = state.canRead,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                ButtonContent(iconRes = R.drawable.menu_book, text = "Read From Beginning")
+                ButtonContent(iconRes = R.drawable.menu_book, text = stringResource(R.string.book_read_from_beginning))
             }
         }
     }
@@ -392,11 +399,12 @@ private fun ButtonContent(@DrawableRes iconRes: Int, text: String) {
     }
 }
 
-private fun statusChipLabel(state: BookState): String = when (state) {
-    BookState.UNREAD -> "Not Started"
-    BookState.READING -> "In Progress"
-    BookState.FINISHED -> "Finished"
-    BookState.MISSING -> "File not found"
+@StringRes
+private fun statusChipLabel(state: BookState): Int = when (state) {
+    BookState.UNREAD -> R.string.book_status_not_started
+    BookState.READING -> R.string.book_status_in_progress
+    BookState.FINISHED -> R.string.book_state_finished
+    BookState.MISSING -> R.string.book_state_missing
 }
 
 @Composable
@@ -411,9 +419,9 @@ private fun MoreInfoDialog(rows: List<InfoRow>, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
         },
-        title = { Text("More info") },
+        title = { Text(stringResource(R.string.book_details_more_info)) },
         text = {
             SelectionContainer {
                 Column(
@@ -421,14 +429,14 @@ private fun MoreInfoDialog(rows: List<InfoRow>, onDismiss: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     rows.forEach { row ->
-                        Column {
+                        Column(modifier = Modifier.semantics(mergeDescendants = true) {}) {
                             Text(
-                                text = row.label,
+                                text = stringResource(row.label),
                                 color = MaterialTheme.colorScheme.secondary,
                                 fontWeight = FontWeight.SemiBold,
                                 style = MaterialTheme.typography.labelLarge
                             )
-                            Text(text = row.value, style = MaterialTheme.typography.bodyMedium)
+                            Text(text = row.value.asString(), style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
@@ -445,7 +453,7 @@ private fun BasicStatisticsTile(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {},
         shape = RoundedCornerShape(8.dp),
         tonalElevation = 4.dp
     ) {
@@ -490,18 +498,18 @@ private fun BookDetailsScreenPreview() {
         BookDetailsScreenContent(
             state = BookDetailsUiState.Ready(
                 title = "Playing Death Games, Vol. 01",
-                seriesLine = "Playing Death Games · Volume 1",
+                seriesLine = "Playing Death Games · Volume 1".asUiText(),
                 credits = "Yushi Ukai, Nekometaru",
                 coverPath = null,
                 genres = listOf("Drama", "Fantasy", "Action"),
                 synopsis = "Yuki wakes up to find herself in an unfamiliar manor.",
                 state = BookState.READING,
                 percent = 58,
-                pageLabel = "Page 116 of 200",
+                pageLabel = "Page 116 of 200".asUiText(),
                 continuePage = 116,
-                pageCount = "200 pages",
-                velocity = "Avg. 42 pages/h",
-                timeLeft = "~2h 15m",
+                pageCount = "200 pages".asUiText(),
+                velocity = "Avg. 42 pages/h".asUiText(),
+                timeLeft = "~2h 15m".asUiText(),
                 info = emptyList(),
             ),
             onNavigateBack = {},

@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.series.screen.edit
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 
 /**
  * One field in an Edit details form.
@@ -19,14 +21,14 @@ import kotlinx.coroutines.launch
  */
 data class EditField(
     val key: String,
-    val label: String,
+    @param:StringRes val label: Int,
     val value: String,
     val default: String,
     val multiline: Boolean = false,
     val isNumber: Boolean = false,
     /** For example "Separate names with commas". */
-    val hint: String? = null,
-    val error: String? = null,
+    @param:StringRes val hint: Int? = null,
+    @param:StringRes val error: Int? = null,
 ) {
     /** Whether the field differs from its default, so it shows a reset button. */
     val isEdited: Boolean get() = value.trim() != default.trim()
@@ -48,7 +50,7 @@ sealed interface EditUiState {
         /** True once anything has been typed, so leaving asks first. */
         val hasChanges: Boolean = false,
         val isSaving: Boolean = false,
-        val error: String? = null,
+        @param:StringRes val error: Int? = null,
     ) : EditUiState {
         fun value(key: String): String = fields.first { it.key == key }.value
     }
@@ -73,7 +75,7 @@ abstract class EditDetailsViewModel : ViewModel() {
     protected abstract fun fileValues(): Map<String, String>
 
     /** Checks the form. Returns an error for each field key that can't be saved. */
-    protected open fun validate(form: EditUiState.Ready): Map<String, String> = emptyMap()
+    protected open fun validate(form: EditUiState.Ready): Map<String, Int> = emptyMap()
 
     /** Saves the form's values. */
     protected abstract suspend fun persist(form: EditUiState.Ready)
@@ -107,7 +109,7 @@ abstract class EditDetailsViewModel : ViewModel() {
                 persist(form)
                 _saved.send(Unit)
             } catch (e: Exception) {
-                mutableState.update { (it as? EditUiState.Ready)?.copy(isSaving = false, error = "Couldn't save the changes.") ?: it }
+                mutableState.update { (it as? EditUiState.Ready)?.copy(isSaving = false, error = R.string.edit_save_failed) ?: it }
             }
         }
     }

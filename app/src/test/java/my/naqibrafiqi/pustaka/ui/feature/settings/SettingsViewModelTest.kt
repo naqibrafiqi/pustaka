@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeoutOrNull
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.access.PickedFolder
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
@@ -20,6 +21,8 @@ import my.naqibrafiqi.pustaka.testing.MainDispatcherRule
 import my.naqibrafiqi.pustaka.testing.TestClock
 import my.naqibrafiqi.pustaka.testing.book
 import my.naqibrafiqi.pustaka.testing.inMemoryDatabase
+import my.naqibrafiqi.pustaka.testing.string
+import my.naqibrafiqi.pustaka.testing.text
 import my.naqibrafiqi.pustaka.ui.feature.settings.screen.FolderChange
 import my.naqibrafiqi.pustaka.ui.feature.settings.screen.SettingsEvent
 import my.naqibrafiqi.pustaka.ui.feature.settings.screen.SettingsUiState
@@ -69,13 +72,13 @@ class SettingsViewModelTest {
     @Test
     fun countsHiddenSeriesAndBooks() = runTest {
         val viewModel = viewModel()
-        assertEquals("Nothing hidden", viewModel.state.ready().hiddenLabel)
+        assertEquals("Nothing hidden", viewModel.state.ready().hiddenLabel.text())
 
         val seriesId = series.addSeries("/lib/Brunhild", "Brunhild")
         series.setHidden(seriesId, true)
         listOf("A.epub", "B.epub").forEach { books.setHidden(books.addBook(book(it)), true) }
 
-        assertEquals("1 series and 2 books", viewModel.state.first { it?.hiddenBooks == 2 }!!.hiddenLabel)
+        assertEquals("1 series and 2 books", viewModel.state.first { it?.hiddenBooks == 2 }!!.hiddenLabel.text())
     }
 
     @Test
@@ -118,10 +121,10 @@ class SettingsViewModelTest {
 
         viewModel.onFolderPicked(PickedFolder.NotInternalStorage)
         val sdCard = viewModel.events.first() as SettingsEvent.Message
-        assertTrue(sdCard.text.contains("internal storage"))
+        assertTrue(string(sdCard.text).contains("internal storage"))
 
         viewModel.onFolderPicked(PickedFolder.Path(FakeSettings.DEFAULT_FOLDER))
-        assertEquals(SettingsEvent.Message("That's already your library folder."), viewModel.events.first())
+        assertEquals(SettingsEvent.Message(R.string.settings_folder_already_used), viewModel.events.first())
         assertNull(viewModel.folderChange.value)
     }
 
@@ -129,9 +132,9 @@ class SettingsViewModelTest {
     fun changesTheAppearance() = runTest {
         val viewModel = viewModel()
         viewModel.setAppTheme(AppTheme.DARK)
-        viewModel.setDynamicColor(false)
+        viewModel.setDynamicColor(true)
 
-        val state = viewModel.state.first { it?.appTheme == AppTheme.DARK && !it.dynamicColor }
+        val state = viewModel.state.first { it?.appTheme == AppTheme.DARK && it.dynamicColor }
         assertEquals(AppTheme.DARK, state!!.appTheme)
     }
 
@@ -159,15 +162,15 @@ class SettingsViewModelTest {
 
         val state = viewModel.state.first { it is HiddenItemsUiState.Ready } as HiddenItemsUiState.Ready
         assertEquals(listOf("Brunhild"), state.series.map { it.name })
-        assertEquals(listOf("Folder: Brunhild"), state.series.map { it.description })
+        assertEquals(listOf("Folder: Brunhild"), state.series.map { it.description.text() })
         assertEquals(
             mapOf("Battle Divas" to "Standalone book", "Brunhild, Vol. 02" to "In Brunhild"),
-            state.books.associate { it.name to it.description },
+            state.books.associate { it.name to it.description.text() },
         )
 
         viewModel.restore(state.series.single())
 
-        assertEquals("“Brunhild” is back in your library.", viewModel.messages.first())
+        assertEquals("“Brunhild” is back in your library.", viewModel.messages.first().text())
         val after = viewModel.state.first { (it as? HiddenItemsUiState.Ready)?.series?.isEmpty() == true }
         assertEquals(2, (after as HiddenItemsUiState.Ready).books.size)
         assertEquals(listOf("Brunhild"), series.observeSeries().first().map { it.name.value })

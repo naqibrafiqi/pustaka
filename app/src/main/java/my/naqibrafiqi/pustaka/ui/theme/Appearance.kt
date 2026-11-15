@@ -22,7 +22,7 @@ import javax.inject.Inject
 /** How the app looks, from Settings → Appearance. */
 data class Appearance(
     val theme: AppTheme = AppTheme.SYSTEM,
-    val dynamicColor: Boolean = true,
+    val dynamicColor: Boolean = false,
 )
 
 /** Whether the app is dark right now: chosen in Settings, or following the phone's dark mode. */

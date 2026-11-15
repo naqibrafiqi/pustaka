@@ -1,6 +1,9 @@
 package my.naqibrafiqi.pustaka.ui.feature.series.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.components.ChoiceDialog
 import my.naqibrafiqi.pustaka.ui.components.ConfirmDialog
 import my.naqibrafiqi.pustaka.ui.components.DialogChoice
@@ -19,18 +22,16 @@ fun SeriesDeleteDialogs(
     when (dialog) {
         null -> Unit
         is SeriesDeleteDialog.Choose -> ChoiceDialog(
-            title = "Delete \"${dialog.name}\"?",
+            title = stringResource(R.string.delete_named_title, dialog.name),
             choices = listOf(
                 DialogChoice(
-                    label = "Remove from library",
-                    description = "Hides this series and its volumes. The folder stays on your phone, " +
-                        "and the next scan won't add it back.",
+                    label = stringResource(R.string.delete_remove_from_library),
+                    description = stringResource(R.string.delete_series_remove_description),
                     onClick = onRemoveFromLibrary,
                 ),
                 DialogChoice(
-                    label = "Delete folder and files",
-                    description = "Deletes the folder and the ${filesLabel(dialog.contents.files)} in it " +
-                        "from your phone.",
+                    label = stringResource(R.string.delete_series_files),
+                    description = stringResource(R.string.delete_series_files_description, filesLabel(dialog.contents.files)),
                     isDestructive = true,
                     onClick = onChooseDeleteFiles,
                 ),
@@ -39,23 +40,24 @@ fun SeriesDeleteDialogs(
         )
         is SeriesDeleteDialog.ConfirmDeleteFiles -> {
             val others = dialog.contents.files - dialog.contents.epubs
-            val what = buildString {
-                append(epubsLabel(dialog.contents.epubs))
-                if (others > 0) append(" and ${if (others == 1) "1 other file" else "$others other files"}")
+            val epubs = pluralStringResource(R.plurals.delete_epubs, dialog.contents.epubs, dialog.contents.epubs)
+            val what = if (others > 0) {
+                stringResource(R.string.delete_epubs_and_others, epubs, pluralStringResource(R.plurals.delete_other_files, others, others))
+            } else {
+                epubs
             }
             ConfirmDialog(
-                title = "Delete ${filesLabel(dialog.contents.files)}?",
-                message = "This deletes the folder ${dialog.folderPath} and everything in it: $what. " +
-                    "Reading progress and highlights for these books are deleted too. This can't be undone.",
-                confirmLabel = "Delete",
+                title = stringResource(R.string.delete_files_title, filesLabel(dialog.contents.files)),
+                message = stringResource(R.string.delete_series_files_message, dialog.folderPath, what),
+                confirmLabel = stringResource(R.string.common_delete),
                 onConfirm = onDeleteFolder,
                 onDismiss = onDismiss,
             )
         }
         is SeriesDeleteDialog.ConfirmDeleteEmptyFolder -> ConfirmDialog(
-            title = "Delete \"${dialog.name}\"?",
-            message = "This series has no files. Its empty folder ${dialog.folderPath} will be deleted.",
-            confirmLabel = "Delete folder",
+            title = stringResource(R.string.delete_named_title, dialog.name),
+            message = stringResource(R.string.delete_empty_folder_message, dialog.folderPath),
+            confirmLabel = stringResource(R.string.delete_folder),
             onConfirm = onDeleteFolder,
             onDismiss = onDismiss,
         )
@@ -75,17 +77,16 @@ fun BookDeleteDialogs(
     when (dialog) {
         null -> Unit
         is BookDeleteDialog.Choose -> ChoiceDialog(
-            title = "Delete \"${dialog.name}\"?",
+            title = stringResource(R.string.delete_named_title, dialog.name),
             choices = listOf(
                 DialogChoice(
-                    label = "Remove from library",
-                    description = "Hides this book. The file stays on your phone, and the next scan " +
-                        "won't add it back.",
+                    label = stringResource(R.string.delete_remove_from_library),
+                    description = stringResource(R.string.delete_book_remove_description),
                     onClick = onRemoveFromLibrary,
                 ),
                 DialogChoice(
-                    label = "Delete file",
-                    description = "Deletes ${dialog.fileName} from your phone.",
+                    label = stringResource(R.string.delete_file),
+                    description = stringResource(R.string.delete_file_description, dialog.fileName),
                     isDestructive = true,
                     onClick = onChooseDeleteFile,
                 ),
@@ -93,24 +94,21 @@ fun BookDeleteDialogs(
             onDismiss = onDismiss,
         )
         is BookDeleteDialog.ConfirmDeleteFile -> ConfirmDialog(
-            title = "Delete file?",
-            message = "${dialog.fileName} will be deleted from your phone, with the book's reading " +
-                "progress and highlights. This can't be undone.",
-            confirmLabel = "Delete",
+            title = stringResource(R.string.delete_file_title),
+            message = stringResource(R.string.delete_file_message, dialog.fileName),
+            confirmLabel = stringResource(R.string.common_delete),
             onConfirm = onDeleteFile,
             onDismiss = onDismiss,
         )
         is BookDeleteDialog.ConfirmForget -> ConfirmDialog(
-            title = "Remove \"${dialog.name}\"?",
-            message = "${dialog.fileName} can't be found. Removing the book deletes its reading " +
-                "progress, highlights and edited details. This can't be undone.",
-            confirmLabel = "Remove",
+            title = stringResource(R.string.delete_forget_title, dialog.name),
+            message = stringResource(R.string.delete_forget_message, dialog.fileName),
+            confirmLabel = stringResource(R.string.delete_forget_confirm),
             onConfirm = onForget,
             onDismiss = onDismiss,
         )
     }
 }
 
-private fun filesLabel(count: Int): String = if (count == 1) "1 file" else "$count files"
-
-private fun epubsLabel(count: Int): String = if (count == 1) "1 EPUB" else "$count EPUBs"
+@Composable
+private fun filesLabel(count: Int): String = pluralStringResource(R.plurals.delete_files, count, count)
