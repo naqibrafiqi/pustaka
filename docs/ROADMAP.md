@@ -180,4 +180,4 @@ This phase is split into three pull requests:
 | 4. Reader | Done |
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
-| 7. Polish and release | In review (PRs 1 and 2 merged, PR 3 into `1.0.0`) |
+| 7. Polish and release | Done. The 1.0.0 release is published by the PM (D22), following [RELEASING.md](RELEASING.md). |
