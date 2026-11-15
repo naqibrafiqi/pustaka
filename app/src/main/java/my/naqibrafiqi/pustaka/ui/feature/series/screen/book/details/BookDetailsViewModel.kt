@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -9,19 +10,20 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.DeleteResult
 import my.naqibrafiqi.pustaka.data.library.LibraryFiles
 import my.naqibrafiqi.pustaka.data.model.Book
@@ -41,6 +43,9 @@ import my.naqibrafiqi.pustaka.ui.model.pagesLabel
 import my.naqibrafiqi.pustaka.ui.model.percentRead
 import my.naqibrafiqi.pustaka.ui.model.timeLeftLabel
 import my.naqibrafiqi.pustaka.ui.model.velocityLabel
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.asUiText
+import my.naqibrafiqi.pustaka.util.text.uiText
 import java.io.File
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -62,13 +67,13 @@ sealed interface BookDeleteDialog {
 }
 
 /** One line in the "More info" dialog. */
-data class InfoRow(val label: String, val value: String)
+data class InfoRow(@param:StringRes val label: Int, val value: UiText)
 
 sealed interface BookDetailsUiState {
 
     data object Loading : BookDetailsUiState
 
-    data class Error(val message: String) : BookDetailsUiState
+    data class Error(@param:StringRes val message: Int) : BookDetailsUiState
 
     /** The book was deleted, for example because it was removed for good while this was open. */
     data object NotFound : BookDetailsUiState
@@ -76,7 +81,7 @@ sealed interface BookDetailsUiState {
     data class Ready(
         val title: String,
         /** "Playing Death Games · Volume 1" for a volume, or null for a standalone book. */
-        val seriesLine: String?,
+        val seriesLine: UiText?,
         val credits: String?,
         val coverPath: String?,
         /** The book's subjects. */
@@ -85,12 +90,12 @@ sealed interface BookDetailsUiState {
         val state: BookState,
         val percent: Int,
         /** "Page 116 of 200", or null when nothing is known yet. */
-        val pageLabel: String?,
+        val pageLabel: UiText?,
         /** The page to continue from, or null when the book hasn't been started. */
         val continuePage: Int?,
-        val pageCount: String,
-        val velocity: String,
-        val timeLeft: String,
+        val pageCount: UiText,
+        val velocity: UiText,
+        val timeLeft: UiText,
         val info: List<InfoRow>,
     ) : BookDetailsUiState {
         val canRead: Boolean get() = state != BookState.MISSING
@@ -124,7 +129,7 @@ class BookDetailsViewModel @AssistedInject constructor(
                 reading.observeSessions(bookId),
             ) { current, seriesLine, progress, sessions ->
                 if (current == null) BookDetailsUiState.NotFound else buildState(current, seriesLine, progress, sessions)
-            }.catch { emit(BookDetailsUiState.Error("Couldn't load this book.")) }
+            }.catch { emit(BookDetailsUiState.Error(R.string.book_details_error)) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), BookDetailsUiState.Loading)
 
@@ -191,22 +196,22 @@ class BookDetailsViewModel @AssistedInject constructor(
     }
 
     /** "Series name · Volume 3", which needs the whole series to number volumes without one. */
-    private fun seriesLine(seriesId: Long?): Flow<String?> {
+    private fun seriesLine(seriesId: Long?): Flow<UiText?> {
         if (seriesId == null) return flowOf(null)
         return combine(
             seriesRepository.observeSeries(seriesId),
             books.observeVolumes(seriesId),
         ) { series, volumes ->
             val volume = volumes.firstOrNull { it.id == bookId }
-            listOfNotNull(series?.name?.value, volume?.let { SeriesProgress(volumes).labelOf(it) })
-                .joinToString(" · ")
-                .ifEmpty { null }
+            listOfNotNull(series?.name?.value?.asUiText(), volume?.let { SeriesProgress(volumes).labelOf(it) })
+                .takeIf { it.isNotEmpty() }
+                ?.let { UiText.Joined(it, separator = R.string.common_dot_join) }
         }
     }
 
     private fun buildState(
         book: Book,
-        seriesLine: String?,
+        seriesLine: UiText?,
         progress: ReadingProgress?,
         sessions: List<ReadingSession>,
     ): BookDetailsUiState.Ready {
@@ -230,7 +235,7 @@ class BookDetailsViewModel @AssistedInject constructor(
             pageCount = book.totalPositions?.let(::pagesLabel) ?: ReadingStats.NONE,
             velocity = velocityLabel(stats.pagesPerHour),
             timeLeft = when {
-                state == BookState.FINISHED -> "Finished"
+                state == BookState.FINISHED -> uiText(R.string.book_state_finished)
                 pagesLeft == null -> ReadingStats.NONE
                 else -> timeLeftLabel(stats.timeLeft(pagesLeft))
             },
@@ -238,18 +243,18 @@ class BookDetailsViewModel @AssistedInject constructor(
         )
     }
 
-    private fun infoRows(book: Book, seriesLine: String?): List<InfoRow> {
+    private fun infoRows(book: Book, seriesLine: UiText?): List<InfoRow> {
         val details = book.details
         return listOfNotNull(
-            details.title?.let { InfoRow("Title in file", it) },
-            seriesLine?.let { InfoRow("Series", it) },
-            details.publisher?.let { InfoRow("Publisher", it) },
-            details.publishedDate?.let { InfoRow("Published", it) },
-            details.language?.let { InfoRow("Language", it) },
-            details.identifier?.let { InfoRow("Identifier", it) },
-            InfoRow("File", book.filePath),
-            InfoRow("File size", fileSizeLabel(book.fileSize)),
-            InfoRow("Added", DATE.format(book.addedAt.atZone(ZoneId.systemDefault()))),
+            details.title?.let { InfoRow(R.string.book_info_title_in_file, it.asUiText()) },
+            seriesLine?.let { InfoRow(R.string.book_info_series, it) },
+            details.publisher?.let { InfoRow(R.string.book_info_publisher, it.asUiText()) },
+            details.publishedDate?.let { InfoRow(R.string.book_info_published, it.asUiText()) },
+            details.language?.let { InfoRow(R.string.book_info_language, it.asUiText()) },
+            details.identifier?.let { InfoRow(R.string.book_info_identifier, it.asUiText()) },
+            InfoRow(R.string.book_info_file, book.filePath.asUiText()),
+            InfoRow(R.string.book_info_file_size, fileSizeLabel(book.fileSize).asUiText()),
+            InfoRow(R.string.book_info_added, DATE.format(book.addedAt.atZone(ZoneId.systemDefault())).asUiText()),
         )
     }
 

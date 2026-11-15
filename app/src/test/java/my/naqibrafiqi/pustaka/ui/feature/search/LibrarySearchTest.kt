@@ -6,13 +6,17 @@ import my.naqibrafiqi.pustaka.data.model.Series
 import my.naqibrafiqi.pustaka.data.model.SeriesDetails
 import my.naqibrafiqi.pustaka.testing.T0
 import my.naqibrafiqi.pustaka.testing.book
+import my.naqibrafiqi.pustaka.testing.text
 import my.naqibrafiqi.pustaka.ui.feature.search.screen.LibrarySearch
 import my.naqibrafiqi.pustaka.ui.feature.search.screen.SearchResults
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class LibrarySearchTest {
 
     private val brunhild = Series(
@@ -48,7 +52,7 @@ class LibrarySearchTest {
         assertEquals(listOf("Brunhild the Dragonslayer"), results.series.map { it.title })
         assertNull(results.series.single().matchedOn)
         assertEquals(listOf("Brunhild, Vol. 01"), results.books.map { it.title })
-        assertEquals("In Brunhild the Dragonslayer", results.books.single().subtitle)
+        assertEquals("In Brunhild the Dragonslayer", results.books.single().subtitle?.text())
     }
 
     @Test
@@ -56,17 +60,17 @@ class LibrarySearchTest {
         // The author is already the subtitle, so it isn't repeated.
         val byAuthor = search("kishine")
         assertEquals(listOf("Battle Divas"), byAuthor.series.map { it.title })
-        assertEquals("Kouka Kishine", byAuthor.series.single().subtitle)
+        assertEquals("Kouka Kishine", byAuthor.series.single().subtitle?.text())
         assertNull(byAuthor.series.single().matchedOn)
-        assertEquals("Author: Yuiko Agarizaki", search("agarizaki").books.single().matchedOn)
+        assertEquals("Author: Yuiko Agarizaki", search("agarizaki").books.single().matchedOn?.text())
 
         val byGenre = search("FANTASY")
-        assertEquals("Genre: Fantasy", byGenre.series.single().matchedOn)
-        assertEquals("Genre: Fantasy", byGenre.books.single().matchedOn)
+        assertEquals("Genre: Fantasy", byGenre.series.single().matchedOn?.text())
+        assertEquals("Genre: Fantasy", byGenre.books.single().matchedOn?.text())
 
-        assertEquals("Tag: Tragedy", search("tragedy").series.single().matchedOn)
+        assertEquals("Tag: Tragedy", search("tragedy").series.single().matchedOn?.text())
         val byIllustrator = search("nekonabeao").books.single()
-        assertTrue(byIllustrator.subtitle!!.contains("Nekonabeao"))
+        assertTrue(byIllustrator.subtitle!!.text().contains("Nekonabeao"))
         assertNull(byIllustrator.matchedOn)
     }
 

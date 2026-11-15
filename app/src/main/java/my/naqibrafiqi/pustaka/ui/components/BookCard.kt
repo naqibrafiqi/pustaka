@@ -20,13 +20,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.model.BookItem
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
 
 /** Books whose file has gone are shown faded. */
 private const val DIMMED_ALPHA = 0.5f
@@ -38,7 +41,7 @@ fun BookCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isGrid: Boolean = true,
-    subtitle: String? = book.volumeLabel ?: book.credits,
+    subtitle: String? = book.volumeLabel?.asString() ?: book.credits,
 ) {
     BookCard(
         onClick = onClick,
@@ -48,7 +51,7 @@ fun BookCard(
         isGrid = isGrid,
         imageUrl = book.coverPath,
         progress = book.progress,
-        statusLabel = book.state.label,
+        statusLabel = stringResource(book.state.label),
         isDimmed = book.isMissing,
     )
 }
@@ -62,7 +65,7 @@ fun BookCard(
     isGrid: Boolean = true,
     imageUrl: String? = null,
     progress: Float = 0f,
-    statusLabel: String = "Unread",
+    statusLabel: String = stringResource(R.string.book_state_unread),
     isDimmed: Boolean = false,
 ) {
     Surface(
@@ -134,7 +137,7 @@ fun BookCard(
                             )
 
                             Text(
-                                text = "${(progress * 100).toInt()}%",
+                                text = stringResource(R.string.common_percent, (progress * 100).toInt()),
                                 fontWeight = FontWeight.SemiBold,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -202,7 +205,7 @@ fun BookCard(
                             )
 
                             Text(
-                                text = "${(progress * 100).toInt()}%",
+                                text = stringResource(R.string.common_percent, (progress * 100).toInt()),
                                 fontWeight = FontWeight.SemiBold,
                                 style = MaterialTheme.typography.labelLarge
                             )

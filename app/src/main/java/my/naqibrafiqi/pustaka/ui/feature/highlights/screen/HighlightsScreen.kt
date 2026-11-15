@@ -45,6 +45,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -117,16 +119,16 @@ fun HighlightsScreen(
         ) {
             when (state) {
                 HighlightsUiState.Loading -> LoadingState()
-                is HighlightsUiState.Error -> ErrorState(message = state.message, onRetry = onRetry)
+                is HighlightsUiState.Error -> ErrorState(message = stringResource(state.message), onRetry = onRetry)
                 is HighlightsUiState.Ready -> when {
                     state.totalCount == 0 -> MessageState(
-                        title = "No highlights yet",
-                        message = "While reading, select some text and tap Highlight. Your highlights show up here.",
+                        title = stringResource(R.string.highlights_empty_title),
+                        message = stringResource(R.string.highlights_empty_message),
                         iconRes = R.drawable.bookmark_stacks,
                     )
                     state.groups.isEmpty() -> MessageState(
-                        title = "No matching highlights",
-                        message = "Nothing matches “${state.query.trim()}”.",
+                        title = stringResource(R.string.highlights_no_matches_title),
+                        message = stringResource(R.string.highlights_no_matches_message, state.query.trim()),
                         iconRes = R.drawable.search,
                     )
                     else -> HighlightsList(
@@ -145,17 +147,17 @@ fun HighlightsScreen(
 private fun HighlightsTopBar(count: Int, onOpenSearch: () -> Unit, onExportAll: () -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
     TopBar(
-        title = "Highlights",
-        subtitle = when (count) {
-            0 -> null
-            1 -> "1 highlight"
-            else -> "$count highlights"
-        },
+        title = stringResource(R.string.highlights_title),
+        subtitle = if (count == 0) null else pluralStringResource(R.plurals.highlights_count, count, count),
         actionButtons = if (count == 0) {
             null
         } else {
             {
-                TopBarActionButton(onClick = onOpenSearch, iconResId = R.drawable.search)
+                TopBarActionButton(
+                    onClick = onOpenSearch,
+                    iconResId = R.drawable.search,
+                    contentDescription = stringResource(R.string.highlights_search),
+                )
                 DropdownMenuButton(
                     expanded = menuOpen,
                     openMenu = { menuOpen = true },
@@ -166,7 +168,7 @@ private fun HighlightsTopBar(count: Int, onOpenSearch: () -> Unit, onExportAll: 
                             menuOpen = false
                             onExportAll()
                         },
-                        text = "Export all as Markdown",
+                        text = stringResource(R.string.highlights_export_all),
                         leadingIconResId = R.drawable.share,
                     )
                 }
@@ -189,19 +191,19 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: (
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onClose) {
-                Icon(painter = painterResource(R.drawable.arrow_back), contentDescription = "Close search")
+                Icon(painter = painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.search_close))
             }
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = { Text("Search highlights, notes and books") },
+                placeholder = { Text(stringResource(R.string.highlights_search_placeholder)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
                 trailingIcon = if (query.isNotEmpty()) {
                     {
                         IconButton(onClick = { onQueryChange("") }) {
-                            Icon(painter = painterResource(R.drawable.close), contentDescription = "Clear search")
+                            Icon(painter = painterResource(R.drawable.close), contentDescription = stringResource(R.string.search_clear))
                         }
                     }
                 } else {
@@ -236,7 +238,7 @@ private fun HighlightsList(
         groups.forEach { group ->
             item(key = "series:${group.seriesId}") {
                 Text(
-                    text = group.name ?: HighlightsMarkdown.STANDALONE,
+                    text = group.name ?: stringResource(R.string.highlights_standalone),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
@@ -273,7 +275,7 @@ private fun BookHeader(book: BookHighlights, onExport: () -> Unit) {
                 modifier = Modifier.semantics { heading() },
             )
             Text(
-                text = if (book.highlights.size == 1) "1 highlight" else "${book.highlights.size} highlights",
+                text = pluralStringResource(R.plurals.highlights_count, book.highlights.size, book.highlights.size),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -281,7 +283,7 @@ private fun BookHeader(book: BookHighlights, onExport: () -> Unit) {
         IconButton(onClick = onExport) {
             Icon(
                 painter = painterResource(R.drawable.share),
-                contentDescription = "Export highlights from ${book.title} as Markdown",
+                contentDescription = stringResource(R.string.highlights_export_book, book.title),
             )
         }
     }
@@ -296,7 +298,7 @@ private fun HighlightCard(item: HighlightItem, onOpen: () -> Unit, onEdit: () ->
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
-            .clickable(role = Role.Button, onClickLabel = "Open in the book", onClick = onOpen),
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.highlights_open_in_book), onClick = onOpen),
     ) {
         Row(
             modifier = Modifier
@@ -324,14 +326,16 @@ private fun HighlightCard(item: HighlightItem, onOpen: () -> Unit, onEdit: () ->
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = listOfNotNull(item.page?.let { "Page $it" }, DATE.format(highlight.createdAt.atZone(ZoneId.systemDefault())))
-                            .joinToString(" · "),
+                        text = listOfNotNull(
+                            item.page?.let { stringResource(R.string.page_number, it) },
+                            DATE.format(highlight.createdAt.atZone(ZoneId.systemDefault())),
+                        ).joinToString(stringResource(R.string.common_dot_join)),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
                     )
                     IconButton(onClick = onEdit) {
-                        Icon(painter = painterResource(R.drawable.edit), contentDescription = "Edit highlight")
+                        Icon(painter = painterResource(R.drawable.edit), contentDescription = stringResource(R.string.highlights_edit))
                     }
                 }
             }

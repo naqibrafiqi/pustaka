@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
@@ -27,7 +28,7 @@ fun DropdownMenuButton(
         IconButton(onClick = openMenu) {
             Icon(
                 painter = painterResource(id = R.drawable.more_vert),
-                contentDescription = "More actions dropdown menu"
+                contentDescription = stringResource(R.string.common_more_options)
             )
         }
 

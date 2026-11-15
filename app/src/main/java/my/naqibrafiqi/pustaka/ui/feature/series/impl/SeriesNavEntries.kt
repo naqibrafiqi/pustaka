@@ -6,21 +6,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.feature.reader.rememberReaderLauncher
 import my.naqibrafiqi.pustaka.ui.feature.search.api.SearchRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.BookDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.EditBookRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.EditSeriesRoute
-import my.naqibrafiqi.pustaka.ui.feature.series.screen.BookDeleteDialogs
-import my.naqibrafiqi.pustaka.ui.feature.series.screen.SeriesDeleteDialogs
 import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesDetailsRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesRoute
+import my.naqibrafiqi.pustaka.ui.feature.series.screen.BookDeleteDialogs
+import my.naqibrafiqi.pustaka.ui.feature.series.screen.SeriesDeleteDialogs
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details.BookDetailsScreen
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.book.details.BookDetailsViewModel
 import my.naqibrafiqi.pustaka.ui.feature.series.screen.edit.EditBookViewModel
@@ -34,6 +37,7 @@ import my.naqibrafiqi.pustaka.ui.feature.series.screen.series.main.SeriesViewMod
 import my.naqibrafiqi.pustaka.ui.model.DetailsEvent
 import my.naqibrafiqi.pustaka.ui.scan.LibraryScanViewModel
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
+import my.naqibrafiqi.pustaka.util.text.resolve
 
 fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanViewModel) {
     entry<SeriesRoute> {
@@ -132,14 +136,14 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanView
         val viewModel = hiltViewModel<EditSeriesViewModel, EditSeriesViewModel.Factory>(
             creationCallback = { factory -> factory.create(route.seriesId) }
         )
-        EditEntry(title = "Edit series", viewModel = viewModel)
+        EditEntry(title = stringResource(R.string.edit_series_title), viewModel = viewModel)
     }
 
     entry<EditBookRoute> { route ->
         val viewModel = hiltViewModel<EditBookViewModel, EditBookViewModel.Factory>(
             creationCallback = { factory -> factory.create(route.bookId) }
         )
-        EditEntry(title = "Edit book", viewModel = viewModel)
+        EditEntry(title = stringResource(R.string.edit_book_title), viewModel = viewModel)
     }
 }
 
@@ -166,11 +170,12 @@ private fun EditEntry(title: String, viewModel: EditDetailsViewModel) {
 @Composable
 private fun DetailsEvents(events: Flow<DetailsEvent>, snackbarHostState: SnackbarHostState, onClosed: () -> Unit) {
     val latestOnClosed by rememberUpdatedState(onClosed)
+    val resources = LocalResources.current
     LaunchedEffect(events) {
         events.collect { event ->
             when (event) {
                 DetailsEvent.Closed -> latestOnClosed()
-                is DetailsEvent.Message -> launch { snackbarHostState.showSnackbar(event.text) }
+                is DetailsEvent.Message -> launch { snackbarHostState.showSnackbar(event.text.resolve(resources)) }
             }
         }
     }

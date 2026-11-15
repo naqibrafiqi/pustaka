@@ -149,8 +149,8 @@ This phase is split into two pull requests:
 
 ### Phase 7: Polish and release (M)
 This phase is split into three pull requests:
-1. Pustaka's colour scheme (D19, D20), the app icon, and a contrast check.
-2. All text moved into the string resource file, and the accessibility pass.
+1. Pustaka's colour scheme (D19, D20), the app icon, and a contrast check. ✅ Done in PR 1.
+2. All text moved into the string resource file, and the accessibility pass. ✅ Done in PR 2. Text that ViewModels build is passed to the screens as `UiText` and looked up there. Preview sample data, log messages and library names in the licences list stay in code.
 3. R8 code shrinking, UI tests for the main flows, the signed release build (D21) and the 1.0.0 release notes (D22).
 
 - Move all hard-coded text into the string resource file.
@@ -180,4 +180,4 @@ This phase is split into three pull requests:
 | 4. Reader | Done |
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
-| 7. Polish and release | In progress (PR 1 of 3 in review) |
+| 7. Polish and release | In progress (PR 1 merged, PR 2 in review) |

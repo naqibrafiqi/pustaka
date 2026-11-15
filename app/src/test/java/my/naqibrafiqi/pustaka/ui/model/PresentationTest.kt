@@ -7,12 +7,16 @@ import my.naqibrafiqi.pustaka.data.model.ReadingSession
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.testing.T0
 import my.naqibrafiqi.pustaka.testing.book
+import my.naqibrafiqi.pustaka.testing.text
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.time.Duration
 import java.time.ZoneOffset
 
+@RunWith(RobolectricTestRunner::class)
 class PresentationTest {
 
     private fun progress(fraction: Double) =
@@ -58,10 +62,10 @@ class PresentationTest {
 
     @Test
     fun pageLabelsUseWhatIsKnown() {
-        assertEquals("Page 116 of 200", pageLabel(116, 200))
-        assertEquals("Page 116", pageLabel(116, null))
-        assertEquals("200 pages", pageLabel(null, 200))
-        assertEquals("1 page", pageLabel(null, 1))
+        assertEquals("Page 116 of 200", pageLabel(116, 200)?.text())
+        assertEquals("Page 116", pageLabel(116, null)?.text())
+        assertEquals("200 pages", pageLabel(null, 200)?.text())
+        assertEquals("1 page", pageLabel(null, 1)?.text())
         assertNull(pageLabel(null, null))
     }
 
@@ -72,7 +76,7 @@ class PresentationTest {
         assertNull(ReadingStats(emptyList()).pagesPerHour)
         assertNull(ReadingStats(listOf(session(minutes = 0, pages = 5))).pagesPerHour)
         assertNull(ReadingStats(listOf(session(minutes = 30, pages = 0))).pagesPerHour)
-        assertEquals("—", velocityLabel(null))
+        assertEquals("—", velocityLabel(null).text())
     }
 
     @Test
@@ -80,7 +84,7 @@ class PresentationTest {
         val stats = ReadingStats(listOf(session(minutes = 30, pages = 20), session(minutes = 30, pages = 40)))
 
         assertEquals(60.0, stats.pagesPerHour!!, 0.001)
-        assertEquals("Avg. 60 pages/h", velocityLabel(stats.pagesPerHour))
+        assertEquals("Avg. 60 pages/h", velocityLabel(stats.pagesPerHour).text())
     }
 
     @Test
@@ -88,11 +92,11 @@ class PresentationTest {
         val stats = ReadingStats(listOf(session(minutes = 60, pages = 60)))
 
         assertEquals(Duration.ofMinutes(135), stats.timeLeft(135))
-        assertEquals("~2h 15m", timeLeftLabel(stats.timeLeft(135)))
-        assertEquals("~45m", timeLeftLabel(stats.timeLeft(45)))
-        assertEquals("~2h", timeLeftLabel(stats.timeLeft(120)))
-        assertEquals("<1m", timeLeftLabel(stats.timeLeft(0)))
-        assertEquals("—", timeLeftLabel(ReadingStats(emptyList()).timeLeft(10)))
+        assertEquals("~2h 15m", timeLeftLabel(stats.timeLeft(135)).text())
+        assertEquals("~45m", timeLeftLabel(stats.timeLeft(45)).text())
+        assertEquals("~2h", timeLeftLabel(stats.timeLeft(120)).text())
+        assertEquals("<1m", timeLeftLabel(stats.timeLeft(0)).text())
+        assertEquals("—", timeLeftLabel(ReadingStats(emptyList()).timeLeft(10)).text())
     }
 
     @Test
@@ -100,12 +104,12 @@ class PresentationTest {
         val now = T0
 
         assertNull(readAgoLabel(null, now))
-        assertEquals("Read just now", readAgoLabel(now.minusSeconds(30), now))
-        assertEquals("Read 32m ago", readAgoLabel(now.minusSeconds(32 * 60), now))
-        assertEquals("Read 3h ago", readAgoLabel(now.minusSeconds(3 * 3600 + 120), now))
-        assertEquals("Read 2d ago", readAgoLabel(now.minus(Duration.ofDays(2)), now))
-        assertEquals("Read on 2 Oct 2026", readAgoLabel(now.minus(Duration.ofDays(30)), now, ZoneOffset.UTC))
-        assertEquals("Read just now", readAgoLabel(now.plusSeconds(60), now))
+        assertEquals("Read just now", readAgoLabel(now.minusSeconds(30), now)?.text())
+        assertEquals("Read 32m ago", readAgoLabel(now.minusSeconds(32 * 60), now)?.text())
+        assertEquals("Read 3h ago", readAgoLabel(now.minusSeconds(3 * 3600 + 120), now)?.text())
+        assertEquals("Read 2d ago", readAgoLabel(now.minus(Duration.ofDays(2)), now)?.text())
+        assertEquals("Read on 2 Oct 2026", readAgoLabel(now.minus(Duration.ofDays(30)), now, ZoneOffset.UTC)?.text())
+        assertEquals("Read just now", readAgoLabel(now.plusSeconds(60), now)?.text())
     }
 
     @Test

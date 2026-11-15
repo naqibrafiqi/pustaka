@@ -7,6 +7,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.model.Series
 import my.naqibrafiqi.pustaka.data.model.SeriesDetails
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
@@ -49,15 +50,15 @@ class EditSeriesViewModel @AssistedInject constructor(
         mutableState.value = EditUiState.Ready(
             subtitle = found.name.value,
             fields = listOf(
-                EditField(NAME, "Name", found.name.value, found.folderName),
-                EditField(AUTHOR, "Author", shown.author.orEmpty(), source.author.orEmpty()),
-                EditField(ILLUSTRATOR, "Illustrator", shown.illustrator.orEmpty(), source.illustrator.orEmpty()),
-                EditField(MAIN_GENRE, "Main genre", shown.mainGenre.orEmpty(), source.mainGenre.orEmpty()),
+                EditField(NAME, R.string.edit_field_name, found.name.value, found.folderName),
+                EditField(AUTHOR, R.string.details_author, shown.author.orEmpty(), source.author.orEmpty()),
+                EditField(ILLUSTRATOR, R.string.details_illustrator, shown.illustrator.orEmpty(), source.illustrator.orEmpty()),
+                EditField(MAIN_GENRE, R.string.edit_field_main_genre, shown.mainGenre.orEmpty(), source.mainGenre.orEmpty()),
                 EditField(
-                    TAGS, "Tags", joinList(shown.tags), joinList(source.tags),
-                    hint = "Separate tags with commas",
+                    TAGS, R.string.edit_field_tags, joinList(shown.tags), joinList(source.tags),
+                    hint = R.string.edit_hint_tags,
                 ),
-                EditField(SYNOPSIS, "Synopsis", shown.synopsis.orEmpty(), source.synopsis.orEmpty(), multiline = true),
+                EditField(SYNOPSIS, R.string.edit_field_synopsis, shown.synopsis.orEmpty(), source.synopsis.orEmpty(), multiline = true),
             ),
             canUseFileDetails = titleInFile != null || source != SeriesDetails.EMPTY,
         )

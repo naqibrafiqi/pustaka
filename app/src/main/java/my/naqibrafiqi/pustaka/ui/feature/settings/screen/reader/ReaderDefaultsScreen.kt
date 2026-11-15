@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettings
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.ui.components.TopBar
@@ -56,11 +58,11 @@ fun ReaderDefaultsScreen(
     Scaffold(
         topBar = {
             TopBar(
-                title = "Reader settings",
+                title = stringResource(R.string.settings_reader_settings),
                 onNavigateBack = onNavigateBack,
                 actionButtons = {
                     TextButton(onClick = onReset, enabled = settings != null && settings != ReaderSettings()) {
-                        Text("Reset")
+                        Text(stringResource(R.string.common_reset))
                     }
                 },
             )
@@ -68,7 +70,7 @@ fun ReaderDefaultsScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             Text(
-                text = "How every book looks in the reader. Changes made from the reader's own menu show up here too.",
+                text = stringResource(R.string.reader_defaults_explanation),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 20.dp),

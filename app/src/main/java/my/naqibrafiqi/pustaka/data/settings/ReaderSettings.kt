@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.data.settings
 
+import androidx.annotation.StringRes
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -9,38 +10,39 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import my.naqibrafiqi.pustaka.R
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
-enum class ReaderTheme(val label: String) {
+enum class ReaderTheme(@param:StringRes val label: Int) {
     /** Light or dark, following the app's theme in Settings (which can follow the phone's). */
-    AUTO("Auto"),
-    LIGHT("Light"),
-    SEPIA("Sepia"),
-    DARK("Dark"),
+    AUTO(R.string.reader_theme_auto),
+    LIGHT(R.string.reader_theme_light),
+    SEPIA(R.string.reader_theme_sepia),
+    DARK(R.string.reader_theme_dark),
 }
 
-enum class ReaderFont(val label: String) {
+enum class ReaderFont(@param:StringRes val label: Int) {
     /** The font chosen by the book's publisher. */
-    ORIGINAL("Original"),
-    SERIF("Serif"),
-    SANS_SERIF("Sans serif"),
+    ORIGINAL(R.string.reader_original),
+    SERIF(R.string.reader_font_serif),
+    SANS_SERIF(R.string.reader_font_sans_serif),
 }
 
-enum class ReaderLineSpacing(val label: String, val lineHeight: Double?) {
+enum class ReaderLineSpacing(@param:StringRes val label: Int, val lineHeight: Double?) {
     /** The book's own spacing. */
-    ORIGINAL("Original", null),
-    TIGHT("Tight", 1.2),
-    NORMAL("Normal", 1.5),
-    LOOSE("Loose", 1.8),
+    ORIGINAL(R.string.reader_original, null),
+    TIGHT(R.string.reader_spacing_tight, 1.2),
+    NORMAL(R.string.reader_normal, 1.5),
+    LOOSE(R.string.reader_spacing_loose, 1.8),
 }
 
-enum class ReaderMargins(val label: String, val pageMargins: Double) {
-    NARROW("Narrow", 0.5),
-    NORMAL("Normal", 1.0),
-    WIDE("Wide", 1.75),
+enum class ReaderMargins(@param:StringRes val label: Int, val pageMargins: Double) {
+    NARROW(R.string.reader_margins_narrow, 0.5),
+    NORMAL(R.string.reader_normal, 1.0),
+    WIDE(R.string.reader_margins_wide, 1.75),
 }
 
 /**
@@ -58,8 +60,8 @@ data class ReaderSettings(
     val margins: ReaderMargins = ReaderMargins.NORMAL,
     val scroll: Boolean = false,
 ) {
-    /** "100%". */
-    val textSizeLabel: String get() = "${(textSize * 100).roundToInt()}%"
+    /** 100 for 100%. */
+    val textSizePercent: Int get() = (textSize * 100).roundToInt()
 
     val canMakeTextSmaller: Boolean get() = textSize > TEXT_SIZE.start
     val canMakeTextBigger: Boolean get() = textSize < TEXT_SIZE.endInclusive

@@ -23,6 +23,8 @@ import my.naqibrafiqi.pustaka.testing.T0
 import my.naqibrafiqi.pustaka.testing.TestClock
 import my.naqibrafiqi.pustaka.testing.book
 import my.naqibrafiqi.pustaka.testing.inMemoryDatabase
+import my.naqibrafiqi.pustaka.testing.string
+import my.naqibrafiqi.pustaka.testing.text
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryFilter
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryUiState
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryViewModel
@@ -97,7 +99,7 @@ class ScreenViewModelTest {
 
         assertEquals(listOf(standalone, volumes[1], volumes[0]), state.books.map { it.id })
         assertEquals(mapOf(LibraryFilter.ALL to 3, LibraryFilter.READING to 1, LibraryFilter.UNREAD to 2), state.counts)
-        assertEquals("Volume 1", state.books.last().volumeLabel)
+        assertEquals("Volume 1", state.books.last().volumeLabel?.text())
         assertNull(state.books.first().volumeLabel)
     }
 
@@ -130,8 +132,8 @@ class ScreenViewModelTest {
 
         assertEquals(newer, current.book.id)
         assertEquals(68, current.book.percent)
-        assertEquals("Page 214 of 312", current.pageLabel)
-        assertEquals("Read 32m ago", current.readAgo)
+        assertEquals("Page 214 of 312", current.pageLabel?.text())
+        assertEquals("Read 32m ago", current.readAgo?.text())
     }
 
     @Test
@@ -171,7 +173,7 @@ class ScreenViewModelTest {
         assertEquals(1, deathGames.finishedCount)
         assertEquals(33, deathGames.percent)
         assertEquals(volumes[1], deathGames.continueBookId)
-        assertEquals("Up next: Volume 2", deathGames.currentLabel)
+        assertEquals("Up next: Volume 2", deathGames.currentLabel.text())
         assertEquals(listOf("Action"), deathGames.genres)
 
         val empty = state.series.first { it.name == "Empty" }
@@ -197,7 +199,7 @@ class ScreenViewModelTest {
         assertEquals("/lib/Death Games", state.folderPath)
         assertEquals(volumes, state.volumes.map { it.id })
         assertEquals(BookState.MISSING, state.volumes.last().state)
-        assertEquals(listOf("Volume 1", "Volume 2", "Volume 3"), state.volumes.map { it.volumeLabel })
+        assertEquals(listOf("Volume 1", "Volume 2", "Volume 3"), state.volumes.map { it.volumeLabel?.text() })
     }
 
     @Test
@@ -243,17 +245,17 @@ class ScreenViewModelTest {
             .state.awaitState<BookDetailsUiState.Ready>()
 
         assertEquals("Death Games, Vol. 02", state.title)
-        assertEquals("Death Games · Volume 2", state.seriesLine)
+        assertEquals("Death Games · Volume 2", state.seriesLine?.text())
         assertEquals("Yushi Ukai, Nekometaru", state.credits)
         assertEquals(listOf("Thriller", "Drama"), state.genres)
         assertEquals(BookState.READING, state.state)
         assertEquals(50, state.percent)
-        assertEquals("Page 100 of 200", state.pageLabel)
+        assertEquals("Page 100 of 200", state.pageLabel?.text())
         assertEquals(100, state.continuePage)
-        assertEquals("200 pages", state.pageCount)
-        assertEquals("Avg. 40 pages/h", state.velocity)
-        assertEquals("~2h 30m", state.timeLeft)
-        assertTrue(state.info.any { it.label == "Publisher" && it.value == "Seven Seas" })
+        assertEquals("200 pages", state.pageCount.text())
+        assertEquals("Avg. 40 pages/h", state.velocity.text())
+        assertEquals("~2h 30m", state.timeLeft.text())
+        assertTrue(state.info.any { string(it.label) == "Publisher" && it.value.text() == "Seven Seas" })
     }
 
     @Test
@@ -266,9 +268,9 @@ class ScreenViewModelTest {
         assertNull(state.seriesLine)
         assertNull(state.continuePage)
         assertEquals(BookState.UNREAD, state.state)
-        assertEquals("—", state.pageCount)
-        assertEquals("—", state.velocity)
-        assertEquals("—", state.timeLeft)
+        assertEquals("—", state.pageCount.text())
+        assertEquals("—", state.velocity.text())
+        assertEquals("—", state.timeLeft.text())
     }
 
     @Test

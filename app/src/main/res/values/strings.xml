@@ -2,8 +2,8 @@
     <string name="app_name">Pustaka</string>
 
     <!-- Common -->
-    <string name="common_label_read_more">Read more</string>
-    <string name="common_label_read_less">Read less</string>
+    <string name="common_label_read_more">Read More</string>
+    <string name="common_label_read_less">Read Less</string>
 
 
     <!-- Navigation -->
@@ -13,8 +13,478 @@
     <string name="navigation_label_settings">Settings</string>
 
     <!-- Plurals -->
-    <plurals name="common_label_volume">
-        <item quantity="one">Volume</item>
-        <item quantity="other">Volumes</item>
+
+    <!-- Shared labels -->
+    <string name="common_list_separator">", "</string>
+    <string name="common_none">—</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_close">Close</string>
+    <string name="common_save">Save</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_try_again">Try again</string>
+    <string name="common_navigate_back">Navigate back</string>
+    <string name="common_more_options">More options</string>
+    <string name="common_percent">%1$d%%</string>
+    <string name="common_dot_separated">%1$s · %2$s</string>
+    <string name="volume_label">Volume %1$s</string>
+    <string name="page_of_total">Page %1$d of %2$d</string>
+    <string name="page_number">Page %1$d</string>
+    <plurals name="pages_count">
+        <item quantity="one">%d page</item>
+        <item quantity="other">%d pages</item>
     </plurals>
+    <plurals name="volumes_count">
+        <item quantity="one">%d volume</item>
+        <item quantity="other">%d volumes</item>
+    </plurals>
+    <plurals name="books_count">
+        <item quantity="one">%d book</item>
+        <item quantity="other">%d books</item>
+    </plurals>
+    <plurals name="series_count">
+        <item quantity="one">%d series</item>
+        <item quantity="other">%d series</item>
+    </plurals>
+
+    <!-- Book states -->
+    <string name="book_state_unread">Unread</string>
+    <string name="book_state_reading">Reading</string>
+    <string name="book_state_finished">Finished</string>
+    <string name="book_state_missing">File not found</string>
+
+    <!-- Reading statistics -->
+    <string name="stats_velocity">Avg. %1$d pages/h</string>
+    <string name="stats_time_left_under_minute">&lt;1m</string>
+    <string name="stats_time_left_minutes">~%1$dm</string>
+    <string name="stats_time_left_hours">~%1$dh</string>
+    <string name="stats_time_left_hours_minutes">~%1$dh %2$dm</string>
+    <string name="read_ago_just_now">Read just now</string>
+    <string name="read_ago_minutes">Read %1$dm ago</string>
+    <string name="read_ago_hours">Read %1$dh ago</string>
+    <string name="read_ago_days">Read %1$dd ago</string>
+    <string name="read_ago_date">Read on %1$s</string>
+
+    <!-- Series progress -->
+    <string name="series_progress_no_volumes">No volumes yet</string>
+    <string name="series_progress_all_read">All volumes read</string>
+    <string name="series_progress_none_readable">No readable volumes</string>
+    <string name="series_progress_reading">Reading: %1$s</string>
+    <string name="series_progress_up_next">Up next: %1$s</string>
+
+    <!-- Scan results -->
+    <string name="scan_up_to_date">Library is up to date</string>
+    <string name="scan_folder_unavailable">Can\'t open the library folder %1$s</string>
+    <string name="scan_no_access">Pustaka needs access to your files to scan the library</string>
+    <string name="scan_failed">The scan didn\'t finish. Try again.</string>
+    <plurals name="scan_new_books">
+        <item quantity="one">%d new book found</item>
+        <item quantity="other">%d new books found</item>
+    </plurals>
+    <plurals name="scan_new_series">
+        <item quantity="one">%d new series found</item>
+        <item quantity="other">%d new series found</item>
+    </plurals>
+    <plurals name="scan_restored_books">
+        <item quantity="one">%d missing book is back</item>
+        <item quantity="other">%d missing books are back</item>
+    </plurals>
+    <plurals name="scan_moved_books">
+        <item quantity="one">%d book renamed or moved</item>
+        <item quantity="other">%d books renamed or moved</item>
+    </plurals>
+    <plurals name="scan_updated_books">
+        <item quantity="one">%d book updated</item>
+        <item quantity="other">%d books updated</item>
+    </plurals>
+    <plurals name="scan_missing_books">
+        <item quantity="one">%d book missing</item>
+        <item quantity="other">%d books missing</item>
+    </plurals>
+    <plurals name="scan_removed_series">
+        <item quantity="one">%d series removed</item>
+        <item quantity="other">%d series removed</item>
+    </plurals>
+    <plurals name="scan_unreadable_files">
+        <item quantity="one">%d file couldn\'t be read</item>
+        <item quantity="other">%d files couldn\'t be read</item>
+    </plurals>
+
+    <string name="common_search">Search</string>
+    <string name="common_in_brackets">(%1$s)</string>
+    <string name="layout_show_list">Show as list</string>
+    <string name="layout_show_grid">Show as grid</string>
+    <string name="book_resume">Resume</string>
+
+    <!-- Library -->
+    <string name="library_title">Library</string>
+    <string name="library_error">Couldn\'t load your library.</string>
+    <string name="library_filter_all">All books</string>
+    <string name="library_filter_reading">Currently reading</string>
+    <string name="library_filter_unread">Unread</string>
+    <string name="library_filter_count">%1$s (%2$d)</string>
+    <string name="library_empty_title">Your library is empty</string>
+    <string name="library_empty_message">Copy EPUB files into %1$s, then pull down to refresh. Each folder in it becomes a series.</string>
+    <string name="library_currently_reading">Currently Reading</string>
+    <string name="library_recently_added">Recently Added</string>
+    <string name="library_none_reading_title">Nothing in progress</string>
+    <string name="library_none_reading_message">Books you\'ve started reading show up here.</string>
+    <string name="library_none_unread_title">No unread books</string>
+    <string name="library_none_unread_message">You\'ve started every book in your library.</string>
+    <string name="library_percent_complete">%1$d%% complete</string>
+    <string name="library_nothing_in_progress">Nothing in progress. The book you\'re reading will show up here.</string>
+
+    <string name="common_loading">Loading</string>
+    <string name="common_error_title">Something went wrong</string>
+    <string name="book_open_details">Open details</string>
+
+    <!-- Series card -->
+    <string name="series_unknown_author">Unknown author</string>
+    <string name="series_continue_reading">Continue reading</string>
+    <string name="series_no_epubs">This folder has no EPUB files yet.</string>
+    <string name="series_card_volumes_shown">Volumes shown</string>
+    <string name="series_card_volumes_hidden">Volumes hidden</string>
+    <string name="series_card_more_genres_short">+%1$d</string>
+    <plurals name="series_card_more_genres">
+        <item quantity="one">%d more genre</item>
+        <item quantity="other">%d more genres</item>
+    </plurals>
+    <plurals name="series_card_finished_of_total">
+        <item quantity="one">%1$d of %2$d read</item>
+        <item quantity="other">%1$d of %2$d read</item>
+    </plurals>
+    <string name="series_card_view_series">View series</string>
+    <string name="series_card_volume_sequence">Volume sequence</string>
+
+    <!-- Settings choices -->
+    <string name="app_theme_system">System default</string>
+    <string name="app_theme_light">Light</string>
+    <string name="app_theme_dark">Dark</string>
+    <string name="series_sort_name">Name</string>
+    <string name="series_sort_recently_added">Recently added</string>
+    <string name="series_sort_recently_read">Recently read</string>
+    <string name="layout_show_compact_grid">Show as compact grid</string>
+    <string name="layout_show_cards">Show as cards</string>
+
+    <!-- Series -->
+    <string name="series_title">Series</string>
+    <string name="series_error">Couldn\'t load your series.</string>
+    <string name="series_empty_title">No series yet</string>
+    <string name="series_empty_message">Each folder inside %1$s becomes a series, with its EPUB files as the volumes. Pull down to refresh.</string>
+    <string name="series_sort">Sort series</string>
+    <string name="series_sort_by">Sort by</string>
+    <string name="series_new">New series</string>
+    <string name="series_new_message">Creates an empty folder in %1$s. Copy the volumes into it, then pull down to refresh.</string>
+    <string name="series_new_your_library_folder">your library folder</string>
+    <string name="series_new_folder_name">Folder name</string>
+    <string name="series_new_create">Create</string>
+    <string name="series_name_empty">Enter a name.</string>
+    <string name="series_name_dot">The name can\'t start with a dot, or the folder would be ignored.</string>
+    <string name="series_name_bad_characters">The name can\'t contain %1$s</string>
+    <string name="series_name_too_long">The name is too long.</string>
+    <string name="create_series_no_library_folder">The library folder %1$s can\'t be found.</string>
+    <string name="create_series_exists">There\'s already a folder called \"%1$s\".</string>
+    <string name="create_series_failed">Couldn\'t create the folder \"%1$s\".</string>
+    <string name="delete_folder_failed">Some files in \"%1$s\" couldn\'t be deleted.</string>
+    <string name="delete_file_failed">\"%1$s\" couldn\'t be deleted.</string>
+
+    <string name="common_go_back">Go back</string>
+    <string name="details_edit">Edit details</string>
+    <string name="details_author">Author</string>
+    <string name="details_illustrator">Illustrator</string>
+
+    <!-- Series Details -->
+    <string name="series_details_title">Series Details</string>
+    <string name="series_details_error">Couldn\'t load this series.</string>
+    <string name="series_delete">Delete series</string>
+    <string name="series_details_not_found_title">Series not found</string>
+    <string name="series_details_not_found_message">This series is no longer in your library.</string>
+    <string name="series_details_no_volumes_message">Copy this series\' EPUB files into %1$s, then pull down to refresh in Library or Series.</string>
+    <string name="series_details_progress">Series Progress</string>
+    <plurals name="series_details_volumes_read">
+        <item quantity="one">%1$d of %2$d volume read</item>
+        <item quantity="other">%1$d of %2$d volumes read</item>
+    </plurals>
+    <plurals name="series_details_storage">
+        <item quantity="one">%1$s · %2$d of %3$d file indexed</item>
+        <item quantity="other">%1$s · %2$d of %3$d files indexed</item>
+    </plurals>
+    <string name="series_details_volumes_heading">Volumes in Sequence</string>
+
+    <string name="common_dot_join">" · "</string>
+
+    <!-- Book Details -->
+    <string name="book_details_title">Book Details</string>
+    <string name="book_details_error">Couldn\'t load this book.</string>
+    <string name="book_details_more_info">More info</string>
+    <string name="book_delete">Delete book</string>
+    <string name="book_details_not_found_title">Book not found</string>
+    <string name="book_details_not_found_message">This book is no longer in your library.</string>
+    <string name="book_details_page_count">Page Count</string>
+    <string name="book_details_velocity">Velocity</string>
+    <string name="book_details_time_left">Estimated Left</string>
+    <string name="book_status_not_started">Not Started</string>
+    <string name="book_status_in_progress">In Progress</string>
+    <string name="book_read_again">Read Again</string>
+    <string name="book_continue_from_page">Continue From Page %1$d</string>
+    <string name="book_start_reading">Start Reading</string>
+    <string name="book_read_from_beginning">Read From Beginning</string>
+    <string name="book_info_title_in_file">Title in file</string>
+    <string name="book_info_series">Series</string>
+    <string name="book_info_publisher">Publisher</string>
+    <string name="book_info_published">Published</string>
+    <string name="book_info_language">Language</string>
+    <string name="book_info_identifier">Identifier</string>
+    <string name="book_info_file">File</string>
+    <string name="book_info_file_size">File size</string>
+    <string name="book_info_added">Added</string>
+
+    <!-- Deleting -->
+    <string name="delete_named_title">Delete \"%1$s\"?</string>
+    <string name="delete_remove_from_library">Remove from library</string>
+    <string name="delete_series_remove_description">Hides this series and its volumes. The folder stays on your phone, and the next scan won\'t add it back.</string>
+    <string name="delete_series_files">Delete folder and files</string>
+    <string name="delete_series_files_description">Deletes the folder and the %1$s in it from your phone.</string>
+    <string name="delete_files_title">Delete %1$s?</string>
+    <string name="delete_series_files_message">This deletes the folder %1$s and everything in it: %2$s. Reading progress and highlights for these books are deleted too. This can\'t be undone.</string>
+    <string name="delete_epubs_and_others">%1$s and %2$s</string>
+    <plurals name="delete_files">
+        <item quantity="one">%d file</item>
+        <item quantity="other">%d files</item>
+    </plurals>
+    <plurals name="delete_epubs">
+        <item quantity="one">%d EPUB</item>
+        <item quantity="other">%d EPUBs</item>
+    </plurals>
+    <plurals name="delete_other_files">
+        <item quantity="one">%d other file</item>
+        <item quantity="other">%d other files</item>
+    </plurals>
+    <string name="delete_empty_folder_message">This series has no files. Its empty folder %1$s will be deleted.</string>
+    <string name="delete_folder">Delete folder</string>
+    <string name="delete_book_remove_description">Hides this book. The file stays on your phone, and the next scan won\'t add it back.</string>
+    <string name="delete_file">Delete file</string>
+    <string name="delete_file_description">Deletes %1$s from your phone.</string>
+    <string name="delete_file_title">Delete file?</string>
+    <string name="delete_file_message">%1$s will be deleted from your phone, with the book\'s reading progress and highlights. This can\'t be undone.</string>
+    <string name="delete_forget_title">Remove \"%1$s\"?</string>
+    <string name="delete_forget_message">%1$s can\'t be found. Removing the book deletes its reading progress, highlights and edited details. This can\'t be undone.</string>
+    <string name="delete_forget_confirm">Remove</string>
+
+    <!-- Edit details -->
+    <string name="edit_series_title">Edit series</string>
+    <string name="edit_book_title">Edit book</string>
+    <string name="edit_saving">Saving</string>
+    <string name="edit_save_failed">Couldn\'t save the changes.</string>
+    <string name="edit_not_found_title">Nothing to edit</string>
+    <string name="edit_not_found_message">This is no longer in your library.</string>
+    <string name="edit_explanation">Edits are saved in Pustaka only. Your files are never changed.</string>
+    <string name="edit_use_file_details">Use details from file</string>
+    <string name="edit_discard_title">Discard changes?</string>
+    <string name="edit_discard_message">Your changes haven\'t been saved.</string>
+    <string name="edit_discard">Discard</string>
+    <string name="edit_keep_editing">Keep editing</string>
+    <string name="edit_reset_field">Reset %1$s</string>
+    <string name="edit_default_value">Default: %1$s</string>
+    <string name="edit_default_empty">Default: empty</string>
+    <string name="edit_field_name">Name</string>
+    <string name="edit_field_volume">Volume number</string>
+    <string name="edit_field_authors">Authors</string>
+    <string name="edit_field_illustrators">Illustrators</string>
+    <string name="edit_field_description">Description</string>
+    <string name="edit_field_genres">Genres</string>
+    <string name="edit_field_main_genre">Main genre</string>
+    <string name="edit_field_tags">Tags</string>
+    <string name="edit_field_synopsis">Synopsis</string>
+    <string name="edit_hint_volume">Sets the order of the volumes in the series</string>
+    <string name="edit_hint_names">Separate names with commas</string>
+    <string name="edit_hint_genres">Separate genres with commas</string>
+    <string name="edit_hint_tags">Separate tags with commas</string>
+    <string name="edit_error_volume">Enter a number, such as 4 or 4.5</string>
+
+    <string name="common_share">Share</string>
+    <string name="common_done">Done</string>
+    <string name="common_reset">Reset</string>
+
+    <!-- Reader -->
+    <string name="reader_close_book">Close the book</string>
+    <string name="reader_contents">Contents</string>
+    <string name="reader_no_contents">This book doesn\'t have a table of contents.</string>
+    <string name="reader_go_to_chapter">Go to chapter</string>
+    <string name="reader_page_slider">Page</string>
+    <string name="reader_finish_up_next">Up next: %1$s · %2$s</string>
+    <string name="reader_finish_last_volume">That was the last volume of %1$s.</string>
+    <string name="reader_finish_end_of_book">You\'ve reached the end of this book.</string>
+    <string name="reader_read_next">Read next</string>
+    <string name="reader_error_title">Couldn\'t open this book</string>
+    <string name="reader_error_not_in_library">This book is no longer in your library.</string>
+    <string name="reader_error_missing">The file for this book is missing. It may have been moved or deleted.</string>
+    <string name="reader_error_not_readable">Pustaka can\'t read this file. Check that it\'s still in your library folder.</string>
+    <string name="reader_error_not_epub">This file isn\'t a valid EPUB, or it\'s damaged.</string>
+    <string name="reader_error_protected">This book is protected with DRM, so Pustaka can\'t open it.</string>
+    <string name="reader_highlight">Highlight</string>
+    <string name="reader_clip_label">Quote</string>
+
+    <!-- Reader settings -->
+    <string name="reader_settings_title">Reading settings</string>
+    <string name="reader_setting_theme">Theme</string>
+    <string name="reader_setting_font">Font</string>
+    <string name="reader_setting_text_size">Text size</string>
+    <string name="reader_setting_line_spacing">Line spacing</string>
+    <string name="reader_setting_margins">Margins</string>
+    <string name="reader_setting_scroll">Scroll</string>
+    <string name="reader_setting_scroll_description">Scroll through each chapter instead of turning pages.</string>
+    <string name="reader_text_smaller">Smaller text</string>
+    <string name="reader_text_bigger">Bigger text</string>
+    <string name="reader_text_size_glyph" translatable="false">A</string>
+    <string name="reader_theme_auto">Auto</string>
+    <string name="reader_theme_light">Light</string>
+    <string name="reader_theme_sepia">Sepia</string>
+    <string name="reader_theme_dark">Dark</string>
+    <string name="reader_original">Original</string>
+    <string name="reader_normal">Normal</string>
+    <string name="reader_font_serif">Serif</string>
+    <string name="reader_font_sans_serif">Sans serif</string>
+    <string name="reader_spacing_tight">Tight</string>
+    <string name="reader_spacing_loose">Loose</string>
+    <string name="reader_margins_narrow">Narrow</string>
+    <string name="reader_margins_wide">Wide</string>
+
+    <!-- Highlights in the reader -->
+    <string name="highlight_delete_title">Delete this highlight?</string>
+    <string name="highlight_delete_message">Its note is deleted too.</string>
+    <string name="highlight_note">Note</string>
+    <string name="highlight_add_note">Add a note</string>
+    <string name="highlight_color_yellow">Yellow</string>
+    <string name="highlight_color_green">Green</string>
+    <string name="highlight_color_blue">Blue</string>
+    <string name="highlight_color_pink">Pink</string>
+
+    <string name="search_close">Close search</string>
+    <string name="search_clear">Clear search</string>
+
+    <!-- Highlights tab -->
+    <string name="highlights_title">Highlights</string>
+    <string name="highlights_error">Couldn\'t load your highlights.</string>
+    <string name="highlights_empty_title">No highlights yet</string>
+    <string name="highlights_empty_message">While reading, select some text and tap Highlight. Your highlights show up here.</string>
+    <string name="highlights_no_matches_title">No matching highlights</string>
+    <string name="highlights_no_matches_message">Nothing matches “%1$s”.</string>
+    <plurals name="highlights_count">
+        <item quantity="one">%d highlight</item>
+        <item quantity="other">%d highlights</item>
+    </plurals>
+    <string name="highlights_search">Search highlights</string>
+    <string name="highlights_search_placeholder">Search highlights, notes and books</string>
+    <string name="highlights_export_all">Export all as Markdown</string>
+    <string name="highlights_export_book">Export highlights from %1$s as Markdown</string>
+    <string name="highlights_open_in_book">Open in the book</string>
+    <string name="highlights_edit">Edit highlight</string>
+    <string name="highlights_standalone">Standalone books</string>
+    <string name="highlights_export_failed">Couldn\'t export your highlights.</string>
+    <string name="highlights_export_no_app">No app can receive the file.</string>
+    <string name="highlights_export_chooser">Export highlights</string>
+    <string name="highlights_export_date">Exported from Pustaka on %1$s.</string>
+    <string name="highlights_export_file_all">Pustaka highlights</string>
+    <string name="highlights_export_file_book">%1$s highlights</string>
+
+    <!-- Search -->
+    <string name="search_error">Couldn\'t search your library.</string>
+    <string name="search_idle_title">Search your library</string>
+    <string name="search_idle_message">Find series and books by name, author or genre.</string>
+    <string name="search_no_matches_title">No matches</string>
+    <string name="search_no_matches_message">Nothing in your library matches “%1$s”. Hidden items aren\'t searched.</string>
+    <string name="search_placeholder">Series, books, authors, genres</string>
+    <string name="search_books">Books</string>
+    <string name="search_in_series">In %1$s</string>
+    <string name="search_matched_on">%1$s: %2$s</string>
+    <string name="search_field_genre">Genre</string>
+    <string name="search_field_tag">Tag</string>
+    <string name="search_field_title">Title</string>
+    <string name="search_field_by">By</string>
+
+    <!-- Settings -->
+    <string name="settings_library_folder">Library folder</string>
+    <string name="settings_use_default_folder">Use default folder</string>
+    <string name="settings_rescan">Rescan library</string>
+    <string name="settings_rescan_summary">Look for new, changed and missing books</string>
+    <string name="settings_scanning">Scanning…</string>
+    <string name="settings_hidden_items">Hidden items</string>
+    <string name="settings_hidden_none">Nothing hidden</string>
+    <string name="settings_hidden_both">%1$s and %2$s</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_dynamic_colours">Dynamic colours</string>
+    <string name="settings_dynamic_colours_summary">Use colours from your wallpaper</string>
+    <string name="settings_reading">Reading</string>
+    <string name="settings_reader_settings">Reader settings</string>
+    <string name="settings_reader_settings_summary">Theme, font, text size, spacing, margins and scrolling</string>
+    <string name="settings_storage">Storage</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_summary">Version, source code and how Pustaka is made</string>
+    <string name="settings_folder_change_title">Use this folder?</string>
+    <string name="settings_folder_change_default_title">Use the default folder?</string>
+    <string name="settings_folder_change_message">Pustaka will read your library from %1$s.\n\nBooks that aren\'t in this folder stay in your library as missing, with their progress and highlights, and come back if their files turn up here. Nothing is moved or deleted.</string>
+    <string name="settings_folder_change_confirm">Use folder</string>
+    <string name="settings_folder_not_internal">Choose a folder on the phone\'s internal storage. SD cards and cloud folders can\'t be used.</string>
+    <string name="settings_folder_already_used">That\'s already your library folder.</string>
+    <string name="settings_folder_no_picker">This phone has no folder picker.</string>
+    <string name="settings_measuring">Measuring…</string>
+    <string name="settings_storage_books">%1$s in %2$s</string>
+    <string name="settings_cover_cache">Cover cache</string>
+    <string name="settings_cover_cache_reading">%1$s. Covers are being read…</string>
+    <string name="settings_cover_cache_summary">%1$s. Cleared covers come back on the next scan.</string>
+    <string name="settings_cover_cache_clear">Clear</string>
+    <string name="settings_app_data">App data</string>
+    <string name="settings_app_data_summary">%1$s: progress, highlights, edits and settings</string>
+    <string name="reader_defaults_explanation">How every book looks in the reader. Changes made from the reader\'s own menu show up here too.</string>
+
+    <!-- Hidden items -->
+    <string name="hidden_error">Couldn\'t load the hidden items.</string>
+    <string name="hidden_empty_title">Nothing is hidden</string>
+    <string name="hidden_empty_message">Series and books you remove from the library show up here, so you can put them back.</string>
+    <string name="hidden_restore">Restore</string>
+    <string name="hidden_restore_named">Restore %1$s</string>
+    <string name="hidden_restored">“%1$s” is back in your library.</string>
+    <string name="hidden_folder">Folder: %1$s</string>
+    <string name="hidden_standalone_book">Standalone book</string>
+    <string name="hidden_volume_of_series">Volume of a series</string>
+
+    <!-- About -->
+    <string name="about_title">About Pustaka</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_description">An offline EPUB reader for books that come in series. It reads the EPUB files in a folder you manage yourself, and never renames, moves or uploads them.</string>
+    <string name="about_source_code">Source code</string>
+    <string name="about_how_made_title">How Pustaka is made</string>
+    <string name="about_how_made">Pustaka is vibe coded. Its code, tests and docs are written by Claude, Anthropic\'s AI model, working in Claude Code. The project owner decides what the app should do, and reviews and tries out each part before it\'s added.</string>
+    <string name="licences_title">Open-source licences</string>
+    <string name="licences_summary">The libraries Pustaka is built with</string>
+    <string name="licences_explanation">Pustaka is built with these open-source projects. Tap one to read its licence.</string>
+
+    <!-- First launch -->
+    <string name="welcome_title">Welcome to Pustaka</string>
+    <string name="welcome_body">Pustaka shows the EPUB books you keep in one folder on your phone. To read that folder, it needs access to your files. Next, %1$s\n\nPustaka never renames or moves your files, and only deletes them when you ask it to.</string>
+    <string name="welcome_continue">Continue</string>
+    <string name="access_needed_title">Pustaka needs access to your files</string>
+    <string name="access_needed_body">Without it, Pustaka can\'t find the books in your library folder. Tap Grant access and %1$s</string>
+    <string name="access_grant">Grant access</string>
+    <string name="access_instruction_all_files">turn on \"Allow access to manage all files\" for Pustaka.</string>
+    <string name="access_instruction_legacy">allow Pustaka to access files on your device.</string>
+
+    <!-- What each open-source library is for -->
+    <string name="licence_library_readium_kotlin_toolkit">Opens EPUB files, reads their details and displays them in the reader.</string>
+    <string name="licence_library_android_jetpack_androidx">Compose, Material 3, Navigation 3, Room, DataStore, WorkManager, Lifecycle, AppCompat, Fragment, Media3, WebKit and the other androidx libraries.</string>
+    <string name="licence_library_kotlin_and_kotlinx">The Kotlin standard library, coroutines, serialization and JetBrains annotations.</string>
+    <string name="licence_library_compose_multiplatform_runtime">Shared Compose and Lifecycle pieces used by Navigation 3.</string>
+    <string name="licence_library_dagger_and_hilt">Dependency injection.</string>
+    <string name="licence_library_guava">Used by AndroidX Media3, which Readium uses.</string>
+    <string name="licence_library_accompanist">Drawing images, used by Coil.</string>
+    <string name="licence_library_material_symbols">The icons.</string>
+    <string name="licence_library_coil">Loads book covers.</string>
+    <string name="licence_library_okhttp_and_okio">Used by Coil.</string>
+    <string name="licence_library_timber">Logging, used by Readium.</string>
+    <string name="licence_library_jsoup">Reads HTML, used by Readium.</string>
+    <string name="licence_library_koi">Kotlin helpers, used by Readium.</string>
+    <string name="licence_library_jspecify_jsr_305_and_javax_inject">Annotations used by other libraries.</string>
+
+    <string name="about_open_in_browser">Open in browser</string>
+    <string name="licences_read">Read licence</string>
 </resources>

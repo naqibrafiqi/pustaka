@@ -35,6 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +54,8 @@ import my.naqibrafiqi.pustaka.ui.model.BookItem
 import my.naqibrafiqi.pustaka.ui.model.BookState
 import my.naqibrafiqi.pustaka.ui.model.booksLabel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.util.text.asString
+import my.naqibrafiqi.pustaka.util.text.asUiText
 
 @Composable
 fun LibraryScreen(
@@ -98,18 +103,18 @@ private fun LibraryScreenContent(
         modifier = modifier,
         topBar = {
             TopBar(
-                title = "Library",
+                title = stringResource(R.string.library_title),
                 actionButtons = {
                     TopBarActionButton(
                         onClick = onSearch,
                         iconResId = R.drawable.search,
-                        contentDescription = "Search",
+                        contentDescription = stringResource(R.string.common_search),
                     )
 
                     TopBarActionButton(
                         onClick = onToggleLayout,
                         iconResId = if (isGrid) R.drawable.list else R.drawable.grid,
-                        contentDescription = if (isGrid) "Show as list" else "Show as grid",
+                        contentDescription = stringResource(if (isGrid) R.string.layout_show_list else R.string.layout_show_grid),
                     )
                 }
             )
@@ -133,7 +138,7 @@ private fun LibraryScreenContent(
                 contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 16.dp)
             ) {
                 when (state) {
-                    is LibraryUiState.Error -> item { ErrorState(message = state.message, onRetry = onRetry) }
+                    is LibraryUiState.Error -> item { ErrorState(message = stringResource(state.message), onRetry = onRetry) }
                     is LibraryUiState.Ready -> readyContent(state, onSelectFilter, onOpenBook, onResumeBook)
                     LibraryUiState.Loading -> Unit
                 }
@@ -165,9 +170,8 @@ private fun LazyListScope.readyContent(
     if (state.isLibraryEmpty) {
         item {
             MessageState(
-                title = "Your library is empty",
-                message = "Copy EPUB files into ${state.libraryFolderPath}, then pull down to refresh. " +
-                    "Each folder in it becomes a series.",
+                title = stringResource(R.string.library_empty_title),
+                message = stringResource(R.string.library_empty_message, state.libraryFolderPath),
                 iconRes = R.drawable.local_library,
             )
         }
@@ -189,15 +193,16 @@ private fun LazyListScope.readyContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Currently Reading",
+                    text = stringResource(R.string.library_currently_reading),
                     fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.semantics { heading() },
                 )
 
                 state.currentlyReading?.readAgo?.let { readAgo ->
                     Text(
-                        text = readAgo,
-                        color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
+                        text = readAgo.asString(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -230,14 +235,15 @@ private fun LazyListScope.readyContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (state.filter == LibraryFilter.ALL) "Recently Added" else state.filter.label,
+                text = stringResource(if (state.filter == LibraryFilter.ALL) R.string.library_recently_added else state.filter.label),
                 fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.semantics { heading() },
             )
 
             Text(
-                text = "(${booksLabel(state.books.size)})",
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = .8f),
+                text = stringResource(R.string.common_in_brackets, booksLabel(state.books.size).asString()),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.labelLarge
             )
         }
@@ -245,13 +251,10 @@ private fun LazyListScope.readyContent(
 
     if (state.books.isEmpty()) {
         item {
+            val reading = state.filter == LibraryFilter.READING
             MessageState(
-                title = if (state.filter == LibraryFilter.READING) "Nothing in progress" else "No unread books",
-                message = if (state.filter == LibraryFilter.READING) {
-                    "Books you've started reading show up here."
-                } else {
-                    "You've started every book in your library."
-                },
+                title = stringResource(if (reading) R.string.library_none_reading_title else R.string.library_none_unread_title),
+                message = stringResource(if (reading) R.string.library_none_reading_message else R.string.library_none_unread_message),
                 iconRes = R.drawable.book_5,
             )
         }
@@ -304,7 +307,7 @@ private fun FilterChipsScrollableRow(
             SelectChip(
                 selected = filter == selected,
                 onClick = { onSelect(filter) },
-                label = "${filter.label} (${counts[filter] ?: 0})"
+                label = stringResource(R.string.library_filter_count, stringResource(filter.label), counts[filter] ?: 0)
             )
         }
 
@@ -375,7 +378,7 @@ private fun CurrentlyReadingCard(
                             )
 
                             Text(
-                                text = volume,
+                                text = volume.asString(),
                                 fontWeight = FontWeight.Normal,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -383,7 +386,7 @@ private fun CurrentlyReadingCard(
                     }
 
                     Text(
-                        text = "${book.percent}% complete",
+                        text = stringResource(R.string.library_percent_complete, book.percent),
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -407,7 +410,7 @@ private fun CurrentlyReadingCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = current.pageLabel.orEmpty(),
+                    text = current.pageLabel?.asString().orEmpty(),
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.labelLarge
@@ -425,7 +428,7 @@ private fun CurrentlyReadingCard(
                         )
 
                         Text(
-                            text = "Resume",
+                            text = stringResource(R.string.book_resume),
                             fontWeight = FontWeight.Medium,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -455,7 +458,7 @@ private fun NothingInProgressCard(modifier: Modifier = Modifier) {
             )
 
             Text(
-                text = "Nothing in progress. The book you're reading will show up here.",
+                text = stringResource(R.string.library_nothing_in_progress),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -481,7 +484,7 @@ private fun LibraryScreenPreview() {
     PustakaTheme {
         LibraryScreenContent(
             state = LibraryUiState.Ready(
-                currentlyReading = CurrentlyReading(previewBooks[0], "Read 32m ago", "Page 131 of 312"),
+                currentlyReading = CurrentlyReading(previewBooks[0], "Read 32m ago".asUiText(), "Page 131 of 312".asUiText()),
                 filter = LibraryFilter.ALL,
                 counts = mapOf(LibraryFilter.ALL to 5, LibraryFilter.READING to 1, LibraryFilter.UNREAD to 4),
                 books = previewBooks,

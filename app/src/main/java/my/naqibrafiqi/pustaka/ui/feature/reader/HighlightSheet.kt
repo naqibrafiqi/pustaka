@@ -39,8 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -95,16 +97,16 @@ fun HighlightSheet(
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete this highlight?") },
-            text = { Text("Its note is deleted too.") },
+            title = { Text(stringResource(R.string.highlight_delete_title)) },
+            text = { Text(stringResource(R.string.highlight_delete_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
                     onDelete()
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.common_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text("Cancel") }
+                TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -127,7 +129,11 @@ private fun HighlightSheetContent(
             .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(text = "Highlight", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = stringResource(R.string.reader_highlight),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.semantics { heading() },
+        )
 
         Quote(text = highlight.text, color = highlight.color)
 
@@ -136,8 +142,8 @@ private fun HighlightSheetContent(
         OutlinedTextField(
             value = note,
             onValueChange = onNoteChange,
-            label = { Text("Note") },
-            placeholder = { Text("Add a note") },
+            label = { Text(stringResource(R.string.highlight_note)) },
+            placeholder = { Text(stringResource(R.string.highlight_add_note)) },
             minLines = 2,
             maxLines = 6,
             modifier = Modifier.fillMaxWidth(),
@@ -154,10 +160,10 @@ private fun HighlightSheetContent(
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("Delete")
+                Text(stringResource(R.string.common_delete))
             }
             Spacer(Modifier.weight(1f))
-            Button(onClick = onDone) { Text("Done") }
+            Button(onClick = onDone) { Text(stringResource(R.string.common_done)) }
         }
     }
 }
@@ -188,33 +194,42 @@ private fun Quote(text: String, color: HighlightColor) {
 fun ColorPicker(selected: HighlightColor, onSelect: (HighlightColor) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         HighlightColor.entries.forEach { color ->
             val isSelected = color == selected
+            val colorName = stringResource(color.label)
+            // A 40dp swatch inside a 48dp touch target, the smallest Android recommends.
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
-                    .background(Color(color.argb))
-                    .then(
-                        if (isSelected) {
-                            Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                        } else {
-                            Modifier
-                        }
-                    )
                     .selectable(selected = isSelected, role = Role.RadioButton) { onSelect(color) }
-                    .semantics { contentDescription = color.label },
+                    .semantics { contentDescription = colorName },
                 contentAlignment = Alignment.Center,
             ) {
-                if (isSelected) {
-                    Icon(
-                        painter = painterResource(R.drawable.check),
-                        contentDescription = null,
-                        tint = Color.Black.copy(alpha = 0.7f),
-                        modifier = Modifier.size(20.dp),
-                    )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(color.argb))
+                        .then(
+                            if (isSelected) {
+                                Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            painter = painterResource(R.drawable.check),
+                            contentDescription = null,
+                            tint = Color.Black.copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
             }
         }

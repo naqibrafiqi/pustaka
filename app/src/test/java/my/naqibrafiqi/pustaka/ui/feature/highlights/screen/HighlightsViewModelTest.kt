@@ -3,6 +3,7 @@ package my.naqibrafiqi.pustaka.ui.feature.highlights.screen
 import android.net.Uri
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.export.ExportFiles
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
@@ -16,6 +17,7 @@ import my.naqibrafiqi.pustaka.testing.MainDispatcherRule
 import my.naqibrafiqi.pustaka.testing.TestClock
 import my.naqibrafiqi.pustaka.testing.book
 import my.naqibrafiqi.pustaka.testing.inMemoryDatabase
+import my.naqibrafiqi.pustaka.testing.testResources
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -156,7 +158,7 @@ class HighlightsViewModelTest {
 
         viewModel.exportAll()
 
-        assertEquals(HighlightsEvent.Message("Couldn't export your highlights."), viewModel.events.first())
+        assertEquals(HighlightsEvent.Message(R.string.highlights_export_failed), viewModel.events.first())
     }
 
     @Test
@@ -198,6 +200,7 @@ class HighlightsViewModelTest {
         highlights = highlights,
         books = books,
         series = series,
+        markdown = HighlightsMarkdown(testResources),
         exportFiles = exportFiles,
         clock = clock,
     )

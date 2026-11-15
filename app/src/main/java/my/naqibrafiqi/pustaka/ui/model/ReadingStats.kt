@@ -1,6 +1,9 @@
 package my.naqibrafiqi.pustaka.ui.model
 
+import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.model.ReadingSession
+import my.naqibrafiqi.pustaka.util.text.UiText
+import my.naqibrafiqi.pustaka.util.text.uiText
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -38,36 +41,38 @@ class ReadingStats(sessions: List<ReadingSession>) {
 
     companion object {
         private val MIN_READING_TIME: Duration = Duration.ofMinutes(1)
-        const val NONE = "—"
+
+        /** "—", shown when there's nothing to go on. */
+        val NONE: UiText = uiText(R.string.common_none)
     }
 }
 
 /** "Avg. 42 pages/h", or "—". */
-fun velocityLabel(pagesPerHour: Double?): String =
-    pagesPerHour?.let { "Avg. ${it.roundToInt()} pages/h" } ?: ReadingStats.NONE
+fun velocityLabel(pagesPerHour: Double?): UiText =
+    pagesPerHour?.let { uiText(R.string.stats_velocity, it.roundToInt()) } ?: ReadingStats.NONE
 
 /** "~2h 15m", "~45m", "<1m", or "—". */
-fun timeLeftLabel(timeLeft: Duration?): String {
+fun timeLeftLabel(timeLeft: Duration?): UiText {
     if (timeLeft == null) return ReadingStats.NONE
     val minutes = timeLeft.toMinutes()
     return when {
-        minutes < 1 -> "<1m"
-        minutes < 60 -> "~${minutes}m"
-        minutes % 60 == 0L -> "~${minutes / 60}h"
-        else -> "~${minutes / 60}h ${minutes % 60}m"
+        minutes < 1 -> uiText(R.string.stats_time_left_under_minute)
+        minutes < 60 -> uiText(R.string.stats_time_left_minutes, minutes)
+        minutes % 60 == 0L -> uiText(R.string.stats_time_left_hours, minutes / 60)
+        else -> uiText(R.string.stats_time_left_hours_minutes, minutes / 60, minutes % 60)
     }
 }
 
 /** "Read just now", "Read 32m ago", "Read 3h ago", "Read 2d ago", or "Read on 4 Oct 2026". */
-fun readAgoLabel(openedAt: Instant?, now: Instant, zone: ZoneId = ZoneId.systemDefault()): String? {
+fun readAgoLabel(openedAt: Instant?, now: Instant, zone: ZoneId = ZoneId.systemDefault()): UiText? {
     if (openedAt == null) return null
     val elapsed = Duration.between(openedAt, now).coerceAtLeast(Duration.ZERO)
     return when {
-        elapsed < Duration.ofMinutes(1) -> "Read just now"
-        elapsed < Duration.ofHours(1) -> "Read ${elapsed.toMinutes()}m ago"
-        elapsed < Duration.ofDays(1) -> "Read ${elapsed.toHours()}h ago"
-        elapsed < Duration.ofDays(30) -> "Read ${elapsed.toDays()}d ago"
-        else -> "Read on ${DATE.format(openedAt.atZone(zone))}"
+        elapsed < Duration.ofMinutes(1) -> uiText(R.string.read_ago_just_now)
+        elapsed < Duration.ofHours(1) -> uiText(R.string.read_ago_minutes, elapsed.toMinutes())
+        elapsed < Duration.ofDays(1) -> uiText(R.string.read_ago_hours, elapsed.toHours())
+        elapsed < Duration.ofDays(30) -> uiText(R.string.read_ago_days, elapsed.toDays())
+        else -> uiText(R.string.read_ago_date, DATE.format(openedAt.atZone(zone)))
     }
 }
 
