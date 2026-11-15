@@ -15,7 +15,7 @@ import javax.inject.Inject
 import kotlin.math.roundToInt
 
 enum class ReaderTheme(val label: String) {
-    /** Light or dark, following the phone's dark mode. */
+    /** Light or dark, following the app's theme in Settings (which can follow the phone's). */
     AUTO("Auto"),
     LIGHT("Light"),
     SEPIA("Sepia"),

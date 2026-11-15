@@ -13,7 +13,8 @@ import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 fun TopBarActionButton(
     onClick: () -> Unit,
     iconResId: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
 ) {
     IconButton(
         onClick = onClick,
@@ -21,7 +22,7 @@ fun TopBarActionButton(
     ) {
         Icon(
             painter = painterResource(id = iconResId),
-            contentDescription = null
+            contentDescription = contentDescription
         )
     }
 }

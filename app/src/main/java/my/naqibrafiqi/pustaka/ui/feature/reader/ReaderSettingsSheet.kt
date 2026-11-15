@@ -54,31 +54,39 @@ fun ReaderSettingsSheet(
         // The page stays visible behind the sheet, so changes can be seen as they're made.
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.1f),
     ) {
-        ReaderSettingsContent(settings, onChange, onReset)
+        Column(modifier = Modifier.navigationBarsPadding()) {
+            Row(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Reading settings",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onReset, enabled = settings != ReaderSettings()) { Text("Reset") }
+            }
+            ReaderSettingsForm(settings, onChange, Modifier.padding(top = 20.dp))
+        }
     }
 }
 
+/**
+ * Every reader setting. Used in the reader's sheet and in Settings → Reader settings, which edit
+ * the same set (decision D8).
+ */
 @Composable
-private fun ReaderSettingsContent(
+fun ReaderSettingsForm(
     settings: ReaderSettings,
     onChange: (ReaderSettings) -> Unit,
-    onReset: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .verticalScroll(rememberScrollState())
-            .navigationBarsPadding()
             .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "Reading settings",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(onClick = onReset, enabled = settings != ReaderSettings()) { Text("Reset") }
-        }
 
         Choice("Theme", ReaderTheme.entries, settings.theme, { it.label }) { onChange(settings.copy(theme = it)) }
         Choice("Font", ReaderFont.entries, settings.font, { it.label }) { onChange(settings.copy(font = it)) }
@@ -172,10 +180,9 @@ private fun TextSize(settings: ReaderSettings, onChange: (ReaderSettings) -> Uni
 private fun ReaderSettingsPreview() {
     PustakaTheme {
         Surface {
-            ReaderSettingsContent(
+            ReaderSettingsForm(
                 settings = ReaderSettings(theme = ReaderTheme.SEPIA, textSize = 1.2, scroll = true),
                 onChange = {},
-                onReset = {},
             )
         }
     }

@@ -25,6 +25,8 @@ import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import my.naqibrafiqi.pustaka.data.settings.DataStoreReaderSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.DataStoreSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.DefaultLibraryFolder
+import my.naqibrafiqi.pustaka.data.storage.DefaultStorageUsage
+import my.naqibrafiqi.pustaka.data.storage.StorageUsage
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import java.io.File
@@ -88,4 +90,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindExportFiles(impl: CacheExportFiles): ExportFiles
+
+    @Binds
+    abstract fun bindStorageUsage(impl: DefaultStorageUsage): StorageUsage
 }

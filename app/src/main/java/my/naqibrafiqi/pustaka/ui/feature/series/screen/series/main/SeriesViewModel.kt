@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.data.library.CreateSeriesResult
@@ -23,6 +23,8 @@ import my.naqibrafiqi.pustaka.data.library.LibraryFiles
 import my.naqibrafiqi.pustaka.data.library.VolumeOrder
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
+import my.naqibrafiqi.pustaka.data.settings.SeriesLayout
+import my.naqibrafiqi.pustaka.data.settings.SeriesSort
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import my.naqibrafiqi.pustaka.ui.model.SeriesItem
 import my.naqibrafiqi.pustaka.ui.model.toItem
@@ -42,9 +44,11 @@ sealed interface SeriesUiState {
     data class Error(val message: String) : SeriesUiState
 
     data class Ready(
-        /** Sorted by name. Standalone books aren't series, so they're only in Library. */
+        /** In the order of [sort]. Standalone books aren't series, so they're only in Library. */
         val series: List<SeriesItem>,
         val libraryFolderPath: String,
+        val sort: SeriesSort = SeriesSort.NAME,
+        val layout: SeriesLayout = SeriesLayout.CARDS,
     ) : SeriesUiState
 }
 
@@ -64,14 +68,16 @@ class SeriesViewModel @Inject constructor(
             combine(
                 seriesRepository.observeSeries(),
                 books.observeLibraryBooks(),
-                settings.settings.map { it.libraryFolderPath },
-            ) { allSeries, library, folderPath ->
+                settings.settings,
+            ) { allSeries, library, appSettings ->
                 val volumesBySeries = library.filterNot { it.isStandalone }.groupBy { it.seriesId }
                 SeriesUiState.Ready(
-                    series = allSeries.map { series ->
+                    series = sortSeries(allSeries, volumesBySeries, appSettings.seriesSort).map { series ->
                         series.toItem(VolumeOrder.sort(volumesBySeries[series.id].orEmpty()))
                     },
-                    libraryFolderPath = folderPath,
+                    libraryFolderPath = appSettings.libraryFolderPath,
+                    sort = appSettings.seriesSort,
+                    layout = appSettings.seriesLayout,
                 ) as SeriesUiState
             }.catch { emit(SeriesUiState.Error("Couldn't load your series.")) }
         }
@@ -113,6 +119,19 @@ class SeriesViewModel @Inject constructor(
                 is CreateSeriesResult.Invalid -> _createDialog.update { it?.copy(isCreating = false, error = result.message) }
                 is CreateSeriesResult.Failed -> _createDialog.update { it?.copy(isCreating = false, error = result.message) }
             }
+        }
+    }
+
+    /** The choice is saved (decision D18). */
+    fun selectSort(sort: SeriesSort) {
+        viewModelScope.launch { settings.setSeriesSort(sort) }
+    }
+
+    /** Switches between cards and the compact grid. The choice is saved (decision D18). */
+    fun toggleLayout() {
+        viewModelScope.launch {
+            val current = (state.value as? SeriesUiState.Ready)?.layout ?: settings.settings.first().seriesLayout
+            settings.setSeriesLayout(if (current == SeriesLayout.CARDS) SeriesLayout.GRID else SeriesLayout.CARDS)
         }
     }
 

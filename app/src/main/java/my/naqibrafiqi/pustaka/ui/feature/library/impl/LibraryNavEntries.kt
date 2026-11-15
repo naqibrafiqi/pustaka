@@ -9,6 +9,7 @@ import my.naqibrafiqi.pustaka.ui.feature.library.api.LibraryRoute
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryScreen
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryViewModel
 import my.naqibrafiqi.pustaka.ui.feature.reader.rememberReaderLauncher
+import my.naqibrafiqi.pustaka.ui.feature.search.api.SearchRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.api.BookDetailsRoute
 import my.naqibrafiqi.pustaka.ui.scan.LibraryScanViewModel
 import my.naqibrafiqi.pustaka.util.provider.LocalAppNavigator
@@ -30,6 +31,7 @@ fun EntryProviderScope<NavKey>.libraryEntryBuilder(scanViewModel: LibraryScanVie
             onRetry = viewModel::retry,
             onOpenBook = { bookId -> navigator.add(BookDetailsRoute(bookId)) },
             onResumeBook = { bookId -> reader.open(bookId, fromStart = false) },
+            onSearch = { navigator.add(SearchRoute) },
         )
     }
 }
