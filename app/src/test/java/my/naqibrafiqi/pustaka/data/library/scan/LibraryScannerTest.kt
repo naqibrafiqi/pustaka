@@ -15,6 +15,7 @@ import my.naqibrafiqi.pustaka.data.repository.DefaultBookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
 import my.naqibrafiqi.pustaka.data.settings.AppSettings
+import my.naqibrafiqi.pustaka.data.settings.AppTheme
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import my.naqibrafiqi.pustaka.testing.TestClock
 import my.naqibrafiqi.pustaka.testing.inMemoryDatabase
@@ -398,6 +399,8 @@ class LibraryScannerTest {
         override suspend fun setLibraryFolderPath(path: String) = error("not used")
         override suspend fun resetLibraryFolderPath() = error("not used")
         override suspend fun setHasSeenWelcome() = error("not used")
+        override suspend fun setAppTheme(theme: AppTheme) = error("not used")
+        override suspend fun setDynamicColor(enabled: Boolean) = error("not used")
     }
 
     /** Reads the fields written by [writeFake], and "saves" a cover as a small file. */

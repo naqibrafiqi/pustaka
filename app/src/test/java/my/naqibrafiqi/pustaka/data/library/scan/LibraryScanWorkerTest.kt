@@ -16,6 +16,7 @@ import my.naqibrafiqi.pustaka.data.library.epub.EpubReader
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.model.BookDetails
 import my.naqibrafiqi.pustaka.data.settings.AppSettings
+import my.naqibrafiqi.pustaka.data.settings.AppTheme
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import my.naqibrafiqi.pustaka.testing.T0
 import my.naqibrafiqi.pustaka.testing.TestClock
@@ -89,6 +90,8 @@ class LibraryScanWorkerTest {
             override suspend fun setLibraryFolderPath(path: String) = error("not used")
             override suspend fun resetLibraryFolderPath() = error("not used")
             override suspend fun setHasSeenWelcome() = error("not used")
+            override suspend fun setAppTheme(theme: AppTheme) = error("not used")
+            override suspend fun setDynamicColor(enabled: Boolean) = error("not used")
         }
         val reader = object : EpubReader {
             override suspend fun read(file: File, fingerprint: String) = EpubMetadata(BookDetails(title = "Title"), 10)

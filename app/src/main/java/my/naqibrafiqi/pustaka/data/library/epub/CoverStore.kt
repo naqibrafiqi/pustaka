@@ -24,6 +24,12 @@ class CoverStore(private val directory: File) {
         return target.path
     }
 
+    /** How much space the covers take up. */
+    fun sizeInBytes(): Long = directory.listFiles()?.sumOf { if (it.isFile) it.length() else 0L } ?: 0L
+
+    /** Deletes every cover. The next scan reads the books again to bring them back. */
+    fun clear() = deleteAllExcept(emptySet())
+
     /** Deletes every cover whose path isn't in [inUse]. */
     fun deleteAllExcept(inUse: Set<String>) {
         directory.listFiles()?.forEach { file ->
