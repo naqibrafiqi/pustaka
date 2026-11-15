@@ -15,7 +15,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
@@ -44,7 +43,9 @@ import androidx.fragment.compose.AndroidFragment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.ui.theme.AppearanceViewModel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
+import my.naqibrafiqi.pustaka.ui.theme.isDark
 import org.readium.r2.navigator.DecorableNavigator
 import org.readium.r2.navigator.Decoration
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
@@ -67,6 +68,7 @@ import org.readium.r2.shared.util.AbsoluteUrl
 class ReaderActivity : AppCompatActivity() {
 
     private val viewModel: ReaderViewModel by viewModels()
+    private val appearanceViewModel: AppearanceViewModel by viewModels()
 
     /** The reader view once it's on screen, for the text selection menu. */
     private var navigatorFragment: EpubNavigatorFragment? = null
@@ -85,12 +87,16 @@ class ReaderActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         setContent {
-            PustakaTheme {
+            val appearance by appearanceViewModel.appearance.collectAsStateWithLifecycle()
+            // Waits for the settings, so the page doesn't flash in the wrong theme.
+            val chosen = appearance ?: return@setContent
+            val appDark = chosen.isDark()
+            PustakaTheme(darkTheme = appDark, dynamicColor = chosen.dynamicColor) {
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 when (val current = state) {
                     ReaderUiState.Loading -> ReaderLoading()
                     is ReaderUiState.Failed -> ReaderFailed(message = current.message, onClose = ::finish)
-                    is ReaderUiState.Ready -> Reader(current)
+                    is ReaderUiState.Ready -> Reader(current, appDark)
                 }
             }
         }
@@ -108,12 +114,12 @@ class ReaderActivity : AppCompatActivity() {
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
-    private fun Reader(book: ReaderUiState.Ready) {
+    private fun Reader(book: ReaderUiState.Ready, appDark: Boolean) {
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val finishCard by viewModel.finishCard.collectAsStateWithLifecycle()
-        val systemDark = isSystemInDarkTheme()
-        val theme = settings.readiumTheme(systemDark)
-        val preferences = settings.toEpubPreferences(systemDark)
+        // The reader's "Auto" theme follows the app's theme, which may follow the phone's.
+        val theme = settings.readiumTheme(appDark)
+        val preferences = settings.toEpubPreferences(appDark)
 
         // The fragment is made by Readium's factory, which has to be in place before it's added.
         remember(book) {

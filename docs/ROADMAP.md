@@ -1,6 +1,6 @@
 # Pustaka Roadmap
 
-_Last updated: 2026-11-14_
+_Last updated: 2026-11-15_
 
 Pustaka is an offline EPUB reader for books that come in series of numbered volumes. Today the app has its navigation and four designed screens (Library, Series, Series Details and Book Details), all showing placeholder data. This roadmap takes it from there to a release you can install and use every day.
 
@@ -27,6 +27,10 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D12 | What can be exported at once | **One book, or everything**: each book's group in the Highlights tab has Export, and the tab's menu has "Export all". Everything goes into one file, grouped by series and book. |
 | D13 | Highlight colours | **Four: yellow, green, blue and pink.** Yellow is used for the very first highlight. |
 | D14 | What "Highlight" does after selecting text | The text is **highlighted at once**, in the colour used last. Tapping the highlight lets you change its colour, add a note or delete it. |
+| D15 | How a new library folder is chosen | Android's **system folder picker**, turned into a path such as `/storage/emulated/0/Download/Pustaka`, plus a "Use default folder" button. Only the phone's internal storage can be chosen. |
+| D16 | What happens to books from the old folder after switching | They're **kept as missing**, with their progress and highlights. If the same files turn up in the new folder, they're matched by fingerprint and come back. |
+| D17 | How search works | **One search screen**, opened from the search button in Library or Series, with results grouped into Series and Books. It matches name, author and genre. |
+| D18 | Whether sort order and layout are remembered | **Yes.** The Series sort and layout and the Library grid/list choice are saved with the other settings. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md). No decisions are open right now.
 
@@ -127,6 +131,10 @@ This phase is split into two pull requests:
 - Edit and delete highlights, and export them as Markdown.
 
 ### Phase 6: Settings, search and sorting (M)
+This phase is split into two pull requests:
+1. The Settings screen: library folder, hidden items, app theme, default reader settings, storage, and About with the open-source licences. ✅ Done in PR 1. The licences are listed by hand, because AboutLibraries needs Kotlin 2.4.
+2. Search, sorting and layout in the Library and Series top bars.
+
 - The Pustaka folder: change it (for example to `Download/Pustaka`) and rescan.
 - Hidden items: a list of series and books removed from the library, with a button to restore each one.
 - Search, sorting and layout: the search, sort/filter and grid buttons already in the Library and Series top bars. Search finds series and books by name, author and genre. Series can be sorted by name, recently added or recently read, and shown as cards or a compact grid. (Decided in Phase 3: the buttons were designed but not in any phase.)
@@ -161,6 +169,6 @@ This phase is split into two pull requests:
 | 2. Library folder and scanning | Done |
 | 3. Connect screens to data | Done |
 | 4. Reader | Done |
-| 5. Highlights | In review (PR 1 merged, PR 2 into `1.0.0`) |
-| 6. Settings, search and sorting | Not started |
+| 5. Highlights | Done |
+| 6. Settings, search and sorting | In review (PR 1 into `1.0.0`; PR 2 not started) |
 | 7. Polish and release | Not started |
