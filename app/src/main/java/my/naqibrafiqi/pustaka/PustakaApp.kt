@@ -35,6 +35,7 @@ import my.naqibrafiqi.pustaka.ui.feature.highlights.api.HighlightsRoute
 import my.naqibrafiqi.pustaka.ui.feature.highlights.impl.highlightsEntryBuilder
 import my.naqibrafiqi.pustaka.ui.feature.library.api.LibraryRoute
 import my.naqibrafiqi.pustaka.ui.feature.library.impl.libraryEntryBuilder
+import my.naqibrafiqi.pustaka.ui.feature.search.impl.searchEntryBuilder
 import my.naqibrafiqi.pustaka.ui.feature.series.api.SeriesRoute
 import my.naqibrafiqi.pustaka.ui.feature.series.impl.seriesEntryBuilder
 import my.naqibrafiqi.pustaka.ui.feature.settings.api.SettingsRoute
@@ -66,6 +67,7 @@ fun PustakaApp() {
         libraryEntryBuilder(scanViewModel)
         seriesEntryBuilder(scanViewModel)
         highlightsEntryBuilder()
+        searchEntryBuilder()
         settingsEntryBuilder(scanViewModel)
     }
 

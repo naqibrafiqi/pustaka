@@ -18,6 +18,23 @@ enum class AppTheme(val label: String) {
     DARK("Dark"),
 }
 
+/** How the Series tab is sorted (decision D18 keeps the choice). */
+enum class SeriesSort(val label: String) {
+    NAME("Name"),
+    /** The series whose newest volume was added most recently first. */
+    RECENTLY_ADDED("Recently added"),
+    /** The series with the volume opened most recently first. Series never read come last. */
+    RECENTLY_READ("Recently read"),
+}
+
+/** How the Series tab shows each series. */
+enum class SeriesLayout(val label: String) {
+    /** A card with the details and a strip of volumes. */
+    CARDS("Cards"),
+    /** Covers in a grid, with the name and number of volumes. */
+    GRID("Compact grid"),
+}
+
 /** App settings. */
 data class AppSettings(
     /** The folder the library is read from, `/storage/emulated/0/Pustaka` by default. */
@@ -29,6 +46,10 @@ data class AppSettings(
     val appTheme: AppTheme = AppTheme.SYSTEM,
     /** Uses colours taken from the phone's wallpaper, on Android 12 and newer. */
     val dynamicColor: Boolean = true,
+    val seriesSort: SeriesSort = SeriesSort.NAME,
+    val seriesLayout: SeriesLayout = SeriesLayout.CARDS,
+    /** Library shows books in a grid, or in a list when false. */
+    val libraryGrid: Boolean = true,
 )
 
 interface SettingsRepository {
@@ -45,6 +66,12 @@ interface SettingsRepository {
     suspend fun setAppTheme(theme: AppTheme)
 
     suspend fun setDynamicColor(enabled: Boolean)
+
+    suspend fun setSeriesSort(sort: SeriesSort)
+
+    suspend fun setSeriesLayout(layout: SeriesLayout)
+
+    suspend fun setLibraryGrid(grid: Boolean)
 }
 
 /** The default library folder path. */
@@ -64,8 +91,11 @@ class DataStoreSettingsRepository @Inject constructor(
                 libraryFolderPath = chosenFolder ?: defaultLibraryFolderPath,
                 hasSeenWelcome = preferences[Keys.HAS_SEEN_WELCOME] ?: false,
                 isDefaultLibraryFolder = chosenFolder == null || chosenFolder == defaultLibraryFolderPath,
-                appTheme = AppTheme.entries.firstOrNull { it.name == preferences[Keys.APP_THEME] } ?: AppTheme.SYSTEM,
+                appTheme = preferences[Keys.APP_THEME].toEnum(AppTheme.SYSTEM),
                 dynamicColor = preferences[Keys.DYNAMIC_COLOR] ?: true,
+                seriesSort = preferences[Keys.SERIES_SORT].toEnum(SeriesSort.NAME),
+                seriesLayout = preferences[Keys.SERIES_LAYOUT].toEnum(SeriesLayout.CARDS),
+                libraryGrid = preferences[Keys.LIBRARY_GRID] ?: true,
             )
         }
         .distinctUntilChanged()
@@ -92,10 +122,29 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[Keys.DYNAMIC_COLOR] = enabled }
     }
 
+    override suspend fun setSeriesSort(sort: SeriesSort) {
+        dataStore.edit { it[Keys.SERIES_SORT] = sort.name }
+    }
+
+    override suspend fun setSeriesLayout(layout: SeriesLayout) {
+        dataStore.edit { it[Keys.SERIES_LAYOUT] = layout.name }
+    }
+
+    override suspend fun setLibraryGrid(grid: Boolean) {
+        dataStore.edit { it[Keys.LIBRARY_GRID] = grid }
+    }
+
+    /** A value saved by another version of the app that this one doesn't know falls back to [default]. */
+    private inline fun <reified T : Enum<T>> String?.toEnum(default: T): T =
+        enumValues<T>().firstOrNull { it.name == this } ?: default
+
     private object Keys {
         val LIBRARY_FOLDER_PATH = stringPreferencesKey("library_folder_path")
         val HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
         val APP_THEME = stringPreferencesKey("app_theme")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        val SERIES_SORT = stringPreferencesKey("series_sort")
+        val SERIES_LAYOUT = stringPreferencesKey("series_layout")
+        val LIBRARY_GRID = booleanPreferencesKey("library_grid")
     }
 }

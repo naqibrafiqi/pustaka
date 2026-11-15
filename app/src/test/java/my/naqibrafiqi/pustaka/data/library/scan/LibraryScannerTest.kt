@@ -16,6 +16,8 @@ import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
 import my.naqibrafiqi.pustaka.data.settings.AppSettings
 import my.naqibrafiqi.pustaka.data.settings.AppTheme
+import my.naqibrafiqi.pustaka.data.settings.SeriesLayout
+import my.naqibrafiqi.pustaka.data.settings.SeriesSort
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import my.naqibrafiqi.pustaka.testing.TestClock
 import my.naqibrafiqi.pustaka.testing.inMemoryDatabase
@@ -401,6 +403,9 @@ class LibraryScannerTest {
         override suspend fun setHasSeenWelcome() = error("not used")
         override suspend fun setAppTheme(theme: AppTheme) = error("not used")
         override suspend fun setDynamicColor(enabled: Boolean) = error("not used")
+        override suspend fun setSeriesSort(sort: SeriesSort) = error("not used")
+        override suspend fun setSeriesLayout(layout: SeriesLayout) = error("not used")
+        override suspend fun setLibraryGrid(grid: Boolean) = error("not used")
     }
 
     /** Reads the fields written by [writeFake], and "saves" a cover as a small file. */

@@ -62,6 +62,7 @@ fun LibraryScreen(
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
     onResumeBook: (Long) -> Unit,
+    onSearch: () -> Unit,
 ) {
     LibraryScreenContent(
         state = state,
@@ -72,6 +73,7 @@ fun LibraryScreen(
         onRetry = onRetry,
         onOpenBook = onOpenBook,
         onResumeBook = onResumeBook,
+        onSearch = onSearch,
     )
 }
 
@@ -86,6 +88,7 @@ private fun LibraryScreenContent(
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
     onResumeBook: (Long) -> Unit,
+    onSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -98,13 +101,15 @@ private fun LibraryScreenContent(
                 title = "Library",
                 actionButtons = {
                     TopBarActionButton(
-                        onClick = { /* TODO: ??? */ },
-                        iconResId = R.drawable.search
+                        onClick = onSearch,
+                        iconResId = R.drawable.search,
+                        contentDescription = "Search",
                     )
 
                     TopBarActionButton(
                         onClick = onToggleLayout,
-                        iconResId = if (isGrid) R.drawable.list else R.drawable.grid
+                        iconResId = if (isGrid) R.drawable.list else R.drawable.grid,
+                        contentDescription = if (isGrid) "Show as list" else "Show as grid",
                     )
                 }
             )
@@ -490,6 +495,7 @@ private fun LibraryScreenPreview() {
             onRetry = {},
             onOpenBook = {},
             onResumeBook = {},
+            onSearch = {},
         )
     }
 }
@@ -514,6 +520,7 @@ private fun LibraryScreenEmptyPreview() {
             onRetry = {},
             onOpenBook = {},
             onResumeBook = {},
+            onSearch = {},
         )
     }
 }

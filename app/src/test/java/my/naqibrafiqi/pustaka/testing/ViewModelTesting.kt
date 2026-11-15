@@ -12,6 +12,8 @@ import my.naqibrafiqi.pustaka.data.library.scan.LibraryScans
 import my.naqibrafiqi.pustaka.data.library.scan.ScanStatus
 import my.naqibrafiqi.pustaka.data.settings.AppSettings
 import my.naqibrafiqi.pustaka.data.settings.AppTheme
+import my.naqibrafiqi.pustaka.data.settings.SeriesLayout
+import my.naqibrafiqi.pustaka.data.settings.SeriesSort
 import my.naqibrafiqi.pustaka.data.settings.SettingsRepository
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
@@ -38,6 +40,9 @@ class FakeSettings(
     override suspend fun setHasSeenWelcome() = current.update { it.copy(hasSeenWelcome = true) }
     override suspend fun setAppTheme(theme: AppTheme) = current.update { it.copy(appTheme = theme) }
     override suspend fun setDynamicColor(enabled: Boolean) = current.update { it.copy(dynamicColor = enabled) }
+    override suspend fun setSeriesSort(sort: SeriesSort) = current.update { it.copy(seriesSort = sort) }
+    override suspend fun setSeriesLayout(layout: SeriesLayout) = current.update { it.copy(seriesLayout = layout) }
+    override suspend fun setLibraryGrid(grid: Boolean) = current.update { it.copy(libraryGrid = grid) }
 
     companion object {
         const val DEFAULT_FOLDER = "/storage/emulated/0/Pustaka"
