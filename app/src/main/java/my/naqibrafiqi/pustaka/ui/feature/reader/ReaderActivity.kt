@@ -123,9 +123,11 @@ class ReaderActivity : AppCompatActivity() {
         val theme = settings.readiumTheme(appDark)
         val preferences = settings.toEpubPreferences(appDark)
 
-        // The fragment is made by Readium's factory, which has to be in place before it's added.
-        remember(book) {
-            supportFragmentManager.fragmentFactory = EpubNavigatorFactory(book.publication).createFragmentFactory(
+        // The fragment is made by Readium's factory, which has to be in place before it's added, so
+        // it's set while composing, before AndroidFragment adds the fragment. Setting the same
+        // factory again on a later composition changes nothing.
+        val fragmentFactory = remember(book) {
+            EpubNavigatorFactory(book.publication).createFragmentFactory(
                 initialLocator = book.initialLocator,
                 initialPreferences = preferences,
                 listener = linkListener,
@@ -137,6 +139,7 @@ class ReaderActivity : AppCompatActivity() {
                 },
             )
         }
+        supportFragmentManager.fragmentFactory = fragmentFactory
 
         var navigator by remember { mutableStateOf<EpubNavigatorFragment?>(null) }
         var chromeVisible by rememberSaveable { mutableStateOf(false) }
