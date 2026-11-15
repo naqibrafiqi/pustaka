@@ -73,13 +73,13 @@ class SettingsRepositoryTest {
     fun savesTheAppTheme() = runTest {
         val settings = repository()
         assertEquals(AppTheme.SYSTEM, settings.settings.first().appTheme)
-        assertTrue(settings.settings.first().dynamicColor)
+        assertFalse(settings.settings.first().dynamicColor)
 
         settings.setAppTheme(AppTheme.DARK)
-        settings.setDynamicColor(false)
+        settings.setDynamicColor(true)
 
         assertEquals(AppTheme.DARK, settings.settings.first().appTheme)
-        assertFalse(settings.settings.first().dynamicColor)
+        assertTrue(settings.settings.first().dynamicColor)
     }
 
     @Test(expected = IllegalArgumentException::class)

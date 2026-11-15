@@ -44,8 +44,8 @@ data class AppSettings(
     /** False once another folder has been chosen in Settings. */
     val isDefaultLibraryFolder: Boolean = true,
     val appTheme: AppTheme = AppTheme.SYSTEM,
-    /** Uses colours taken from the phone's wallpaper, on Android 12 and newer. */
-    val dynamicColor: Boolean = true,
+    /** Uses colours taken from the phone's wallpaper, on Android 12 and newer. Off by default (D20). */
+    val dynamicColor: Boolean = false,
     val seriesSort: SeriesSort = SeriesSort.NAME,
     val seriesLayout: SeriesLayout = SeriesLayout.CARDS,
     /** Library shows books in a grid, or in a list when false. */
@@ -92,7 +92,7 @@ class DataStoreSettingsRepository @Inject constructor(
                 hasSeenWelcome = preferences[Keys.HAS_SEEN_WELCOME] ?: false,
                 isDefaultLibraryFolder = chosenFolder == null || chosenFolder == defaultLibraryFolderPath,
                 appTheme = preferences[Keys.APP_THEME].toEnum(AppTheme.SYSTEM),
-                dynamicColor = preferences[Keys.DYNAMIC_COLOR] ?: true,
+                dynamicColor = preferences[Keys.DYNAMIC_COLOR] ?: false,
                 seriesSort = preferences[Keys.SERIES_SORT].toEnum(SeriesSort.NAME),
                 seriesLayout = preferences[Keys.SERIES_LAYOUT].toEnum(SeriesLayout.CARDS),
                 libraryGrid = preferences[Keys.LIBRARY_GRID] ?: true,

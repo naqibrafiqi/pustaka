@@ -129,9 +129,9 @@ class SettingsViewModelTest {
     fun changesTheAppearance() = runTest {
         val viewModel = viewModel()
         viewModel.setAppTheme(AppTheme.DARK)
-        viewModel.setDynamicColor(false)
+        viewModel.setDynamicColor(true)
 
-        val state = viewModel.state.first { it?.appTheme == AppTheme.DARK && !it.dynamicColor }
+        val state = viewModel.state.first { it?.appTheme == AppTheme.DARK && it.dynamicColor }
         assertEquals(AppTheme.DARK, state!!.appTheme)
     }
 

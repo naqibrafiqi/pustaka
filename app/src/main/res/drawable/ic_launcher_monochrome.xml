@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The one-colour version of the app icon, for Android 13's themed icons. The launcher tints it,
+    so the lines of text and the ribbon are cut out of the pages instead of drawn in other colours.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M54,46C48,41 39,39 29,40L29,72C39,71 48,73 54,77C60,73 69,71 79,72L79,40C69,39 60,41 54,46ZM52.8,46L55.2,46L55.2,74.2L52.8,74.2ZM35,47h14v1.8h-14zM35,53h14v1.8h-14zM35,59h14v1.8h-14zM35,65h10v1.8h-10zM59,53h14v1.8h-14zM59,59h14v1.8h-14zM59,65h10v1.8h-10zM61,43.4L67,41.6L67,52L64,49L61,52Z" />
+    <!-- The ribbon's tail above the pages -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M61,36L67,36L67,40.2L61,42Z" />
+</vector>
