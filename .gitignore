@@ -14,6 +14,9 @@
 .cxx
 local.properties
 
+# Signed APKs and R8 mapping files from Android Studio's "Generate Signed App Bundle or APK"
+/app/release/
+
 # Release signing (decision D21). Never commit these.
 keystore.properties
 *.jks
