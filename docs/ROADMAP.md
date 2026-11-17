@@ -37,6 +37,7 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D22 | How 1.0.0 is published | **The PM publishes it.** Claude builds the signed APK and writes the release notes in the repo. The PM creates the GitHub Release and uploads the APK. |
 | D23 | Which branch work goes into after 1.0.0 | **One branch per version.** `1.0.0` is released and stays as it is. The Phase 8 plan and the project skills are in `1.0.1`. The Phase 8 code goes into `1.1.0`, started from `1.0.1`. |
 | D24 | Whether paragraphs are always justified (#32) | A **Justify** switch in reader settings and in Default reader settings, **on** by default. Built as proposed in part 1 and approved with it. |
+| D25 | What "latest book" means for the series cover (#38) | The **last volume in volume order**, not the most recently added file. Picking another volume's cover in Edit series overrides it. Built as proposed in part 2 and approved with it. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
@@ -45,7 +46,6 @@ These came up while planning Phase 8. Each has a proposal, which Claude follows 
 
 | # | Question | Proposal |
 |---|---|---|
-| D25 | What "latest book" means for the series cover (#38) | The **last volume in volume order**, not the most recently added file. Picking another volume's cover in Edit series overrides it. Built this way in part 2, which is in review. |
 | D26 | When the "Back to where you were" button appears and disappears (#35) | It appears after jumping from the table of contents, the progress bar or a highlight. It goes away after reading **10 pages** forward from the new spot, after tapping it, or after closing the book. |
 | D27 | Where bookmarks are listed (#37) | A **Bookmarks** tab in the Contents sheet, next to the chapters. Tapping one opens that page. |
 | D28 | Whether to build the page-flip animation (#36) | Readium only slides or scrolls pages, so a page flip has to be built from scratch on top of it. Claude does a short **feasibility check first** and reports back before building it. |
@@ -211,4 +211,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Part 1 (#31 to #34) is merged. Part 2 (#38) is in review on `phase-8b-series-cover`, following the proposal in D25. D25 to D28 are still open. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34) and 2 (#38) are merged. Part 3 (#35) is next. D26 to D28 are still open. |
