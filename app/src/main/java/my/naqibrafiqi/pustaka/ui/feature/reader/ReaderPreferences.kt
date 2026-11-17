@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.reader
 
+import my.naqibrafiqi.pustaka.data.library.epub.PageStyles
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.settings.ReaderFont
 import my.naqibrafiqi.pustaka.data.settings.ReaderLineSpacing
@@ -31,6 +32,9 @@ fun ReaderSettings.toEpubPreferences(systemDark: Boolean): EpubPreferences = Epu
     // Readium only applies its own line spacing when the publisher's styles are turned off.
     publisherStyles = lineSpacing == ReaderLineSpacing.ORIGINAL,
     scroll = scroll,
+    // Readium's own justifying needs the publisher's styles off and then pushes centred lines to
+    // the left, so Pustaka's page script justifies instead. This only tells the script it's on.
+    ligatures = if (justify) PageStyles.JUSTIFY_SIGNAL else null,
 )
 
 /**

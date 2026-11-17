@@ -42,9 +42,11 @@ import my.naqibrafiqi.pustaka.data.settings.ReaderLineSpacing
 import my.naqibrafiqi.pustaka.data.settings.ReaderMargins
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettings
 import my.naqibrafiqi.pustaka.data.settings.ReaderTheme
+import my.naqibrafiqi.pustaka.ui.components.sheetDragArea
+import my.naqibrafiqi.pustaka.ui.components.steadyBottomSheet
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
-/** Theme, font, text size, line spacing, margins and scrolling. Changes show on the page straight away. */
+/** Theme, font, text size, line spacing, margins, justifying and scrolling. Changes show on the page straight away. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderSettingsSheet(
@@ -59,9 +61,11 @@ fun ReaderSettingsSheet(
         // The page stays visible behind the sheet, so changes can be seen as they're made.
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.1f),
     ) {
-        Column(modifier = Modifier.navigationBarsPadding()) {
+        Column(modifier = Modifier.navigationBarsPadding().steadyBottomSheet()) {
             Row(
-                modifier = Modifier.padding(horizontal = 24.dp),
+                modifier = Modifier
+                    .sheetDragArea()
+                    .padding(horizontal = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -102,27 +106,37 @@ fun ReaderSettingsForm(
             onChange(settings.copy(lineSpacing = it))
         }
         Choice(R.string.reader_setting_margins, ReaderMargins.entries, settings.margins, { it.label }) { onChange(settings.copy(margins = it)) }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .toggleable(
-                    value = settings.scroll,
-                    role = Role.Switch,
-                    onValueChange = { onChange(settings.copy(scroll = it)) },
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.reader_setting_scroll), style = MaterialTheme.typography.titleSmall)
-                Text(
-                    text = stringResource(R.string.reader_setting_scroll_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Switch(checked = settings.scroll, onCheckedChange = null)
+        SwitchRow(R.string.reader_setting_justify, R.string.reader_setting_justify_description, settings.justify) {
+            onChange(settings.copy(justify = it))
         }
+        SwitchRow(R.string.reader_setting_scroll, R.string.reader_setting_scroll_description, settings.scroll) {
+            onChange(settings.copy(scroll = it))
+        }
+    }
+}
+
+@Composable
+private fun SwitchRow(
+    @StringRes title: Int,
+    @StringRes description: Int,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(title), style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = stringResource(description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 

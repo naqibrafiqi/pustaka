@@ -51,6 +51,8 @@ enum class ReaderMargins(@param:StringRes val label: Int, val pageMargins: Doubl
  *
  * @property textSize a multiplier of the book's own text size, 1.0 being 100%.
  * @property scroll scrolls through each chapter instead of turning pages (decision D9).
+ * @property justify lines up paragraphs with both edges of the page, unless the book aligns them
+ *   itself, such as centred lines (decision D24).
  */
 data class ReaderSettings(
     val theme: ReaderTheme = ReaderTheme.AUTO,
@@ -59,6 +61,7 @@ data class ReaderSettings(
     val lineSpacing: ReaderLineSpacing = ReaderLineSpacing.ORIGINAL,
     val margins: ReaderMargins = ReaderMargins.NORMAL,
     val scroll: Boolean = false,
+    val justify: Boolean = true,
 ) {
     /** 100 for 100%. */
     val textSizePercent: Int get() = (textSize * 100).roundToInt()
@@ -103,6 +106,7 @@ class DataStoreReaderSettingsRepository @Inject constructor(
                 lineSpacing = preferences[Keys.LINE_SPACING].toEnum(defaults.lineSpacing),
                 margins = preferences[Keys.MARGINS].toEnum(defaults.margins),
                 scroll = preferences[Keys.SCROLL] ?: defaults.scroll,
+                justify = preferences[Keys.JUSTIFY] ?: defaults.justify,
             )
         }
         .distinctUntilChanged()
@@ -115,6 +119,7 @@ class DataStoreReaderSettingsRepository @Inject constructor(
             it[Keys.LINE_SPACING] = settings.lineSpacing.name
             it[Keys.MARGINS] = settings.margins.name
             it[Keys.SCROLL] = settings.scroll
+            it[Keys.JUSTIFY] = settings.justify
         }
     }
 
@@ -133,6 +138,7 @@ class DataStoreReaderSettingsRepository @Inject constructor(
         val LINE_SPACING = stringPreferencesKey("reader_line_spacing")
         val MARGINS = stringPreferencesKey("reader_margins")
         val SCROLL = booleanPreferencesKey("reader_scroll")
-        val ALL = listOf(THEME, FONT, TEXT_SIZE, LINE_SPACING, MARGINS, SCROLL)
+        val JUSTIFY = booleanPreferencesKey("reader_justify")
+        val ALL = listOf(THEME, FONT, TEXT_SIZE, LINE_SPACING, MARGINS, SCROLL, JUSTIFY)
     }
 }

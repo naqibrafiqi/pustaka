@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.MessageState
+import my.naqibrafiqi.pustaka.ui.components.sheetDragArea
+import my.naqibrafiqi.pustaka.ui.components.steadyBottomSheet
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 import my.naqibrafiqi.pustaka.util.text.asString
 import my.naqibrafiqi.pustaka.util.text.asUiText
@@ -215,20 +219,28 @@ fun ContentsSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
-        Text(
-            text = stringResource(R.string.reader_contents),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
-        )
-        if (entries.isEmpty()) {
+        Column(modifier = Modifier.steadyBottomSheet()) {
             Text(
-                text = stringResource(R.string.reader_no_contents),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+                text = stringResource(R.string.reader_contents),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sheetDragArea()
+                    .padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
             )
-        } else {
-            ContentsList(entries = entries, currentIndex = currentIndex, onSelect = onSelect)
+            if (entries.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.reader_no_contents),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .sheetDragArea()
+                        .padding(horizontal = 24.dp, vertical = 24.dp),
+                )
+            } else {
+                ContentsList(entries = entries, currentIndex = currentIndex, onSelect = onSelect)
+            }
         }
     }
 }
@@ -240,7 +252,13 @@ private fun ContentsList(entries: List<TocEntry>, currentIndex: Int?, onSelect: 
         // Leaves a chapter above the current one in view, for context.
         currentIndex?.let { listState.scrollToItem((it - 1).coerceAtLeast(0)) }
     }
-    LazyColumn(state = listState, modifier = Modifier.navigationBarsPadding()) {
+    // A list that fits the sheet has nothing to stretch when it's swiped (#31).
+    val scrollable by remember { derivedStateOf { listState.canScrollForward || listState.canScrollBackward } }
+    LazyColumn(
+        state = listState,
+        overscrollEffect = if (scrollable) rememberOverscrollEffect() else null,
+        modifier = Modifier.navigationBarsPadding(),
+    ) {
         itemsIndexed(entries) { index, entry ->
             val isCurrent = index == currentIndex
             Row(
