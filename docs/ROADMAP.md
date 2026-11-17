@@ -38,6 +38,7 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D23 | Which branch work goes into after 1.0.0 | **One branch per version.** `1.0.0` is released and stays as it is. The Phase 8 plan and the project skills are in `1.0.1`. The Phase 8 code goes into `1.1.0`, started from `1.0.1`. |
 | D24 | Whether paragraphs are always justified (#32) | A **Justify** switch in reader settings and in Default reader settings, **on** by default. Built as proposed in part 1 and approved with it. |
 | D25 | What "latest book" means for the series cover (#38) | The **last volume in volume order**, not the most recently added file. Picking another volume's cover in Edit series overrides it. Built as proposed in part 2 and approved with it. |
+| D26 | When the "Back to where you were" button appears and disappears (#35) | It appears after jumping from the table of contents, the page slider or a highlight, and **shows and hides with the reader's bars**. It goes away after **10 screen turns** forward from the new spot (pages scrolled, when scrolling), after tapping it, on turning back to that page, or after closing the book. Approved with part 3, with the turns and bars changes from review. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
@@ -46,7 +47,6 @@ These came up while planning Phase 8. Each has a proposal, which Claude follows 
 
 | # | Question | Proposal |
 |---|---|---|
-| D26 | When the "Back to where you were" button appears and disappears (#35) | It appears after jumping from the table of contents, the progress bar or a highlight. It goes away after reading **10 pages** forward from the new spot, after tapping it, or after closing the book. |
 | D27 | Where bookmarks are listed (#37) | A **Bookmarks** tab in the Contents sheet, next to the chapters. Tapping one opens that page. |
 | D28 | Whether to build the page-flip animation (#36) | Readium only slides or scrolls pages, so a page flip has to be built from scratch on top of it. Claude does a short **feasibility check first** and reports back before building it. |
 
@@ -182,6 +182,8 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
    - The series card, the compact grid, search and the front of the Series Details header all show the series cover. The card used to show the cover of the volume being read, so a picked cover now shows there too.
    - A picked cover goes back to the default when its volume is removed, hidden or its file changes.
 3. **Back to where you were (M):** [#35](https://github.com/naqibrafiqi/pustaka/issues/35). After a jump, the reader remembers the previous page and shows a button to go back to it (D26).
+   - Built as proposed in D26: a "Back to page 42" button after a jump from the contents, the page slider or a highlight in the Highlights tab. It shows and hides with the top and bottom bars, just above the page slider. Jumping again keeps the first page, the one that was being read.
+   - "10 pages" means 10 screen turns (swipes or taps) forward from where the jump landed, as you asked in review. A turn back takes one off the count. When scrolling, there are no turns, so the page numbers scrolled are counted instead. Links inside the book, such as footnotes, aren't counted as jumps.
 4. **Bookmarks (M):** [#37](https://github.com/naqibrafiqi/pustaka/issues/37). A bookmark button in the reader's top bar, a new database table, and a list of bookmarks (D27).
 5. **Tablet layouts (M):** [#39](https://github.com/naqibrafiqi/pustaka/issues/39). Check every screen on a tablet, upright and sideways, and fix anything that overlaps, overflows or has text that's too small.
 6. **Page-flip animation (L):** [#36](https://github.com/naqibrafiqi/pustaka/issues/36). A third page-turn choice in reader settings, next to Paged and Scroll. This starts with the feasibility check in D28.
@@ -211,4 +213,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34) and 2 (#38) are merged. Part 3 (#35) is next. D26 to D28 are still open. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38) and 3 (#35) are merged. Part 4 (#37) is next. D27 and D28 are still open. |
