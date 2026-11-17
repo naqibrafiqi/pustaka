@@ -76,12 +76,12 @@ Each scan also creates the library folder if it's missing, as long as the app ha
 
 ## Book identity
 
-Because the user controls the filenames, the app has to recognise a book after it's been renamed or moved. Otherwise reading progress and highlights would be lost. Each book is identified by a **fingerprint**: a hash of the file's size plus the first and last 64 KB of its contents.
+Because the user controls the filenames, the app has to recognise a book after it's been renamed or moved. Otherwise reading progress, highlights and bookmarks would be lost. Each book is identified by a **fingerprint**: a hash of the file's size plus the first and last 64 KB of its contents.
 
 The ID stored inside the EPUB (`dc:identifier` in `content.opf`) is saved too, but it isn't used on its own. Publishers sometimes reuse the same ID for every volume in a series.
 
 **On each scan:**
-- A new path with a **known** fingerprint is treated as a move or rename. The app updates the book's path and keeps its progress, highlights and edited details.
+- A new path with a **known** fingerprint is treated as a move or rename. The app updates the book's path and keeps its progress, highlights, bookmarks and edited details.
 - A new path with an **unknown** fingerprint is a new book.
 - An exact copy of a book that's still in its old place is a second book, because both files exist.
 - A file that keeps its path but changes (its size or last-modified time is different) is read again. It keeps its progress and edited details.
@@ -139,7 +139,7 @@ Books with the same number are ordered by filename.
 
 When a known file is no longer found, its book is marked **missing** instead of being deleted:
 - It still appears, greyed out with a "File not found" label, and it can't be opened.
-- Its progress, highlights and edited details are kept.
+- Its progress, highlights, bookmarks and edited details are kept.
 - If a file with the same fingerprint turns up again, anywhere in the library, it's restored automatically.
 - The user can remove a missing book from the library for good. Its data is deleted.
 

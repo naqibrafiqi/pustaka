@@ -312,6 +312,14 @@
     <string name="reader_contents">Contents</string>
     <string name="reader_no_contents">This book doesn\'t have a table of contents.</string>
     <string name="reader_go_to_chapter">Go to chapter</string>
+    <string name="reader_chapters">Chapters</string>
+    <string name="reader_bookmarks">Bookmarks</string>
+    <string name="reader_bookmarks_count">Bookmarks (%1$d)</string>
+    <string name="reader_bookmark_page">Bookmark this page</string>
+    <string name="reader_remove_bookmark">Remove bookmark</string>
+    <string name="reader_no_bookmarks">No bookmarks yet. Tap the bookmark button at the top of the page to add one.</string>
+    <string name="reader_go_to_bookmark">Go to bookmark</string>
+    <string name="reader_bookmark_place">%1$s · %2$s</string>
     <string name="reader_page_slider">Page</string>
     <string name="reader_back_to_page">Back to page %1$d</string>
     <string name="reader_back_to_previous">Back to where you were</string>

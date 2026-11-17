@@ -1,12 +1,14 @@
 package my.naqibrafiqi.pustaka.data.local
 
 import my.naqibrafiqi.pustaka.data.local.entity.BookEntity
+import my.naqibrafiqi.pustaka.data.local.entity.BookmarkEntity
 import my.naqibrafiqi.pustaka.data.local.entity.HighlightEntity
 import my.naqibrafiqi.pustaka.data.local.entity.ReadingProgressEntity
 import my.naqibrafiqi.pustaka.data.local.entity.ReadingSessionEntity
 import my.naqibrafiqi.pustaka.data.local.entity.SeriesEntity
 import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.BookDetails
+import my.naqibrafiqi.pustaka.data.model.Bookmark
 import my.naqibrafiqi.pustaka.data.model.Highlight
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.ReadingProgress
@@ -112,4 +114,22 @@ internal fun Highlight.toEntity() = HighlightEntity(
     color = color.argb,
     createdAt = createdAt,
     updatedAt = updatedAt,
+)
+
+internal fun BookmarkEntity.toModel() = Bookmark(
+    id = id,
+    bookId = bookId,
+    locator = locator,
+    progression = progression,
+    text = text,
+    createdAt = createdAt,
+)
+
+internal fun Bookmark.toEntity() = BookmarkEntity(
+    id = id,
+    bookId = bookId,
+    locator = locator,
+    progression = progression,
+    text = text,
+    createdAt = createdAt,
 )
