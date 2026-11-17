@@ -12,41 +12,52 @@ data class ReturnPoint<T>(val target: T, val page: Int?)
  * Remembers the page before a jump from the table of contents, the progress bar or a highlight,
  * so the reader can go back to it (decision D26).
  *
- * The page is forgotten once [PAGES_TO_FORGET] pages have been read forward from where the jump
+ * The page is forgotten once [TURNS_TO_FORGET] screens have been read forward from where the jump
  * landed, on getting back to the remembered page, or when it's used. Closing the book forgets it
- * too, because it isn't saved.
+ * too, because it isn't saved. Turning back a screen takes one off the count, so looking back
+ * doesn't count as reading on.
  *
- * Jumping again before then keeps the first page, the one that was being read.
+ * Jumping again before then keeps the first page, the one that was being read, and counts from
+ * the new spot.
  */
 class ReturnTracker<T> {
 
     var point: ReturnPoint<T>? = null
         private set
 
-    /** The page the jump landed on, which reading forward is counted from. */
-    private var landingPage: Int? = null
+    /** Screens read forward from where the jump landed. */
+    private var turns = 0
+
+    /** The next move is the jump landing, which isn't a turn. */
+    private var landing = false
 
     /**
      * Called just before jumping.
      *
      * @param fromPage the page being left, or null when it isn't known.
-     * @param toPage the page being jumped to, or null to take the next page shown.
      */
-    fun onJump(from: T, fromPage: Int?, toPage: Int?) {
+    fun onJump(from: T, fromPage: Int?) {
         if (point == null) point = ReturnPoint(from, fromPage)
-        landingPage = toPage
-        if (toPage != null && toPage == point?.page) forget()
+        turns = 0
+        landing = true
     }
 
     /**
-     * Called each time the page changes.
+     * Called each time the place on screen changes.
      *
+     * @param page the page now shown, or null when it isn't known.
+     * @param turns screens moved: 1 for a turn forward, -1 for a turn back. When scrolling, the
+     *   number of pages scrolled.
      * @return true when the remembered page was forgotten.
      */
-    fun onPage(page: Int): Boolean {
+    fun onMove(page: Int?, turns: Int): Boolean {
         val current = point ?: return false
-        val landing = landingPage ?: page.also { landingPage = it }
-        if (page == current.page || page - landing >= PAGES_TO_FORGET) {
+        if (landing) {
+            landing = false
+        } else {
+            this.turns += turns
+        }
+        if ((page != null && page == current.page) || this.turns >= TURNS_TO_FORGET) {
             forget()
             return true
         }
@@ -58,11 +69,12 @@ class ReturnTracker<T> {
 
     private fun forget() {
         point = null
-        landingPage = null
+        turns = 0
+        landing = false
     }
 
     companion object {
-        /** How many pages forward from the jump count as reading on from there (D26). */
-        const val PAGES_TO_FORGET = 10
+        /** How many screens forward from the jump count as reading on from there (D26). */
+        const val TURNS_TO_FORGET = 10
     }
 }

@@ -158,6 +158,9 @@ class ReaderViewModel @Inject constructor(
     val openHighlightId: StateFlow<Long?> = _openHighlightId.asStateFlow()
 
     private val returnTracker = ReturnTracker<Locator>()
+
+    /** The place shown before the newest one, to tell a turn forward from a turn back. */
+    private var previousLocator: Locator? = null
     private val _returnPoint = MutableStateFlow<ReturnPoint<Locator>?>(null)
 
     /** The page before the last jump, offered as "Back to page 42" until reading goes on (#35, D26). */
@@ -190,8 +193,10 @@ class ReaderViewModel @Inject constructor(
 
         position.page?.let { page ->
             sessions.onPage(page, clock.instant())?.let(::record)
-            if (returnTracker.onPage(page)) _returnPoint.value = null
         }
+        val turns = previousLocator?.let { turnsBetween(it, locator, _settings.value.scroll, ready.readingOrder) } ?: 0
+        previousLocator = locator
+        if (returnTracker.onMove(position.page, turns)) _returnPoint.value = null
         if (!finishHandled && isLastPage(locator, ready)) {
             finishHandled = true
             viewModelScope.launch { finish() }
@@ -205,7 +210,10 @@ class ReaderViewModel @Inject constructor(
     fun onJump(target: Locator) {
         val ready = _state.value as? ReaderUiState.Ready ?: return
         val from = latestLocator.value ?: return
-        returnTracker.onJump(from, fromPage = _position.value.page, toPage = pageOf(target, ready))
+        val fromPage = _position.value.page
+        // Nothing to go back to when the jump stays on the same page.
+        if (fromPage != null && fromPage == pageOf(target, ready)) return
+        returnTracker.onJump(from, fromPage)
         _returnPoint.value = returnTracker.point
     }
 
@@ -327,8 +335,11 @@ class ReaderViewModel @Inject constructor(
         // Opening at a highlight is a jump too, so the saved page is offered to go back to.
         val savedLocator = saved?.locator?.let(::parseLocator)
         if (openAt != null && savedLocator != null) {
-            returnTracker.onJump(savedLocator, fromPage = pageOf(savedLocator, ready), toPage = pageOf(openAt, ready))
-            _returnPoint.value = returnTracker.point
+            val savedPage = pageOf(savedLocator, ready)
+            if (savedPage == null || savedPage != pageOf(openAt, ready)) {
+                returnTracker.onJump(savedLocator, savedPage)
+                _returnPoint.value = returnTracker.point
+            }
         }
         _state.value = ready
     }
@@ -407,6 +418,32 @@ class ReaderViewModel @Inject constructor(
         }
 
         private const val END_OF_BOOK = 0.999
+
+        /**
+         * How many screens the reader moved from [from] to [to], for "10 pages on" (D26): 1 for a
+         * turn forward and -1 for a turn back. Scrolling has no turns, so it's the pages scrolled.
+         *
+         * A page number covers a screen or more, so turns are told apart by the chapter and how far
+         * into it they are.
+         *
+         * @param readingOrder the book's chapter files in order.
+         */
+        fun turnsBetween(from: Locator, to: Locator, scroll: Boolean, readingOrder: List<String>): Int {
+            val fromPage = from.locations.position
+            val toPage = to.locations.position
+            if (scroll) return if (fromPage != null && toPage != null) toPage - fromPage else 0
+            val chapters = readingOrder.map { it.substringBefore('#') }
+            val fromChapter = chapters.indexOf(from.href.toString().substringBefore('#'))
+            val toChapter = chapters.indexOf(to.href.toString().substringBefore('#'))
+            val fromProgression = from.locations.progression
+            val toProgression = to.locations.progression
+            val order = when {
+                fromChapter >= 0 && toChapter >= 0 && fromChapter != toChapter -> toChapter.compareTo(fromChapter)
+                fromChapter == toChapter && fromProgression != null && toProgression != null -> toProgression.compareTo(fromProgression)
+                else -> (to.locations.totalProgression ?: 0.0).compareTo(from.locations.totalProgression ?: 0.0)
+            }
+            return order.coerceIn(-1, 1)
+        }
 
         /**
          * The page [locator] is on. Places such as a chapter's start or a highlight don't always say,

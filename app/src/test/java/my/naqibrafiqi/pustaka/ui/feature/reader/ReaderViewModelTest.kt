@@ -46,6 +46,8 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.readium.r2.shared.publication.Locator
+import org.readium.r2.shared.util.Url
+import org.readium.r2.shared.util.mediatype.MediaType
 import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.time.Duration
@@ -375,6 +377,24 @@ class ReaderViewModelTest {
         assertEquals(1, ReaderViewModel.pageOf(chapterStart, ready))
         val page3 = ready.positions[2]
         assertEquals(3, ReaderViewModel.pageOf(page3.copy(locations = page3.locations.copy(position = null)), ready))
+    }
+
+    @Test
+    fun turnsAreCountedByDirectionAndScrollingByPages() {
+        val order = listOf("ch1.xhtml", "ch2.xhtml")
+        fun at(chapter: String, page: Int, progression: Double) = Locator(
+            href = Url(chapter)!!,
+            mediaType = MediaType.XHTML,
+            locations = Locator.Locations(position = page, progression = progression, totalProgression = page / 100.0),
+        )
+        fun turns(from: Locator, to: Locator, scroll: Boolean = false) = ReaderViewModel.turnsBetween(from, to, scroll, order)
+
+        // A turn can stay on the same page number, so it's how far into the chapter that counts.
+        assertEquals(1, turns(at("ch1.xhtml", 5, 0.50), at("ch1.xhtml", 5, 0.55)))
+        assertEquals(-1, turns(at("ch1.xhtml", 5, 0.50), at("ch1.xhtml", 4, 0.45)))
+        assertEquals(1, turns(at("ch1.xhtml", 9, 0.99), at("ch2.xhtml", 10, 0.0)))
+        assertEquals(-1, turns(at("ch2.xhtml", 10, 0.0), at("ch1.xhtml", 9, 0.99)))
+        assertEquals(4, turns(at("ch1.xhtml", 5, 0.5), at("ch1.xhtml", 9, 0.9), scroll = true))
     }
 
     @Test

@@ -99,30 +99,28 @@ fun ReaderChrome(
             )
         }
 
-        Column(
+        // "Back to page 42" comes and goes with the bars, sitting just above the bottom one.
+        AnimatedVisibility(
+            visible = visible,
             modifier = Modifier.align(Alignment.BottomCenter),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            enter = fadeIn() + slideInVertically { it },
+            exit = fadeOut() + slideOutVertically { it },
         ) {
-            // Keeps the page showing while the button fades out.
-            var lastReturnPoint by remember { mutableStateOf(returnPoint) }
-            if (returnPoint != null) lastReturnPoint = returnPoint
-            AnimatedVisibility(
-                visible = returnPoint != null,
-                enter = fadeIn() + scaleIn(initialScale = 0.8f),
-                exit = fadeOut() + scaleOut(targetScale = 0.8f),
-            ) {
-                ReturnButton(
-                    page = lastReturnPoint?.page,
-                    onClick = onReturn,
-                    // Without the bars, it sits in the space they leave free below the text.
-                    modifier = Modifier.padding(bottom = if (visible) 8.dp else 0.dp),
-                )
-            }
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn() + slideInVertically { it },
-                exit = fadeOut() + slideOutVertically { it },
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Keeps the page showing while the button fades out.
+                var lastReturnPoint by remember { mutableStateOf(returnPoint) }
+                if (returnPoint != null) lastReturnPoint = returnPoint
+                AnimatedVisibility(
+                    visible = returnPoint != null,
+                    enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                    exit = fadeOut() + scaleOut(targetScale = 0.8f),
+                ) {
+                    ReturnButton(
+                        page = lastReturnPoint?.page,
+                        onClick = onReturn,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                }
                 ReaderBottomBar(position = position, onGoToPage = onGoToPage)
             }
         }
