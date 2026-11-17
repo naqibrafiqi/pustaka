@@ -157,6 +157,12 @@ class ReaderViewModel @Inject constructor(
     /** The highlight being looked at or changed, after tapping it on the page. */
     val openHighlightId: StateFlow<Long?> = _openHighlightId.asStateFlow()
 
+    private val returnTracker = ReturnTracker<Locator>()
+    private val _returnPoint = MutableStateFlow<ReturnPoint<Locator>?>(null)
+
+    /** The page before the last jump, offered as "Back to page 42" until reading goes on (#35, D26). */
+    val returnPoint: StateFlow<ReturnPoint<Locator>?> = _returnPoint.asStateFlow()
+
     private var publication: Publication? = null
     private var book: Book? = null
     private val sessions = SessionTracker()
@@ -184,12 +190,27 @@ class ReaderViewModel @Inject constructor(
 
         position.page?.let { page ->
             sessions.onPage(page, clock.instant())?.let(::record)
+            if (returnTracker.onPage(page)) _returnPoint.value = null
         }
         if (!finishHandled && isLastPage(locator, ready)) {
             finishHandled = true
             viewModelScope.launch { finish() }
         }
     }
+
+    /**
+     * Called just before jumping to [target] from the table of contents or the progress bar, so the
+     * page being left can be offered to go back to.
+     */
+    fun onJump(target: Locator) {
+        val ready = _state.value as? ReaderUiState.Ready ?: return
+        val from = latestLocator.value ?: return
+        returnTracker.onJump(from, fromPage = _position.value.page, toPage = pageOf(target, ready))
+        _returnPoint.value = returnTracker.point
+    }
+
+    /** Where to go for "Back to page 42", which is then no longer offered. */
+    fun takeReturnPoint(): Locator? = returnTracker.take().also { _returnPoint.value = null }
 
     /** The reader is showing again, after being in the background. */
     fun onReaderResumed() {
@@ -303,6 +324,12 @@ class ReaderViewModel @Inject constructor(
             tableOfContents = flattenTableOfContents(opened.tableOfContents),
         )
         _position.value = initialLocator?.let { positionOf(it, ready) } ?: ReaderPosition(pageCount = ready.pageCount)
+        // Opening at a highlight is a jump too, so the saved page is offered to go back to.
+        val savedLocator = saved?.locator?.let(::parseLocator)
+        if (openAt != null && savedLocator != null) {
+            returnTracker.onJump(savedLocator, fromPage = pageOf(savedLocator, ready), toPage = pageOf(openAt, ready))
+            _returnPoint.value = returnTracker.point
+        }
         _state.value = ready
     }
 
@@ -380,6 +407,19 @@ class ReaderViewModel @Inject constructor(
         }
 
         private const val END_OF_BOOK = 0.999
+
+        /**
+         * The page [locator] is on. Places such as a chapter's start or a highlight don't always say,
+         * so it's then the last page that starts at or before it in the same chapter.
+         */
+        fun pageOf(locator: Locator, ready: ReaderUiState.Ready): Int? {
+            locator.locations.position?.let { return it }
+            val href = locator.href.toString().substringBefore('#')
+            val progression = locator.locations.progression ?: 0.0
+            val chapter = ready.positions.filter { it.href.toString().substringBefore('#') == href }
+            val page = chapter.lastOrNull { (it.locations.progression ?: 0.0) <= progression + 1e-9 } ?: chapter.firstOrNull()
+            return page?.locations?.position
+        }
 
         fun positionOf(locator: Locator, ready: ReaderUiState.Ready): ReaderPosition {
             val tocIndex = currentTocIndex(ready.tableOfContents, locator.href.toString(), ready.readingOrder)

@@ -350,6 +350,54 @@ class ReaderViewModelTest {
     }
 
     @Test
+    fun aJumpOffersThePageItLeft() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val positions = viewModel.ready().positions
+        viewModel.onLocatorChanged(positions[1])
+        assertNull(viewModel.returnPoint.value)
+
+        viewModel.onJump(positions.last())
+        viewModel.onLocatorChanged(positions.last())
+
+        assertEquals(2, viewModel.returnPoint.value?.page)
+        assertEquals(positions[1], viewModel.takeReturnPoint())
+        assertNull(viewModel.returnPoint.value)
+    }
+
+    @Test
+    fun aJumpToAChapterStartFindsItsPage() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val ready = viewModel(bookId).ready()
+        val chapterStart = ready.publication.locatorFromLink(ready.tableOfContents.single().link)!!
+
+        assertNull(chapterStart.locations.position)
+        assertEquals(1, ReaderViewModel.pageOf(chapterStart, ready))
+        val page3 = ready.positions[2]
+        assertEquals(3, ReaderViewModel.pageOf(page3.copy(locations = page3.locations.copy(position = null)), ready))
+    }
+
+    @Test
+    fun openingAtAHighlightOffersTheSavedPage() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val first = viewModel(bookId)
+        val positions = first.ready().positions
+        first.onLocatorChanged(positions[1])
+        first.saveNow()
+        reading.observeProgress(bookId).first { it != null }
+        val highlight = positions.last().copy(text = Locator.Text(highlight = "a quote"))
+
+        val atHighlight = viewModel(bookId, locator = highlight.toJSON().toString())
+        atHighlight.ready()
+
+        assertEquals(2, atHighlight.returnPoint.value?.page)
+        // Opening at the saved page itself offers nothing.
+        val atSaved = viewModel(bookId, locator = positions[1].toJSON().toString())
+        atSaved.ready()
+        assertNull(atSaved.returnPoint.value)
+    }
+
+    @Test
     fun aSelectionWithoutTextIsntHighlighted() = runTest {
         val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
         val viewModel = viewModel(bookId)

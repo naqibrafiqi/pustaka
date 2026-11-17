@@ -182,6 +182,8 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
    - The series card, the compact grid, search and the front of the Series Details header all show the series cover. The card used to show the cover of the volume being read, so a picked cover now shows there too.
    - A picked cover goes back to the default when its volume is removed, hidden or its file changes.
 3. **Back to where you were (M):** [#35](https://github.com/naqibrafiqi/pustaka/issues/35). After a jump, the reader remembers the previous page and shows a button to go back to it (D26).
+   - Built as proposed in D26: a "Back to page 42" button at the bottom of the page after a jump from the contents, the page slider or a highlight in the Highlights tab. Jumping again keeps the first page, the one that was being read.
+   - "10 pages" means 10 of the page numbers the reader shows, which are Readium's positions rather than screen turns. In a book with pictures that can take more than 10 turns. Links inside the book, such as footnotes, aren't counted as jumps.
 4. **Bookmarks (M):** [#37](https://github.com/naqibrafiqi/pustaka/issues/37). A bookmark button in the reader's top bar, a new database table, and a list of bookmarks (D27).
 5. **Tablet layouts (M):** [#39](https://github.com/naqibrafiqi/pustaka/issues/39). Check every screen on a tablet, upright and sideways, and fix anything that overlaps, overflows or has text that's too small.
 6. **Page-flip animation (L):** [#36](https://github.com/naqibrafiqi/pustaka/issues/36). A third page-turn choice in reader settings, next to Paged and Scroll. This starts with the feasibility check in D28.
@@ -211,4 +213,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34) and 2 (#38) are merged. Part 3 (#35) is next. D26 to D28 are still open. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34) and 2 (#38) are merged. Part 3 (#35) is in review. D26 to D28 are still open. |

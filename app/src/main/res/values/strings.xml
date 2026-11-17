@@ -313,6 +313,8 @@
     <string name="reader_no_contents">This book doesn\'t have a table of contents.</string>
     <string name="reader_go_to_chapter">Go to chapter</string>
     <string name="reader_page_slider">Page</string>
+    <string name="reader_back_to_page">Back to page %1$d</string>
+    <string name="reader_back_to_previous">Back to where you were</string>
     <string name="reader_finish_up_next">Up next: %1$s · %2$s</string>
     <string name="reader_finish_last_volume">That was the last volume of %1$s.</string>
     <string name="reader_finish_end_of_book">You\'ve reached the end of this book.</string>

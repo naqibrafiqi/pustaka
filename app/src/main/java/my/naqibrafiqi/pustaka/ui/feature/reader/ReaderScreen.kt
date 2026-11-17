@@ -3,6 +3,8 @@ package my.naqibrafiqi.pustaka.ui.feature.reader
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -22,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberOverscrollEffect
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -76,6 +80,8 @@ fun ReaderChrome(
     onOpenSettings: () -> Unit,
     onGoToPage: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    returnPoint: ReturnPoint<*>? = null,
+    onReturn: () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -93,13 +99,57 @@ fun ReaderChrome(
             )
         }
 
-        AnimatedVisibility(
-            visible = visible,
+        Column(
             modifier = Modifier.align(Alignment.BottomCenter),
-            enter = fadeIn() + slideInVertically { it },
-            exit = fadeOut() + slideOutVertically { it },
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ReaderBottomBar(position = position, onGoToPage = onGoToPage)
+            // Keeps the page showing while the button fades out.
+            var lastReturnPoint by remember { mutableStateOf(returnPoint) }
+            if (returnPoint != null) lastReturnPoint = returnPoint
+            AnimatedVisibility(
+                visible = returnPoint != null,
+                enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                exit = fadeOut() + scaleOut(targetScale = 0.8f),
+            ) {
+                ReturnButton(
+                    page = lastReturnPoint?.page,
+                    onClick = onReturn,
+                    // Without the bars, it sits in the space they leave free below the text.
+                    modifier = Modifier.padding(bottom = if (visible) 8.dp else 0.dp),
+                )
+            }
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn() + slideInVertically { it },
+                exit = fadeOut() + slideOutVertically { it },
+            ) {
+                ReaderBottomBar(position = position, onGoToPage = onGoToPage)
+            }
+        }
+    }
+}
+
+/** "Back to page 42": goes back to where reading was before a jump (#35). */
+@Composable
+private fun ReturnButton(page: Int?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shadowElevation = 4.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(painter = painterResource(R.drawable.undo), contentDescription = null, modifier = Modifier.size(18.dp))
+            Text(
+                text = if (page != null) stringResource(R.string.reader_back_to_page, page) else stringResource(R.string.reader_back_to_previous),
+                style = MaterialTheme.typography.labelLarge,
+            )
         }
     }
 }
@@ -383,6 +433,7 @@ private fun ReaderChromePreview() {
                 onOpenContents = {},
                 onOpenSettings = {},
                 onGoToPage = {},
+                returnPoint = ReturnPoint(Unit, page = 12),
             )
         }
     }

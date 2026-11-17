@@ -58,6 +58,7 @@ import org.readium.r2.navigator.input.InputListener
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.navigator.preferences.ReadingProgression
 import org.readium.r2.navigator.preferences.Theme
+import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.util.AbsoluteUrl
 
 /**
@@ -151,6 +152,13 @@ class ReaderActivity : AppCompatActivity() {
         val highlights by viewModel.highlights.collectAsStateWithLifecycle()
         val openHighlightId by viewModel.openHighlightId.collectAsStateWithLifecycle()
         val openHighlight = highlights.firstOrNull { it.id == openHighlightId }?.highlight
+        val returnPoint by viewModel.returnPoint.collectAsStateWithLifecycle()
+
+        // A jump from the contents or the progress bar can be gone back from (#35).
+        fun jumpTo(target: Locator) {
+            viewModel.onJump(target)
+            navigator?.go(target, animated = false)
+        }
 
         SystemBars(
             visible = chromeVisible || contentsOpen || settingsOpen || openHighlight != null,
@@ -189,7 +197,10 @@ class ReaderActivity : AppCompatActivity() {
                 onNavigateBack = ::finish,
                 onOpenContents = { contentsOpen = true },
                 onOpenSettings = { settingsOpen = true },
-                onGoToPage = { page -> book.positions.getOrNull(page - 1)?.let { navigator?.go(it, animated = false) } },
+                onGoToPage = { page -> book.positions.getOrNull(page - 1)?.let(::jumpTo) },
+                // The finish card takes the bottom of the screen.
+                returnPoint = returnPoint.takeIf { finishCard == null },
+                onReturn = { viewModel.takeReturnPoint()?.let { navigator?.go(it, animated = false) } },
             )
 
             finishCard?.let { card ->
@@ -230,7 +241,7 @@ class ReaderActivity : AppCompatActivity() {
                 onSelect = { entry ->
                     contentsOpen = false
                     chromeVisible = false
-                    navigator?.go(entry.link, animated = false)
+                    book.publication.locatorFromLink(entry.link)?.let(::jumpTo)
                 },
                 onDismiss = { contentsOpen = false },
             )
