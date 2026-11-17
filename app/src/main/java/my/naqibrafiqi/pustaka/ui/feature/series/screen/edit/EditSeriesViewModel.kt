@@ -8,14 +8,17 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.data.model.Book
 import my.naqibrafiqi.pustaka.data.model.Series
 import my.naqibrafiqi.pustaka.data.model.SeriesDetails
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
+import my.naqibrafiqi.pustaka.ui.model.SeriesProgress
 
 /**
- * Edit details for a series. Its name defaults to the folder name, and its other details to those
- * of its first volume. "Use details from file" also takes the series title stored in that volume.
+ * Edit details for a series. Its name defaults to the folder name, its cover to the last volume's
+ * (D25) and its other details to those of its first volume. "Use details from file" also takes the
+ * series title stored in that volume. The cover can be any volume's cover.
  */
 @HiltViewModel(assistedFactory = EditSeriesViewModel.Factory::class)
 class EditSeriesViewModel @AssistedInject constructor(
@@ -43,7 +46,8 @@ class EditSeriesViewModel @AssistedInject constructor(
             return
         }
         series = found
-        titleInFile = books.observeVolumes(seriesId).first().firstNotNullOfOrNull { it.sourceDetails.seriesTitle }
+        val volumes = books.observeVolumes(seriesId).first()
+        titleInFile = volumes.firstNotNullOfOrNull { it.sourceDetails.seriesTitle }
 
         val shown = found.details
         val source = found.sourceDetails
@@ -60,6 +64,7 @@ class EditSeriesViewModel @AssistedInject constructor(
                 ),
                 EditField(SYNOPSIS, R.string.edit_field_synopsis, shown.synopsis.orEmpty(), source.synopsis.orEmpty(), multiline = true),
             ),
+            cover = coverChoice(volumes, selected = shown.coverPath, default = source.coverPath),
             canUseFileDetails = titleInFile != null || source != SeriesDetails.EMPTY,
         )
     }
@@ -86,10 +91,20 @@ class EditSeriesViewModel @AssistedInject constructor(
                 synopsis = form.value(SYNOPSIS),
                 mainGenre = form.value(MAIN_GENRE),
                 tags = splitList(form.value(TAGS)),
-                // The cover can't be changed here, so whatever is shown stays.
-                coverPath = series.details.coverPath,
+                // Without a picker, whatever is shown stays.
+                coverPath = form.cover?.selected ?: series.details.coverPath,
             ),
         )
+    }
+
+    /** One option per volume with a cover, or null when there's nothing to choose between. */
+    private fun coverChoice(volumes: List<Book>, selected: String?, default: String?): CoverChoice? {
+        val progress = SeriesProgress(volumes)
+        val options = volumes.mapNotNull { book ->
+            book.details.coverPath?.let { CoverOption(coverPath = it, label = progress.labelOf(book)) }
+        }.distinctBy { it.coverPath }
+        if (options.size < 2) return null
+        return CoverChoice(options = options, selected = selected, default = default)
     }
 
     companion object {

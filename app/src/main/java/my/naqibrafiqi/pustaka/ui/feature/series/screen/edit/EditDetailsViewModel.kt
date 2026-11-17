@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.util.text.UiText
 
 /**
  * One field in an Edit details form.
@@ -34,6 +35,26 @@ data class EditField(
     val isEdited: Boolean get() = value.trim() != default.trim()
 }
 
+/** A volume whose cover the series can use. */
+data class CoverOption(
+    val coverPath: String,
+    /** "Volume 3". */
+    val label: UiText,
+)
+
+/**
+ * The series cover in Edit series: one of its volumes' covers (#38).
+ *
+ * @property default the cover it resets to: the last volume's (D25).
+ */
+data class CoverChoice(
+    val options: List<CoverOption>,
+    val selected: String?,
+    val default: String?,
+) {
+    val isEdited: Boolean get() = selected != default
+}
+
 sealed interface EditUiState {
 
     data object Loading : EditUiState
@@ -45,6 +66,8 @@ sealed interface EditUiState {
         /** The name of the series or book, under the screen title. */
         val subtitle: String,
         val fields: List<EditField>,
+        /** The cover picker, or null when there's no cover to choose. */
+        val cover: CoverChoice? = null,
         /** Whether there are details from a file for "Use details from file" to fill in. */
         val canUseFileDetails: Boolean,
         /** True once anything has been typed, so leaving asks first. */
@@ -88,11 +111,16 @@ abstract class EditDetailsViewModel : ViewModel() {
         if (field.key == key) field.copy(value = field.default, error = null) else field
     }
 
+    fun pickCover(coverPath: String) = updateCover { it.copy(selected = coverPath) }
+
+    fun resetCover() = updateCover { it.copy(selected = it.default) }
+
     fun useDetailsFromFile() {
         // The file's details are only known once the form has loaded.
         if (mutableState.value !is EditUiState.Ready) return
         val values = fileValues()
         updateFields { field -> values[field.key]?.let { field.copy(value = it, error = null) } ?: field }
+        resetCover()
     }
 
     fun save() {
@@ -119,6 +147,14 @@ abstract class EditDetailsViewModel : ViewModel() {
             if (state !is EditUiState.Ready) return@update state
             val fields = state.fields.map(change)
             state.copy(fields = fields, hasChanges = state.hasChanges || fields != state.fields)
+        }
+    }
+
+    private fun updateCover(change: (CoverChoice) -> CoverChoice) {
+        mutableState.update { state ->
+            val cover = (state as? EditUiState.Ready)?.cover ?: return@update state
+            val changed = change(cover)
+            state.copy(cover = changed, hasChanges = state.hasChanges || changed != cover)
         }
     }
 
