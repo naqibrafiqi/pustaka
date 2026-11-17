@@ -49,6 +49,7 @@ These came up while planning Phase 8. Each has a proposal, which Claude follows 
 | # | Question | Proposal |
 |---|---|---|
 | D28 | Whether to build the page-flip animation (#36) | Readium only slides or scrolls pages, so a page flip has to be built from scratch on top of it. Claude does a short **feasibility check first** and reports back before building it. |
+| D29 | Where the tabs go on a tablet (#39) | Came up in part 5. On a window **600dp or wider** (any tablet, an unfolded foldable, a phone on its side), the four tabs move from the bottom bar to a **navigation rail** down the left side, as Android recommends. The rail stays on every screen, so you can switch tabs from Book Details or Search too. Phones held upright keep the bottom bar, which still hides on those screens. Built this way in part 5. If you'd rather keep the bottom bar everywhere, it's a small change back. |
 
 ---
 
@@ -189,6 +190,13 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
    - A bookmark belongs to a page number. A page number can take more than one screen, so every screen of a bookmarked page shows the button filled.
    - Bookmarks are kept in a new `bookmarks` table, so the database goes from version 1 to 2. Room adds the table when 1.1.0 is installed over 1.0.0, and everything else is kept. A test opens a 1.0.0 database to check this.
 5. **Tablet layouts (M):** [#39](https://github.com/naqibrafiqi/pustaka/issues/39). Check every screen on a tablet, upright and sideways, and fix anything that overlaps, overflows or has text that's too small.
+   - Checked every screen on a tablet-sized emulator (800 × 1280dp), upright and sideways, and at the phone size afterwards. Nothing overlapped or ran off the screen, but most screens were laid out for a phone's width, so on a tablet the covers grew very large and lines stretched right across. Fixed:
+   - **Grids and lists fit more across.** The Library grid shows 4 covers upright and 6 sideways (2 on a phone, as before). The Library list, the series cards and the Series Details volumes go two or three across. The compact series grid fits 5 or more. A phone keeps its current layout.
+   - **Covers stop growing.** The list layout's cover stays the size it is on a phone, and the cover on Book Details stops at 240dp wide, so the title and the read button show without scrolling, even sideways.
+   - **Readable width.** Settings, Highlights, Search, Book Details, Series Details, Edit, Hidden items, About, Licences, Default reader settings and the access screens keep their content to a column in the middle (720dp, or 840dp for Series Details) instead of stretching across the screen.
+   - **Navigation rail** on wide windows instead of the bottom bar (D29).
+   - **Screen edges.** Every screen left the space for the system bars and camera cutout twice, so sideways the content was pushed in on one side and lists ended with an extra gap at the bottom. This also affected phones, on the screens opened from a tab.
+   - **Text size:** all text uses Android's scalable text sizes, so it's the same physical size on a tablet as on a phone and follows the system font size setting. Nothing needed changing. The reader shows two pages side by side when the tablet is on its side, which Readium does on its own.
 6. **Page-flip animation (L):** [#36](https://github.com/naqibrafiqi/pustaka/issues/36). A third page-turn choice in reader settings, next to Paged and Scroll. This starts with the feasibility check in D28.
 
 **Done when:** every issue above is fixed on `1.1.0`, or deliberately set aside with your agreement.
@@ -216,4 +224,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35) and 4 (#37) are merged. Part 5 (#39) is next. D28 is still open. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35) and 4 (#37) are merged. Part 5 (#39) is in review, with D29 for you to confirm. D28 is still open. |

@@ -48,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.ui.components.fillMaxWidthUpTo
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.BookCover
 import my.naqibrafiqi.pustaka.ui.components.ErrorState
 import my.naqibrafiqi.pustaka.ui.components.LoadingState
@@ -184,6 +186,9 @@ private fun BookDetailsScreenContent(
     }
 }
 
+/** The widest the cover gets. */
+private val COVER_MAX_WIDTH = 240.dp
+
 @Composable
 private fun ReadyContent(
     state: BookDetailsUiState.Ready,
@@ -194,7 +199,7 @@ private fun ReadyContent(
     val listState = rememberLazyListState()
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.centredContentWidth(),
         state = listState,
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -207,8 +212,10 @@ private fun ReadyContent(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Half the width on a phone. On a tablet it stops growing, so the title and the
+                // Start reading button still show without scrolling.
                 BookCover(
-                    modifier = Modifier.fillMaxWidth(.5f),
+                    modifier = Modifier.fillMaxWidthUpTo(.5f, max = COVER_MAX_WIDTH),
                     imageUrl = state.coverPath
                 )
             }

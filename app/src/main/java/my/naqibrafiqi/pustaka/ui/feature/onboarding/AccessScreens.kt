@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
@@ -95,6 +96,7 @@ private fun AccessScreenLayout(
             modifier = Modifier
                 .fillMaxSize()
                 .safeDrawingPadding()
+                .centredContentWidth()
                 .padding(horizontal = 24.dp, vertical = 32.dp),
         ) {
             Column(

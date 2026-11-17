@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 
@@ -48,7 +49,8 @@ fun AboutScreen(onOpenLicences: () -> Unit, onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .centredContentWidth(),
         ) {
             Column(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
@@ -109,7 +111,9 @@ fun AboutScreen(onOpenLicences: () -> Unit, onNavigateBack: () -> Unit) {
 fun LicencesScreen(onOpenLibrary: (Int) -> Unit, onNavigateBack: () -> Unit) {
     Scaffold(topBar = { TopBar(title = stringResource(R.string.licences_title), onNavigateBack = onNavigateBack) }) { innerPadding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .centredContentWidth(),
             contentPadding = PaddingValues(
                 top = innerPadding.calculateTopPadding(),
                 bottom = innerPadding.calculateBottomPadding() + 16.dp,
@@ -151,7 +155,8 @@ fun LicenceScreen(library: OpenSourceLibrary, onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .centredContentWidth(),
         ) {
             ListItem(
                 headlineContent = { Text(library.author) },

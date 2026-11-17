@@ -4,9 +4,15 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -32,6 +38,10 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import my.naqibrafiqi.pustaka.ui.components.BottomBar
 import my.naqibrafiqi.pustaka.ui.components.BottomBarNavItems
+import my.naqibrafiqi.pustaka.ui.components.BottomBarRoute
+import my.naqibrafiqi.pustaka.ui.components.SideRail
+import my.naqibrafiqi.pustaka.ui.components.SideRailInsets
+import my.naqibrafiqi.pustaka.ui.components.WideWindowWidth
 import my.naqibrafiqi.pustaka.ui.feature.highlights.api.HighlightsRoute
 import my.naqibrafiqi.pustaka.ui.feature.highlights.impl.highlightsEntryBuilder
 import my.naqibrafiqi.pustaka.ui.feature.library.api.LibraryRoute
@@ -102,32 +112,54 @@ fun PustakaApp() {
         selectedTabIndex = 0
     }
 
+    val currentItem = tabs.find { it.route == selectedTabRoute }
+    val onSelectTab: (Int, BottomBarRoute) -> Unit = { index, _ -> selectedTabIndex = index }
+
     CompositionLocalProvider(LocalAppNavigator provides currentBackStack) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = {
-                AnimatedVisibility(
-                    visible = isMainScreen,
-                    enter = slideInVertically { it },
-                    exit = slideOutVertically { it }
-                ) {
-                    BottomBar(
-                        currentItem = tabs.find { it.route == selectedTabRoute },
-                        items = tabs,
-                        onClick = { index, _ ->
-                            selectedTabIndex = index
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            // A wide window gets the tabs in a rail down the side, and keeps it on every screen (D29).
+            // A phone keeps the bottom bar, which hides on the screens opened from a tab.
+            val useRail = maxWidth >= WideWindowWidth
+            Row(modifier = Modifier.fillMaxSize()) {
+                if (useRail) {
+                    SideRail(currentItem = currentItem, items = tabs, onClick = onSelectTab)
+                }
+
+                Scaffold(
+                    modifier = Modifier
+                        .weight(1f)
+                        // The rail keeps clear of the start side, so the screens don't need to.
+                        .then(if (useRail) Modifier.consumeWindowInsets(SideRailInsets.only(WindowInsetsSides.Start)) else Modifier),
+                    contentWindowInsets = if (useRail) {
+                        ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                    } else {
+                        ScaffoldDefaults.contentWindowInsets
+                    },
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
+                    bottomBar = {
+                        if (!useRail) {
+                            AnimatedVisibility(
+                                visible = isMainScreen,
+                                enter = slideInVertically { it },
+                                exit = slideOutVertically { it }
+                            ) {
+                                BottomBar(currentItem = currentItem, items = tabs, onClick = onSelectTab)
+                            }
                         }
+                    }
+                ) { innerPadding ->
+                    NavDisplay(
+                        entries = currentEntries,
+                        // Consumed here, so the screens' own scaffolds don't leave the same space again.
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .consumeWindowInsets(innerPadding),
+                        onBack = {
+                            currentBackStack.removeLastOrNull()
+                        },
                     )
                 }
             }
-        ) { innerPadding ->
-            NavDisplay(
-                entries = currentEntries,
-                modifier = Modifier.padding(innerPadding),
-                onBack = {
-                    currentBackStack.removeLastOrNull()
-                },
-            )
         }
     }
 }
