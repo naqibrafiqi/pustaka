@@ -40,6 +40,7 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D25 | What "latest book" means for the series cover (#38) | The **last volume in volume order**, not the most recently added file. Picking another volume's cover in Edit series overrides it. Built as proposed in part 2 and approved with it. |
 | D26 | When the "Back to where you were" button appears and disappears (#35) | It appears after jumping from the table of contents, the page slider or a highlight, and **shows and hides with the reader's bars**. It goes away after **10 screen turns** forward from the new spot (pages scrolled, when scrolling), after tapping it, on turning back to that page, or after closing the book. Approved with part 3, with the turns and bars changes from review. |
 | D27 | Where bookmarks are listed (#37) | A **Bookmarks** tab in the Contents sheet, next to the chapters, with a bookmark button in the reader's top bar. A bookmark belongs to a page number, and tapping one opens that page. Built as proposed in part 4 and approved with it. |
+| D29 | Where the tabs go on a tablet (#39) | On a window **600dp or wider** (tablets, unfolded foldables, phones on their side), the tabs are in a **navigation rail** down the left side, kept on every screen. Phones held upright keep the bottom bar. Built in part 5 and approved with it. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
@@ -49,7 +50,6 @@ These came up while planning Phase 8. Each has a proposal, which Claude follows 
 | # | Question | Proposal |
 |---|---|---|
 | D28 | Whether to build the page-flip animation (#36) | Readium only slides or scrolls pages, so a page flip has to be built from scratch on top of it. Claude does a short **feasibility check first** and reports back before building it. |
-| D29 | Where the tabs go on a tablet (#39) | Came up in part 5. On a window **600dp or wider** (any tablet, an unfolded foldable, a phone on its side), the four tabs move from the bottom bar to a **navigation rail** down the left side, as Android recommends. The rail stays on every screen, so you can switch tabs from Book Details or Search too. Phones held upright keep the bottom bar, which still hides on those screens. Built this way in part 5. If you'd rather keep the bottom bar everywhere, it's a small change back. |
 
 ---
 
@@ -224,4 +224,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35) and 4 (#37) are merged. Part 5 (#39) is in review, with D29 for you to confirm. D28 is still open. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36) is next, starting with the D28 feasibility check. |
