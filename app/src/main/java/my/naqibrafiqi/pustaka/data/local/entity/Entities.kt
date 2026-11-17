@@ -13,7 +13,8 @@ import java.time.Instant
 /**
  * A series folder.
  *
- * [source] holds the details taken from the series' first volume, and [edited] the user's edits.
+ * [source] holds the details taken from the series' volumes (see SeriesDefaults), and [edited] the
+ * user's edits.
  * Room sets an embedded object to null when all of its columns are null, so both are nullable.
  */
 @Entity(

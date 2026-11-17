@@ -368,7 +368,59 @@ class LibraryScannerTest {
         assertEquals(emptyList<String>(), reader.reads)
     }
 
+    // --- Series cover (#38, D25) ---
+
+    @Test
+    fun theSeriesCoverComesFromTheLastVolume() = runTest {
+        epub("Series/Vol 2.epub", volume = 2.0, subjects = listOf("Second"))
+        epub("Series/Vol 1.epub", volume = 1.0, subjects = listOf("First"))
+        epub("Series/Vol 3.epub", volume = 3.0, subjects = listOf("Third"), withCover = false)
+        scanner.scan()
+
+        val found = series.getSeriesByFolderPath(File(library, "Series").path)!!
+        // Vol 3 has no cover, so Vol 2 is the last volume with one. The other details stay with Vol 1.
+        assertEquals(coverOf("Series/Vol 2.epub"), found.details.coverPath)
+        assertEquals("First", found.details.mainGenre)
+    }
+
+    @Test
+    fun aNewLastVolumeBecomesTheSeriesCover() = runTest {
+        epub("Series/Vol 1.epub", volume = 1.0)
+        scanner.scan()
+
+        epub("Series/Vol 2.epub", volume = 2.0)
+        scanner.scan()
+
+        val found = series.getSeriesByFolderPath(File(library, "Series").path)!!
+        assertEquals(coverOf("Series/Vol 2.epub"), found.details.coverPath)
+    }
+
+    @Test
+    fun aPickedCoverStaysUntilItsVolumeChanges() = runTest {
+        val first = epub("Series/Vol 1.epub", volume = 1.0)
+        epub("Series/Vol 2.epub", volume = 2.0)
+        scanner.scan()
+        val id = series.getSeriesByFolderPath(File(library, "Series").path)!!.id
+        series.updateEdits(id, name = null, details = SeriesDetails(coverPath = coverOf("Series/Vol 1.epub")))
+
+        scanner.scan()
+        assertEquals(coverOf("Series/Vol 1.epub"), series.getSeries(id)!!.details.coverPath)
+
+        // A changed file gets a new cover, so the picked one is gone and the default comes back.
+        writeFake(first, title = "Changed", volume = 1.0)
+        first.setLastModified(first.lastModified() + 10_000)
+        scanner.scan()
+
+        val after = series.getSeries(id)!!
+        assertNull(after.editedDetails.coverPath)
+        assertEquals(coverOf("Series/Vol 2.epub"), after.details.coverPath)
+    }
+
     // --- Helpers ---
+
+    private suspend fun coverOf(relativePath: String): String? =
+        db.bookDao().getAll().single { it.filePath == File(library, relativePath).path }.source?.coverPath
+
 
     private fun epub(
         relativePath: String,

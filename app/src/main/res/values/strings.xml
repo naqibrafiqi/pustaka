@@ -295,10 +295,12 @@
     <string name="edit_field_main_genre">Main genre</string>
     <string name="edit_field_tags">Tags</string>
     <string name="edit_field_synopsis">Synopsis</string>
+    <string name="edit_field_cover">Cover</string>
     <string name="edit_hint_volume">Sets the order of the volumes in the series</string>
     <string name="edit_hint_names">Separate names with commas</string>
     <string name="edit_hint_genres">Separate genres with commas</string>
     <string name="edit_hint_tags">Separate tags with commas</string>
+    <string name="edit_hint_cover">The latest volume\'s cover is used unless you pick another</string>
     <string name="edit_error_volume">Enter a number, such as 4 or 4.5</string>
 
     <string name="common_share">Share</string>

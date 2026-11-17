@@ -80,7 +80,7 @@ sealed interface SeriesDetailsUiState {
         val synopsis: String?,
         /** The main genre first, then the tags. */
         val genres: List<String>,
-        /** Covers for the fan in the header: the first three volumes, or the series' own cover. */
+        /** Covers for the fan in the header: the series cover in front, then up to two volumes. */
         val headerCovers: List<String?>,
         val volumeCount: Int,
         val finishedCount: Int,
@@ -197,14 +197,13 @@ class SeriesDetailsViewModel @AssistedInject constructor(
     ): SeriesDetailsUiState.Ready {
         val seriesProgress = SeriesProgress(volumes)
         val onDisk = volumes.filterNot { it.isMissing }
-        val volumeCovers = volumes.mapNotNull { it.details.coverPath }.take(HEADER_COVERS)
         return SeriesDetailsUiState.Ready(
             name = series.name.value,
             author = series.details.author,
             illustrator = series.details.illustrator,
             synopsis = series.details.synopsis,
             genres = genresOf(series),
-            headerCovers = volumeCovers.ifEmpty { listOf(series.details.coverPath) },
+            headerCovers = headerCovers(series.details.coverPath, volumes),
             volumeCount = seriesProgress.total,
             finishedCount = seriesProgress.finished,
             percent = seriesProgress.percent,
@@ -214,6 +213,18 @@ class SeriesDetailsViewModel @AssistedInject constructor(
             volumes = volumes.map { it.toItem(progress[it.id], seriesProgress.labelOf(it)) },
             isGrid = grid,
         )
+    }
+
+    /**
+     * The series cover in front, then the covers of the volumes before it, newest first. With no
+     * series cover, the newest volumes' covers.
+     */
+    private fun headerCovers(seriesCover: String?, volumes: List<Book>): List<String?> {
+        val newestFirst = volumes.mapNotNull { it.details.coverPath }.distinct().reversed()
+        if (seriesCover == null) return newestFirst.take(HEADER_COVERS).ifEmpty { listOf(null) }
+        val behind = newestFirst.dropWhile { it != seriesCover }.drop(1)
+            .ifEmpty { newestFirst.filter { it != seriesCover } }
+        return listOf(seriesCover) + behind.take(HEADER_COVERS - 1)
     }
 
     private companion object {

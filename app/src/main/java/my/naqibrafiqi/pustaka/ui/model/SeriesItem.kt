@@ -45,7 +45,8 @@ fun Series.toItem(volumes: List<Book>): SeriesItem {
         author = details.author,
         illustrator = details.illustrator,
         genres = genresOf(this),
-        coverPath = current?.details?.coverPath ?: details.coverPath,
+        // The series' own cover (D25), so a cover picked in Edit series shows here too.
+        coverPath = details.coverPath,
         volumeCount = progress.total,
         finishedCount = progress.finished,
         percent = progress.percent,
