@@ -18,7 +18,8 @@ import javax.xml.parsers.DocumentBuilderFactory
  * - EPUB 3: a `<meta property="role" refines="#id">` element.
  *
  * A `dc:creator` without a role is an author ([Creator.role] is null). A `dc:contributor` without a
- * role gets the MARC code `ctb` ("contributor"), so it isn't mistaken for an author.
+ * role gets the MARC code `ctb` ("contributor"), so it isn't mistaken for an author. Someone with
+ * several roles keeps the one [mainRole] picks.
  */
 internal object OpfCreators {
 
@@ -26,6 +27,24 @@ internal object OpfCreators {
     private const val DC = "http://purl.org/dc/elements/1.1/"
     private const val OPF = "http://www.idpf.org/2007/opf"
     const val ROLE_CONTRIBUTOR = "ctb"
+
+    /** The roles Pustaka shows, most important first. */
+    private val ROLE_PRIORITY = listOf(
+        Creator.ROLE_AUTHOR,
+        Creator.ROLE_ILLUSTRATOR,
+        Creator.ROLE_TRANSLATOR,
+        Creator.ROLE_EDITOR,
+    )
+
+    /**
+     * A person can have several roles, such as `ann` (annotator) and `aut` (author) for an author
+     * who also wrote the notes. Pustaka keeps one: author, illustrator, translator or editor, in
+     * that order, or else the first one listed. Returns null when there are none.
+     */
+    fun mainRole(roles: Collection<String>): String? {
+        val cleaned = roles.map { it.trim().lowercase() }.filter { it.isNotEmpty() }
+        return ROLE_PRIORITY.firstOrNull { it in cleaned } ?: cleaned.firstOrNull()
+    }
 
     /** Returns null if the EPUB's `content.opf` can't be found or read. */
     fun read(epub: File): List<Creator>? = runCatching {
@@ -56,14 +75,14 @@ internal object OpfCreators {
         val metadata = document.getElementsByTagNameNS(OPF, "metadata").item(0) as? Element
             ?: return emptyList()
 
-        val rolesById = mutableMapOf<String, String>()
+        val rolesById = mutableMapOf<String, MutableList<String>>()
         val metas = metadata.getElementsByTagNameNS(OPF, "meta")
         for (i in 0 until metas.length) {
             val meta = metas.item(i) as Element
             if (meta.getAttribute("property") != "role") continue
             val id = meta.getAttribute("refines").removePrefix("#")
             val role = meta.textContent.trim()
-            if (id.isNotEmpty() && role.isNotEmpty()) rolesById.putIfAbsent(id, role)
+            if (id.isNotEmpty() && role.isNotEmpty()) rolesById.getOrPut(id) { mutableListOf() } += role
         }
 
         val creators = mutableListOf<Creator>()
@@ -79,7 +98,7 @@ internal object OpfCreators {
             val name = element.textContent.trim().replace(Regex("\\s+"), " ")
             if (name.isEmpty()) continue
             val role = element.getAttributeNS(OPF, "role").trim().ifEmpty { null }
-                ?: rolesById[element.getAttribute("id")]
+                ?: rolesById[element.getAttribute("id")]?.let(::mainRole)
             creators += Creator(
                 name = name,
                 role = role?.lowercase() ?: if (isCreator) null else ROLE_CONTRIBUTOR,

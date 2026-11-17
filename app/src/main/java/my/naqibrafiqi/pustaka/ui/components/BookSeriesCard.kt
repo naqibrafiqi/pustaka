@@ -120,12 +120,16 @@ private fun TopAction(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (genres.isNotEmpty()) {
+            // A long genre (such as a library subject heading) shortens with "…" instead of
+            // squeezing the volume count.
             Row(
+                modifier = Modifier.weight(1f, fill = false),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TagChip(
                     text = genres[0],
+                    modifier = Modifier.weight(1f, fill = false),
                     color = MaterialTheme.colorScheme.secondary.copy(alpha = .2f)
                 )
 

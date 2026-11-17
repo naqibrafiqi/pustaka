@@ -68,7 +68,7 @@ class ReadiumEpubReader @Inject constructor(
     /** Used when `content.opf` can't be read directly. Readium's roles are less precise. */
     private fun creatorsFrom(metadata: Metadata): List<Creator> = buildList {
         fun add(contributors: List<Contributor>, role: String?) =
-            contributors.forEach { add(Creator(it.name.trim(), role ?: it.roles.firstOrNull())) }
+            contributors.forEach { add(Creator(it.name.trim(), role ?: OpfCreators.mainRole(it.roles))) }
         add(metadata.authors, null)
         add(metadata.illustrators, Creator.ROLE_ILLUSTRATOR)
         add(metadata.translators, Creator.ROLE_TRANSLATOR)

@@ -6,14 +6,36 @@ Pustaka is an offline EPUB reader for Android, built for books that come in seri
 
 You keep your EPUB files in a `Pustaka` folder on your phone, either loose or in one subfolder per series. Pustaka scans that folder, reads each book's details from the EPUB itself, and keeps track of your reading progress and highlights. It never renames or moves your files.
 
-> **Status:** version 1.0.0. See the [release notes](docs/releases/1.0.0.md). The next round of fixes and improvements is Phase 8 in the [roadmap](docs/ROADMAP.md).
+> **Status:** version 1.1.0. See the [release notes](docs/releases/1.1.0.md) and the [roadmap](docs/ROADMAP.md).
+
+## Screenshots
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/library.png" width="200" alt="Library tab: the book being read, with a Resume button, above the recently added books"><br><sub>Library</sub></td>
+    <td align="center"><img src="docs/screenshots/series.png" width="200" alt="Series tab: a card per series with its cover, author, volume count and progress"><br><sub>Series</sub></td>
+    <td align="center"><img src="docs/screenshots/series-details.png" width="200" alt="Series Details: a fan of covers, the synopsis, series progress and the volumes in order"><br><sub>Series details</sub></td>
+    <td align="center"><img src="docs/screenshots/book-details-dark.png" width="200" alt="Book Details in the dark theme: cover, title, author, synopsis and reading progress"><br><sub>Book details, dark theme</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/reader.png" width="200" alt="The reader with its bars shown: a bookmarked page with a yellow highlight and the page slider"><br><sub>Reader</sub></td>
+    <td align="center"><img src="docs/screenshots/highlights.png" width="200" alt="Highlights tab: highlights grouped by series and book, with a note"><br><sub>Highlights</sub></td>
+    <td align="center"><img src="docs/screenshots/settings.png" width="200" alt="Settings: library folder, rescan, hidden items, theme, reader settings and storage"><br><sub>Settings</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+<p align="center"><img src="docs/screenshots/tablet.png" width="820" alt="The Library on a tablet held sideways, with the tabs in a rail on the left"><br><sub>On a tablet</sub></p>
+
+The books shown are public-domain ebooks from [Standard Ebooks](https://standardebooks.org).
 
 ## Features
 - A library built from a folder you manage yourself: put EPUBs directly in `Pustaka/` for standalone books, or in `Pustaka/<Series>/` for a series
 - Title, authors, cover, description and volume number read automatically from each EPUB, and editable in the app
-- A reader with page turning or scrolling, a table of contents and reader settings
+- A reader with page turning or scrolling, a table of contents, bookmarks and reader settings
+- A "Back to page" button after jumping somewhere in a book
 - Reading progress, reading statistics, and highlights you can export as Markdown
 - Search, sorting, and a light or dark theme
+- Layouts for phones and tablets
 - Works offline, with no account
 
 See [docs/local_storage_and_library.md](docs/local_storage_and_library.md) for how the library folder works.
