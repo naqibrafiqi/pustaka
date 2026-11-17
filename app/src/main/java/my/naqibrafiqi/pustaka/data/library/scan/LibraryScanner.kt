@@ -323,9 +323,18 @@ class LibraryScanner @Inject constructor(
         }
 
         for (series in seriesDao.getAll()) {
-            val defaults = SeriesDefaults.fromVolumes(bookDao.getInSeries(series.id).map { it.toModel() })
-            if (series.toModel().sourceDetails != defaults) {
-                seriesDao.update(series.copy(source = defaults, updatedAt = now))
+            val volumes = bookDao.getInSeries(series.id).map { it.toModel() }
+            val model = series.toModel()
+            val defaults = SeriesDefaults.fromVolumes(volumes)
+            // A picked cover whose volume has gone (or whose file changed) goes back to the default.
+            val pickedCover = model.editedDetails.coverPath
+            val edits = if (pickedCover != null && pickedCover !in SeriesDefaults.coversOf(volumes)) {
+                model.editedDetails.copy(coverPath = null)
+            } else {
+                model.editedDetails
+            }
+            if (model.sourceDetails != defaults || model.editedDetails != edits) {
+                seriesDao.update(series.copy(source = defaults, edited = edits, updatedAt = now))
             }
         }
 

@@ -291,6 +291,78 @@ class EditAndDeleteTest {
         assertNull(series.getSeries(id)!!.editedDetails.author)
     }
 
+    @Test
+    fun theCoverPickerListsTheVolumesAndStartsOnTheLastOne() = runTest {
+        val id = seriesWithCovers(3)
+        val cover = EditSeriesViewModel(id, series, books).ready().cover!!
+
+        assertEquals(listOf("/covers/1.jpg", "/covers/2.jpg", "/covers/3.jpg"), cover.options.map { it.coverPath })
+        assertEquals(listOf("Volume 1", "Volume 2", "Volume 3"), cover.options.map { it.label.text() })
+        assertEquals("/covers/3.jpg", cover.selected)
+        assertFalse(cover.isEdited)
+    }
+
+    @Test
+    fun pickingACoverSavesItAsAnEdit() = runTest {
+        val id = seriesWithCovers(3)
+        val viewModel = EditSeriesViewModel(id, series, books)
+        viewModel.ready()
+
+        viewModel.pickCover("/covers/1.jpg")
+        assertTrue(viewModel.ready().hasChanges)
+        viewModel.save()
+        viewModel.saved.first()
+
+        val saved = series.getSeries(id)!!
+        assertEquals("/covers/1.jpg", saved.editedDetails.coverPath)
+        assertEquals("/covers/1.jpg", saved.details.coverPath)
+    }
+
+    @Test
+    fun pickingTheLastVolumeAgainFollowsTheDefault() = runTest {
+        val id = seriesWithCovers(3)
+        series.updateEdits(id, name = null, details = SeriesDetails(coverPath = "/covers/1.jpg"))
+        val viewModel = EditSeriesViewModel(id, series, books)
+        assertTrue(viewModel.ready().cover!!.isEdited)
+
+        viewModel.resetCover()
+        viewModel.save()
+        viewModel.saved.first()
+
+        // Not kept as an edit, so a new last volume would take over.
+        assertNull(series.getSeries(id)!!.editedDetails.coverPath)
+    }
+
+    @Test
+    fun useDetailsFromFileAlsoResetsTheCover() = runTest {
+        val id = seriesWithCovers(2)
+        val viewModel = EditSeriesViewModel(id, series, books)
+        viewModel.ready()
+        viewModel.pickCover("/covers/1.jpg")
+
+        viewModel.useDetailsFromFile()
+
+        assertEquals("/covers/2.jpg", viewModel.ready().cover!!.selected)
+    }
+
+    @Test
+    fun aSeriesWithOneCoverHasNoPicker() = runTest {
+        val id = seriesWithCovers(1)
+        assertNull(EditSeriesViewModel(id, series, books).ready().cover)
+    }
+
+    /** A series whose volumes 1 to [count] have the covers `/covers/N.jpg`, the last as the default. */
+    private suspend fun seriesWithCovers(count: Int): Long {
+        val id = series.addSeries("/lib/hb", "Harbour", SeriesDetails(coverPath = "/covers/$count.jpg"))
+        for (n in 1..count) {
+            books.addBook(
+                book("Harbour $n.epub", seriesId = id, folder = "/lib/hb")
+                    .copy(sourceDetails = BookDetails(volumeNumber = n.toDouble(), coverPath = "/covers/$n.jpg"))
+            )
+        }
+        return id
+    }
+
     // --- Edit book ---
 
     @Test

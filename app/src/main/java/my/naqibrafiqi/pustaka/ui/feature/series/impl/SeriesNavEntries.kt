@@ -163,6 +163,8 @@ private fun EditEntry(title: String, viewModel: EditDetailsViewModel) {
         onReset = viewModel::reset,
         onUseDetailsFromFile = viewModel::useDetailsFromFile,
         onSave = viewModel::save,
+        onPickCover = viewModel::pickCover,
+        onResetCover = viewModel::resetCover,
     )
 }
 

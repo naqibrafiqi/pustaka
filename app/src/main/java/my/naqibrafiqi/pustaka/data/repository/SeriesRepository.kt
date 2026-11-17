@@ -37,7 +37,7 @@ interface SeriesRepository {
         sourceDetails: SeriesDetails = SeriesDetails.EMPTY,
     ): Long
 
-    /** Replaces the default details, for example after the first volume has changed. */
+    /** Replaces the default details, for example after the first or last volume has changed. */
     suspend fun updateSourceDetails(id: Long, sourceDetails: SeriesDetails)
 
     /**

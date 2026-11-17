@@ -93,7 +93,8 @@ class LibraryFiles @Inject constructor(
         val deleted = withContext(Dispatchers.IO) { !file.exists() || file.delete() }
         if (!deleted) return DeleteResult.Failed(uiText(R.string.delete_file_failed, file.name))
         books.deleteBook(bookId)
-        // The series' details come from its first volume, which may have been this one.
+        // The series' details come from its first volume and its cover from its last (or a picked
+        // one), and any of those may have been this one.
         if (!book.isStandalone) scans.requestScan()
         return DeleteResult.Deleted
     }

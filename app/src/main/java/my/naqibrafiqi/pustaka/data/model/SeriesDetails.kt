@@ -2,7 +2,8 @@ package my.naqibrafiqi.pustaka.data.model
 
 /**
  * The details of a series other than its name. By default they're filled from the series' first
- * volume, and each one can be edited by the user.
+ * volume, except the cover, which comes from its last (see SeriesDefaults). Each one can be edited
+ * by the user, and the cover can be any volume's cover.
  *
  * A [Series] keeps two of these: the defaults and the user's edits. In the edits, a null field
  * means "not edited". Use [overlaidOn] to get the values to show.

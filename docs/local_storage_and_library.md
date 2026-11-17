@@ -118,7 +118,8 @@ A file that can't be opened, for example because it's damaged, is still added to
 - **Book name** is the filename without `.epub` by default.
 - The user can edit every series and book detail, names included. Edits are saved in the app's database and **never written into the files**. Each field can be reset to its default.
 - On the "Edit details" screen, a "Use details from file" button fills the fields from the EPUB's own details. This helps when a filename is untidy, such as `[Group] Series v04 (Digital).epub`.
-- Series details other than the name are filled from the series' first volume by default, using the details in that volume's file: its authors and illustrators, its description as the synopsis, its first subject as the main genre and the other subjects as tags, and its cover.
+- Series details other than the name are filled from the series' first volume by default, using the details in that volume's file: its authors and illustrators, its description as the synopsis, its first subject as the main genre and the other subjects as tags.
+- The series cover is the **last volume's** cover by default (D25), so it changes when a new volume is added. Edit series can pick any volume's cover instead. A picked cover goes back to the default if that volume is removed, hidden or its file changes.
 
 ---
 
