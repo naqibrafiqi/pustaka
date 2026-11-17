@@ -6,7 +6,7 @@ Pustaka is an offline EPUB reader for Android, built for books that come in seri
 
 You keep your EPUB files in a `Pustaka` folder on your phone, either loose or in one subfolder per series. Pustaka scans that folder, reads each book's details from the EPUB itself, and keeps track of your reading progress and highlights. It never renames or moves your files.
 
-> **Status:** version 1.0.0. See the [release notes](docs/releases/1.0.0.md) and the [roadmap](docs/ROADMAP.md).
+> **Status:** version 1.0.0. See the [release notes](docs/releases/1.0.0.md). The next round of fixes and improvements is Phase 8 in the [roadmap](docs/ROADMAP.md).
 
 ## Features
 - A library built from a folder you manage yourself: put EPUBs directly in `Pustaka/` for standalone books, or in `Pustaka/<Series>/` for a series
@@ -19,7 +19,7 @@ You keep your EPUB files in a `Pustaka` folder on your phone, either loose or in
 See [docs/local_storage_and_library.md](docs/local_storage_and_library.md) for how the library folder works.
 
 ## Installation
-Pustaka is distributed through [GitHub Releases](https://github.com/rafeeqy/pustaka/releases), not the Play Store. Download the APK from the latest release and open it on your phone. Pustaka needs the **"All files access"** permission to read your `Pustaka` folder.
+Pustaka is distributed through [GitHub Releases](https://github.com/naqibrafiqi/pustaka/releases), not the Play Store. Download the APK from the latest release and open it on your phone. Pustaka needs the **"All files access"** permission to read your `Pustaka` folder.
 
 ## Tech stack
 - Kotlin, Jetpack Compose, Material 3
@@ -52,3 +52,5 @@ Pustaka is vibe coded. From Phase 1 on, the code, tests and docs in this reposit
 - **Claude** acts as the engineer: it plans each phase, writes the code and tests, builds the app, and opens a pull request per phase.
 
 Every commit Claude writes ends with a `Co-Authored-By: Claude` line, so `git log` shows which work is Claude's.
+
+Claude Code also loads the Android skills in [.claude/skills](.claude/skills/README.md). They're copied from Google's and a community skills repository, at pinned commits.
