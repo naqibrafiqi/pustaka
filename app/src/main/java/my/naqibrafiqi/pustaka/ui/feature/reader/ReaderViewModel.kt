@@ -11,22 +11,28 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.library.epub.OpenFailure
 import my.naqibrafiqi.pustaka.data.library.epub.OpenResult
 import my.naqibrafiqi.pustaka.data.library.epub.ReadiumToolkit
 import my.naqibrafiqi.pustaka.data.model.Book
+import my.naqibrafiqi.pustaka.data.model.Bookmark
 import my.naqibrafiqi.pustaka.data.model.Highlight
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
+import my.naqibrafiqi.pustaka.data.repository.BookmarkRepository
 import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.ReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
@@ -106,11 +112,26 @@ data class ReaderHighlight(val highlight: Highlight, val locator: Locator) {
 }
 
 /**
+ * A bookmarked page in the book being read (#37), with what the Bookmarks tab shows about it.
+ *
+ * @property page the page it's on, or null when the book has no page numbers.
+ * @property text the start of the page's text, when there was any.
+ */
+data class ReaderBookmark(
+    val id: Long,
+    val locator: Locator,
+    val page: Int?,
+    val percent: Int,
+    val chapterTitle: String?,
+    val text: String?,
+)
+
+/**
  * Opens a book in the reader and keeps its reading position saved. The position is written shortly
  * after each page turn, and straight away when the reader goes into the background.
  *
  * It also records reading sessions (see [SessionTracker]), applies the reader settings, marks
- * the book finished on its last page, and keeps the book's highlights.
+ * the book finished on its last page, and keeps the book's highlights and bookmarks.
  */
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -122,6 +143,7 @@ class ReaderViewModel @Inject constructor(
     private val seriesRepository: SeriesRepository,
     private val readerSettings: ReaderSettingsRepository,
     private val highlightRepository: HighlightRepository,
+    private val bookmarkRepository: BookmarkRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -135,6 +157,9 @@ class ReaderViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<ReaderUiState>(ReaderUiState.Loading)
     val state: StateFlow<ReaderUiState> = _state.asStateFlow()
+
+    /** The newest locator from the navigator, saved after [SAVE_DELAY_MS] without a new one. */
+    private val latestLocator = MutableStateFlow<Locator?>(null)
 
     private val _position = MutableStateFlow(ReaderPosition())
     val position: StateFlow<ReaderPosition> = _position.asStateFlow()
@@ -157,6 +182,21 @@ class ReaderViewModel @Inject constructor(
     /** The highlight being looked at or changed, after tapping it on the page. */
     val openHighlightId: StateFlow<Long?> = _openHighlightId.asStateFlow()
 
+    /** The book's bookmarks in book order, once it's open. Any whose place can't be read are left out. */
+    val bookmarks: StateFlow<List<ReaderBookmark>> = combine(
+        bookmarkRepository.observeBookmarks(bookId),
+        _state.filterIsInstance<ReaderUiState.Ready>(),
+    ) { list, ready -> list.mapNotNull { readerBookmark(it, ready) } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Whether the page being read is bookmarked, for the bookmark button in the top bar. */
+    val pageBookmarked: StateFlow<Boolean> = combine(bookmarks, latestLocator, _position) { list, locator, position ->
+        locator != null && list.any { isOnPage(it, locator, position.page) }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /** Adding and removing one at a time, so a quick double tap doesn't add the page twice. */
+    private val bookmarkLock = Mutex()
+
     private val returnTracker = ReturnTracker<Locator>()
 
     /** The place shown before the newest one, to tell a turn forward from a turn back. */
@@ -173,8 +213,6 @@ class ReaderViewModel @Inject constructor(
     /** The last page has been reached during this reading, so the card isn't shown twice. */
     private var finishHandled = false
 
-    /** The newest locator from the navigator, saved after [SAVE_DELAY_MS] without a new one. */
-    private val latestLocator = MutableStateFlow<Locator?>(null)
     private var lastSaved: Locator? = null
 
     init {
@@ -292,6 +330,45 @@ class ReaderViewModel @Inject constructor(
         if (_openHighlightId.value == id) _openHighlightId.value = null
         viewModelScope.launch {
             withContext(NonCancellable) { highlightRepository.deleteHighlight(id) }
+        }
+    }
+
+    /**
+     * The bookmark button: bookmarks the page being read, or removes its bookmark when it has one
+     * (#37). A page is the stretch of the book with one page number, which can take more than one
+     * screen.
+     *
+     * @param pageText the text at the top of the page, shown in the list of bookmarks.
+     */
+    fun toggleBookmark(pageText: String? = null) {
+        val locator = latestLocator.value ?: return
+        val page = _position.value.page
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                bookmarkLock.withLock {
+                    val ready = _state.value as? ReaderUiState.Ready ?: return@withLock
+                    val onPage = bookmarkRepository.observeBookmarks(bookId).first()
+                        .mapNotNull { readerBookmark(it, ready) }
+                        .filter { isOnPage(it, locator, page) }
+                    if (onPage.isNotEmpty()) {
+                        bookmarkRepository.deleteBookmarks(onPage.map { it.id })
+                    } else {
+                        bookmarkRepository.addBookmark(
+                            bookId = bookId,
+                            locator = locator.toJSON().toString(),
+                            progression = locator.locations.totalProgression ?: 0.0,
+                            text = pageText?.let(::snippet),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /** Removes a bookmark from the Bookmarks tab. */
+    fun deleteBookmark(id: Long) {
+        viewModelScope.launch {
+            withContext(NonCancellable) { bookmarkLock.withLock { bookmarkRepository.deleteBookmarks(listOf(id)) } }
         }
     }
 
@@ -457,6 +534,38 @@ class ReaderViewModel @Inject constructor(
             val page = chapter.lastOrNull { (it.locations.progression ?: 0.0) <= progression + 1e-9 } ?: chapter.firstOrNull()
             return page?.locations?.position
         }
+
+        /** A saved bookmark, placed in the open book, or null when its place can't be read. */
+        fun readerBookmark(bookmark: Bookmark, ready: ReaderUiState.Ready): ReaderBookmark? {
+            val locator = parseLocator(bookmark.locator) ?: return null
+            val position = positionOf(locator, ready)
+            return ReaderBookmark(
+                id = bookmark.id,
+                locator = locator,
+                page = pageOf(locator, ready),
+                percent = position.percent,
+                chapterTitle = position.chapterTitle,
+                text = bookmark.text?.let(::snippet),
+            )
+        }
+
+        /**
+         * Whether [bookmark] is on the page being read: the same page number, or, in a book without
+         * page numbers, the same place.
+         */
+        fun isOnPage(bookmark: ReaderBookmark, current: Locator, currentPage: Int?): Boolean =
+            if (bookmark.page != null && currentPage != null) {
+                bookmark.page == currentPage
+            } else {
+                bookmark.locator.href == current.href && bookmark.locator.locations.progression == current.locations.progression
+            }
+
+        /** The text a bookmark shows, on one line and cut short. */
+        fun snippet(text: String): String? =
+            text.replace(WHITESPACE, " ").trim().take(SNIPPET_LENGTH).ifEmpty { null }
+
+        private val WHITESPACE = Regex("\\s+")
+        private const val SNIPPET_LENGTH = 200
 
         fun positionOf(locator: Locator, ready: ReaderUiState.Ready): ReaderPosition {
             val tocIndex = currentTocIndex(ready.tableOfContents, locator.href.toString(), ready.readingOrder)

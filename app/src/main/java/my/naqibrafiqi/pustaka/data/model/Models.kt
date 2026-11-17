@@ -127,3 +127,20 @@ data class Highlight(
     val createdAt: Instant,
     val updatedAt: Instant,
 )
+
+/**
+ * A bookmarked page (#37), made with the bookmark button in the reader's top bar.
+ *
+ * @property locator where the page starts, as a serialized Readium `Locator` (JSON).
+ * @property progression how far into the book, from 0 to 1, to list bookmarks in book order.
+ * @property text the start of the page's text, shown in the list of bookmarks. It's kept apart
+ *   from [locator] because the reader would go to where that text starts, which can be a page earlier.
+ */
+data class Bookmark(
+    val id: Long = 0,
+    val bookId: Long,
+    val locator: String,
+    val progression: Double,
+    val text: String? = null,
+    val createdAt: Instant,
+)

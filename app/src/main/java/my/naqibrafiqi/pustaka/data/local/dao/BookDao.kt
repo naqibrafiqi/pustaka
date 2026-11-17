@@ -97,7 +97,7 @@ interface BookDao {
     @Query("UPDATE books SET lastOpenedAt = :openedAt WHERE id = :id")
     suspend fun setLastOpened(id: Long, openedAt: Instant)
 
-    /** Also deletes the book's progress, sessions and highlights. */
+    /** Also deletes the book's progress, sessions, highlights and bookmarks. */
     @Query("DELETE FROM books WHERE id = :id")
     suspend fun deleteById(id: Long)
 }

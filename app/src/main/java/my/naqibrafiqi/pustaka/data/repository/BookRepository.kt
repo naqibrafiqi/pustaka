@@ -64,7 +64,7 @@ interface BookRepository {
     /** Records that the book was opened now. */
     suspend fun markOpened(id: Long)
 
-    /** Deletes the book, its progress, sessions and highlights. The file isn't touched. */
+    /** Deletes the book, its progress, sessions, highlights and bookmarks. The file isn't touched. */
     suspend fun deleteBook(id: Long)
 }
 

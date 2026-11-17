@@ -22,6 +22,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.OverscrollEffect
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberOverscrollEffect
@@ -30,10 +33,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -46,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -82,6 +89,8 @@ fun ReaderChrome(
     modifier: Modifier = Modifier,
     returnPoint: ReturnPoint<*>? = null,
     onReturn: () -> Unit = {},
+    bookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -93,7 +102,9 @@ fun ReaderChrome(
             ReaderTopBar(
                 title = title,
                 chapterTitle = position.chapterTitle,
+                bookmarked = bookmarked,
                 onNavigateBack = onNavigateBack,
+                onToggleBookmark = onToggleBookmark,
                 onOpenContents = onOpenContents,
                 onOpenSettings = onOpenSettings,
             )
@@ -156,7 +167,9 @@ private fun ReturnButton(page: Int?, onClick: () -> Unit, modifier: Modifier = M
 private fun ReaderTopBar(
     title: String,
     chapterTitle: String?,
+    bookmarked: Boolean,
     onNavigateBack: () -> Unit,
+    onToggleBookmark: () -> Unit,
     onOpenContents: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -191,6 +204,14 @@ private fun ReaderTopBar(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+            }
+            // Filled when the page is bookmarked (#37).
+            IconButton(onClick = onToggleBookmark) {
+                Icon(
+                    painter = painterResource(if (bookmarked) R.drawable.bookmark_filled else R.drawable.bookmark),
+                    contentDescription = stringResource(if (bookmarked) R.string.reader_remove_bookmark else R.string.reader_bookmark_page),
+                    tint = if (bookmarked) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                )
             }
             IconButton(onClick = onOpenContents) {
                 Icon(painter = painterResource(R.drawable.list), contentDescription = stringResource(R.string.reader_contents))
@@ -254,7 +275,13 @@ private fun ReaderBottomBar(position: ReaderPosition, onGoToPage: (Int) -> Unit)
     }
 }
 
-/** The table of contents, scrolled to the chapter being read. */
+/** The two tabs of the Contents sheet (D27). */
+enum class ContentsTab { CHAPTERS, BOOKMARKS }
+
+/**
+ * The table of contents, scrolled to the chapter being read, and the book's bookmarks in a second
+ * tab (D27).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentsSheet(
@@ -262,6 +289,12 @@ fun ContentsSheet(
     currentIndex: Int?,
     onSelect: (TocEntry) -> Unit,
     onDismiss: () -> Unit,
+    bookmarks: List<ReaderBookmark> = emptyList(),
+    currentPage: Int? = null,
+    tab: ContentsTab = ContentsTab.CHAPTERS,
+    onTabChange: (ContentsTab) -> Unit = {},
+    onSelectBookmark: (ReaderBookmark) -> Unit = {},
+    onDeleteBookmark: (ReaderBookmark) -> Unit = {},
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -276,21 +309,79 @@ fun ContentsSheet(
                     .sheetDragArea()
                     .padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
             )
-            if (entries.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.reader_no_contents),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .sheetDragArea()
-                        .padding(horizontal = 24.dp, vertical = 24.dp),
-                )
-            } else {
-                ContentsList(entries = entries, currentIndex = currentIndex, onSelect = onSelect)
+            ContentsTabs(tab = tab, bookmarkCount = bookmarks.size, onTabChange = onTabChange)
+            when (tab) {
+                ContentsTab.CHAPTERS -> if (entries.isEmpty()) {
+                    SheetMessage(stringResource(R.string.reader_no_contents))
+                } else {
+                    ContentsList(entries = entries, currentIndex = currentIndex, onSelect = onSelect)
+                }
+                ContentsTab.BOOKMARKS -> if (bookmarks.isEmpty()) {
+                    SheetMessage(stringResource(R.string.reader_no_bookmarks))
+                } else {
+                    BookmarksList(
+                        bookmarks = bookmarks,
+                        currentPage = currentPage,
+                        onSelect = onSelectBookmark,
+                        onDelete = onDeleteBookmark,
+                    )
+                }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ContentsTabs(tab: ContentsTab, bookmarkCount: Int, onTabChange: (ContentsTab) -> Unit) {
+    PrimaryTabRow(
+        selectedTabIndex = tab.ordinal,
+        containerColor = Color.Transparent,
+        modifier = Modifier.sheetDragArea(),
+    ) {
+        Tab(
+            selected = tab == ContentsTab.CHAPTERS,
+            onClick = { onTabChange(ContentsTab.CHAPTERS) },
+            unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = { Text(stringResource(R.string.reader_chapters)) },
+        )
+        Tab(
+            selected = tab == ContentsTab.BOOKMARKS,
+            onClick = { onTabChange(ContentsTab.BOOKMARKS) },
+            unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = {
+                Text(
+                    if (bookmarkCount > 0) {
+                        stringResource(R.string.reader_bookmarks_count, bookmarkCount)
+                    } else {
+                        stringResource(R.string.reader_bookmarks)
+                    }
+                )
+            },
+        )
+    }
+}
+
+/** A line of text in place of an empty list. */
+@Composable
+private fun SheetMessage(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .fillMaxWidth()
+            .sheetDragArea()
+            .navigationBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 24.dp),
+    )
+}
+
+/** A list that fits the sheet has nothing to stretch when it's swiped (#31). */
+@Composable
+private fun rememberSheetOverscroll(listState: LazyListState): OverscrollEffect? {
+    val scrollable by remember { derivedStateOf { listState.canScrollForward || listState.canScrollBackward } }
+    return if (scrollable) rememberOverscrollEffect() else null
 }
 
 @Composable
@@ -300,11 +391,9 @@ private fun ContentsList(entries: List<TocEntry>, currentIndex: Int?, onSelect: 
         // Leaves a chapter above the current one in view, for context.
         currentIndex?.let { listState.scrollToItem((it - 1).coerceAtLeast(0)) }
     }
-    // A list that fits the sheet has nothing to stretch when it's swiped (#31).
-    val scrollable by remember { derivedStateOf { listState.canScrollForward || listState.canScrollBackward } }
     LazyColumn(
         state = listState,
-        overscrollEffect = if (scrollable) rememberOverscrollEffect() else null,
+        overscrollEffect = rememberSheetOverscroll(listState),
         modifier = Modifier.navigationBarsPadding(),
     ) {
         itemsIndexed(entries) { index, entry ->
@@ -334,6 +423,83 @@ private fun ContentsList(entries: List<TocEntry>, currentIndex: Int?, onSelect: 
                     )
                 }
             }
+        }
+    }
+}
+
+/** The book's bookmarks in book order (#37). The one for the page being read stands out. */
+@Composable
+private fun BookmarksList(
+    bookmarks: List<ReaderBookmark>,
+    currentPage: Int?,
+    onSelect: (ReaderBookmark) -> Unit,
+    onDelete: (ReaderBookmark) -> Unit,
+) {
+    val listState = rememberLazyListState()
+    LazyColumn(
+        state = listState,
+        overscrollEffect = rememberSheetOverscroll(listState),
+        modifier = Modifier.navigationBarsPadding(),
+    ) {
+        items(bookmarks, key = { it.id }) { bookmark ->
+            BookmarkRow(
+                bookmark = bookmark,
+                isCurrent = bookmark.page != null && bookmark.page == currentPage,
+                onSelect = { onSelect(bookmark) },
+                onDelete = { onDelete(bookmark) },
+            )
+        }
+    }
+}
+
+/** The chapter, the page and how far into the book, then the start of the page's text. */
+@Composable
+private fun BookmarkRow(bookmark: ReaderBookmark, isCurrent: Boolean, onSelect: () -> Unit, onDelete: () -> Unit) {
+    val page = bookmark.page?.let { stringResource(R.string.page_number, it) }
+    val percent = stringResource(R.string.common_percent, bookmark.percent)
+    val textColor = if (isCurrent) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+    val subtleColor = if (isCurrent) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.reader_go_to_bookmark), onClick = onSelect)
+            .background(if (isCurrent) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(start = 24.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = bookmark.chapterTitle ?: page ?: percent,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal,
+                color = textColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = if (page != null) stringResource(R.string.reader_bookmark_place, page, percent) else percent,
+                style = MaterialTheme.typography.labelMedium,
+                color = subtleColor,
+            )
+            bookmark.text?.let { text ->
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = subtleColor,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                painter = painterResource(R.drawable.bookmark_remove),
+                contentDescription = stringResource(R.string.reader_remove_bookmark),
+                tint = subtleColor,
+            )
         }
     }
 }
@@ -432,6 +598,7 @@ private fun ReaderChromePreview() {
                 onOpenSettings = {},
                 onGoToPage = {},
                 returnPoint = ReturnPoint(Unit, page = 12),
+                bookmarked = true,
             )
         }
     }

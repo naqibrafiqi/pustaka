@@ -136,3 +136,25 @@ data class HighlightEntity(
     val createdAt: Instant,
     val updatedAt: Instant,
 )
+
+/** A bookmarked page (#37). Added in database version 2. */
+@Entity(
+    tableName = "bookmarks",
+    foreignKeys = [
+        ForeignKey(
+            entity = BookEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["bookId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index(value = ["bookId"])],
+)
+data class BookmarkEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val bookId: Long,
+    val locator: String,
+    val progression: Double,
+    val text: String?,
+    val createdAt: Instant,
+)
