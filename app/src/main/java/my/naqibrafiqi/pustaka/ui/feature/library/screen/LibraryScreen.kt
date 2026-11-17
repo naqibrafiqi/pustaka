@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -50,6 +51,7 @@ import my.naqibrafiqi.pustaka.ui.components.MessageState
 import my.naqibrafiqi.pustaka.ui.components.SelectChip
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.components.TopBarActionButton
+import my.naqibrafiqi.pustaka.ui.components.columnCount
 import my.naqibrafiqi.pustaka.ui.model.BookItem
 import my.naqibrafiqi.pustaka.ui.model.BookState
 import my.naqibrafiqi.pustaka.ui.model.booksLabel
@@ -132,23 +134,40 @@ private fun LibraryScreenContent(
                 return@PullToRefreshBox
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState,
-                contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 16.dp)
-            ) {
-                when (state) {
-                    is LibraryUiState.Error -> item { ErrorState(message = stringResource(state.message), onRetry = onRetry) }
-                    is LibraryUiState.Ready -> readyContent(state, onSelectFilter, onOpenBook, onResumeBook)
-                    LibraryUiState.Loading -> Unit
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                // Two covers across on a phone, more on a tablet. A list gets more columns too.
+                val booksWidth = maxWidth - 32.dp
+                val columns = if (isGrid) {
+                    columnCount(booksWidth, minCellWidth = GRID_CELL_WIDTH, spacing = 16.dp, minColumns = 2)
+                } else {
+                    columnCount(booksWidth, minCellWidth = LIST_CELL_WIDTH, spacing = 16.dp)
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 16.dp)
+                ) {
+                    when (state) {
+                        is LibraryUiState.Error -> item { ErrorState(message = stringResource(state.message), onRetry = onRetry) }
+                        is LibraryUiState.Ready -> readyContent(state, columns, onSelectFilter, onOpenBook, onResumeBook)
+                        LibraryUiState.Loading -> Unit
+                    }
                 }
             }
         }
     }
 }
 
+/** The narrowest a book gets in the grid. A phone fits two across. */
+private val GRID_CELL_WIDTH = 160.dp
+
+/** The narrowest a book gets in the list. A phone fits one across, a tablet two or three. */
+private val LIST_CELL_WIDTH = 320.dp
+
 private fun LazyListScope.readyContent(
     state: LibraryUiState.Ready,
+    columns: Int,
     onSelectFilter: (LibraryFilter) -> Unit,
     onOpenBook: (Long) -> Unit,
     onResumeBook: (Long) -> Unit,
@@ -258,8 +277,8 @@ private fun LazyListScope.readyContent(
                 iconRes = R.drawable.book_5,
             )
         }
-    } else if (state.isGrid) {
-        items(items = state.books.chunked(2), key = { row -> row.first().id }) { row ->
+    } else {
+        items(items = state.books.chunked(columns), key = { row -> row.first().id }) { row ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -270,20 +289,12 @@ private fun LazyListScope.readyContent(
                     BookCard(
                         book = book,
                         onClick = { onOpenBook(book.id) },
+                        isGrid = state.isGrid,
                         modifier = Modifier.weight(1f),
                     )
                 }
-                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
+                repeat(columns - row.size) { Spacer(modifier = Modifier.weight(1f)) }
             }
-        }
-    } else {
-        items(items = state.books, key = { it.id }) { book ->
-            BookCard(
-                book = book,
-                onClick = { onOpenBook(book.id) },
-                isGrid = false,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            )
         }
     }
 }

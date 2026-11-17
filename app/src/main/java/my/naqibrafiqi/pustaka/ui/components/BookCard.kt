@@ -34,6 +34,9 @@ import my.naqibrafiqi.pustaka.util.text.asString
 /** Books whose file has gone are shown faded. */
 private const val DIMMED_ALPHA = 0.5f
 
+/** The cover's width in the list layout. */
+private val LIST_COVER_WIDTH = 96.dp
+
 /** A card for [book]. The subtitle is its volume label if it has one, otherwise its credits. */
 @Composable
 fun BookCard(
@@ -163,9 +166,10 @@ fun BookCard(
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // About the size it always was on a phone, and no bigger on a tablet.
                 BookCover(
                     imageUrl = imageUrl,
-                    modifier = Modifier.weight(.4f)
+                    modifier = Modifier.width(LIST_COVER_WIDTH)
                 )
 
                 Column(modifier = Modifier.weight(1f)) {

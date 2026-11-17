@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettings
 import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.feature.reader.ReaderSettingsForm
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
@@ -68,7 +69,11 @@ fun ReaderDefaultsScreen(
             )
         },
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .centredContentWidth(),
+        ) {
             Text(
                 text = stringResource(R.string.reader_defaults_explanation),
                 style = MaterialTheme.typography.bodyMedium,

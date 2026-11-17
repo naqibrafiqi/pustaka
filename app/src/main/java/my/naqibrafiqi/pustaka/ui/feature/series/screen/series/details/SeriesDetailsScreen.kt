@@ -47,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
+import my.naqibrafiqi.pustaka.ui.components.AtLeastCells
 import my.naqibrafiqi.pustaka.ui.components.BookCard
 import my.naqibrafiqi.pustaka.ui.components.BookCoverFan
 import my.naqibrafiqi.pustaka.ui.components.ErrorState
@@ -165,9 +167,11 @@ private fun SeriesDetailsScreenContent(
                 actionLabel = stringResource(R.string.common_go_back),
                 onAction = onNavigateBack,
             )
+            // Two covers across (or one list row) on a phone, more on a tablet. The page is kept to a
+            // readable width so the header and statistics don't stretch across a tablet on its side.
             is SeriesDetailsUiState.Ready -> LazyVerticalGrid(
-                columns = if (isGrid) GridCells.Fixed(2) else GridCells.Fixed(1),
-                modifier = contentModifier,
+                columns = if (isGrid) AtLeastCells(160.dp, minColumns = 2) else AtLeastCells(320.dp),
+                modifier = contentModifier.centredContentWidth(DETAILS_MAX_WIDTH),
                 state = gridState,
                 contentPadding = PaddingValues(
                     start = 16.dp,
@@ -182,6 +186,9 @@ private fun SeriesDetailsScreenContent(
         }
     }
 }
+
+/** Wider than [MaxContentWidth][my.naqibrafiqi.pustaka.ui.components.MaxContentWidth], to fit four covers across. */
+private val DETAILS_MAX_WIDTH = 840.dp
 
 private fun LazyGridScope.readyContent(
     state: SeriesDetailsUiState.Ready,

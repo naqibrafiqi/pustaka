@@ -4,8 +4,10 @@ import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -45,6 +47,7 @@ import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.settings.AppTheme
 import my.naqibrafiqi.pustaka.data.storage.StorageReport
 import my.naqibrafiqi.pustaka.data.storage.formatBytes
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.model.booksLabel
@@ -92,7 +95,8 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .centredContentWidth(),
         ) {
             SectionTitle(stringResource(R.string.navigation_label_library))
             SettingsItem(
@@ -174,6 +178,7 @@ fun SettingsScreen(
                 iconRes = R.drawable.article,
                 onClick = actions::openLicences,
             )
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 

@@ -40,6 +40,7 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D25 | What "latest book" means for the series cover (#38) | The **last volume in volume order**, not the most recently added file. Picking another volume's cover in Edit series overrides it. Built as proposed in part 2 and approved with it. |
 | D26 | When the "Back to where you were" button appears and disappears (#35) | It appears after jumping from the table of contents, the page slider or a highlight, and **shows and hides with the reader's bars**. It goes away after **10 screen turns** forward from the new spot (pages scrolled, when scrolling), after tapping it, on turning back to that page, or after closing the book. Approved with part 3, with the turns and bars changes from review. |
 | D27 | Where bookmarks are listed (#37) | A **Bookmarks** tab in the Contents sheet, next to the chapters, with a bookmark button in the reader's top bar. A bookmark belongs to a page number, and tapping one opens that page. Built as proposed in part 4 and approved with it. |
+| D29 | Where the tabs go on a tablet (#39) | On a window **600dp or wider** (tablets, unfolded foldables, phones on their side), the tabs are in a **navigation rail** down the left side, kept on every screen. Phones held upright keep the bottom bar. Built in part 5 and approved with it. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
@@ -189,6 +190,13 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
    - A bookmark belongs to a page number. A page number can take more than one screen, so every screen of a bookmarked page shows the button filled.
    - Bookmarks are kept in a new `bookmarks` table, so the database goes from version 1 to 2. Room adds the table when 1.1.0 is installed over 1.0.0, and everything else is kept. A test opens a 1.0.0 database to check this.
 5. **Tablet layouts (M):** [#39](https://github.com/naqibrafiqi/pustaka/issues/39). Check every screen on a tablet, upright and sideways, and fix anything that overlaps, overflows or has text that's too small.
+   - Checked every screen on a tablet-sized emulator (800 × 1280dp), upright and sideways, and at the phone size afterwards. Nothing overlapped or ran off the screen, but most screens were laid out for a phone's width, so on a tablet the covers grew very large and lines stretched right across. Fixed:
+   - **Grids and lists fit more across.** The Library grid shows 4 covers upright and 6 sideways (2 on a phone, as before). The Library list, the series cards and the Series Details volumes go two or three across. The compact series grid fits 5 or more. A phone keeps its current layout.
+   - **Covers stop growing.** The list layout's cover stays the size it is on a phone, and the cover on Book Details stops at 240dp wide, so the title and the read button show without scrolling, even sideways.
+   - **Readable width.** Settings, Highlights, Search, Book Details, Series Details, Edit, Hidden items, About, Licences, Default reader settings and the access screens keep their content to a column in the middle (720dp, or 840dp for Series Details) instead of stretching across the screen.
+   - **Navigation rail** on wide windows instead of the bottom bar (D29).
+   - **Screen edges.** Every screen left the space for the system bars and camera cutout twice, so sideways the content was pushed in on one side and lists ended with an extra gap at the bottom. This also affected phones, on the screens opened from a tab.
+   - **Text size:** all text uses Android's scalable text sizes, so it's the same physical size on a tablet as on a phone and follows the system font size setting. Nothing needed changing. The reader shows two pages side by side when the tablet is on its side, which Readium does on its own.
 6. **Page-flip animation (L):** [#36](https://github.com/naqibrafiqi/pustaka/issues/36). A third page-turn choice in reader settings, next to Paged and Scroll. This starts with the feasibility check in D28.
 
 **Done when:** every issue above is fixed on `1.1.0`, or deliberately set aside with your agreement.
@@ -216,4 +224,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35) and 4 (#37) are merged. Part 5 (#39) is next. D28 is still open. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36) is next, starting with the D28 feasibility check. |
