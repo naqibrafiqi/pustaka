@@ -185,6 +185,9 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
    - Built as proposed in D26: a "Back to page 42" button after a jump from the contents, the page slider or a highlight in the Highlights tab. It shows and hides with the top and bottom bars, just above the page slider. Jumping again keeps the first page, the one that was being read.
    - "10 pages" means 10 screen turns (swipes or taps) forward from where the jump landed, as you asked in review. A turn back takes one off the count. When scrolling, there are no turns, so the page numbers scrolled are counted instead. Links inside the book, such as footnotes, aren't counted as jumps.
 4. **Bookmarks (M):** [#37](https://github.com/naqibrafiqi/pustaka/issues/37). A bookmark button in the reader's top bar, a new database table, and a list of bookmarks (D27).
+   - Built as proposed in D27: a bookmark button in the top bar, next to Contents, is filled when the page is bookmarked. Tapping it bookmarks the page, or removes the page's bookmark. The Contents sheet has two tabs, Chapters and Bookmarks. Bookmarks are listed in book order with the chapter, page, percentage and the start of the page's text. Tapping one goes there, and "Back to page 42" (D26) then offers the page that was left. Each one has a button to remove it.
+   - A bookmark belongs to a page number. A page number can take more than one screen, so every screen of a bookmarked page shows the button filled.
+   - Bookmarks are kept in a new `bookmarks` table, so the database goes from version 1 to 2. Room adds the table when 1.1.0 is installed over 1.0.0, and everything else is kept. A test opens a 1.0.0 database to check this.
 5. **Tablet layouts (M):** [#39](https://github.com/naqibrafiqi/pustaka/issues/39). Check every screen on a tablet, upright and sideways, and fix anything that overlaps, overflows or has text that's too small.
 6. **Page-flip animation (L):** [#36](https://github.com/naqibrafiqi/pustaka/issues/36). A third page-turn choice in reader settings, next to Paged and Scroll. This starts with the feasibility check in D28.
 
@@ -213,4 +216,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38) and 3 (#35) are merged. Part 4 (#37) is next. D27 and D28 are still open. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Parts 1 (#31 to #34), 2 (#38) and 3 (#35) are merged. Part 4 (#37) is in review, built as proposed in D27. D28 is still open. |

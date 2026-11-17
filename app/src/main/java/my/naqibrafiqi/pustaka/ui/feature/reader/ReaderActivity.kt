@@ -147,14 +147,18 @@ class ReaderActivity : AppCompatActivity() {
         var navigator by remember { mutableStateOf<EpubNavigatorFragment?>(null) }
         var chromeVisible by rememberSaveable { mutableStateOf(false) }
         var contentsOpen by rememberSaveable { mutableStateOf(false) }
+        // The Contents sheet opens on the tab it was left on.
+        var contentsTab by rememberSaveable { mutableStateOf(ContentsTab.CHAPTERS) }
         var settingsOpen by rememberSaveable { mutableStateOf(false) }
         val position by viewModel.position.collectAsStateWithLifecycle()
         val highlights by viewModel.highlights.collectAsStateWithLifecycle()
         val openHighlightId by viewModel.openHighlightId.collectAsStateWithLifecycle()
         val openHighlight = highlights.firstOrNull { it.id == openHighlightId }?.highlight
         val returnPoint by viewModel.returnPoint.collectAsStateWithLifecycle()
+        val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
+        val pageBookmarked by viewModel.pageBookmarked.collectAsStateWithLifecycle()
 
-        // A jump from the contents or the progress bar can be gone back from (#35).
+        // A jump from the contents, a bookmark or the progress bar can be gone back from (#35).
         fun jumpTo(target: Locator) {
             viewModel.onJump(target)
             navigator?.go(target, animated = false)
@@ -201,6 +205,13 @@ class ReaderActivity : AppCompatActivity() {
                 // The finish card takes the bottom of the screen.
                 returnPoint = returnPoint.takeIf { finishCard == null },
                 onReturn = { viewModel.takeReturnPoint()?.let { navigator?.go(it, animated = false) } },
+                bookmarked = pageBookmarked,
+                onToggleBookmark = {
+                    lifecycleScope.launch {
+                        // The text at the top of the screen, to show in the list of bookmarks.
+                        viewModel.toggleBookmark(navigator?.let { PageText.of(it) })
+                    }
+                },
             )
 
             finishCard?.let { card ->
@@ -244,6 +255,16 @@ class ReaderActivity : AppCompatActivity() {
                     book.publication.locatorFromLink(entry.link)?.let(::jumpTo)
                 },
                 onDismiss = { contentsOpen = false },
+                bookmarks = bookmarks,
+                currentPage = position.page,
+                tab = contentsTab,
+                onTabChange = { contentsTab = it },
+                onSelectBookmark = { bookmark ->
+                    contentsOpen = false
+                    chromeVisible = false
+                    jumpTo(bookmark.locator)
+                },
+                onDeleteBookmark = { viewModel.deleteBookmark(it.id) },
             )
         }
     }

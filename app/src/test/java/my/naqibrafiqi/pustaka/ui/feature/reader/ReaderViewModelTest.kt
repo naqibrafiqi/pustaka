@@ -17,6 +17,8 @@ import my.naqibrafiqi.pustaka.data.model.ReadingStatus
 import my.naqibrafiqi.pustaka.data.model.SeriesDetails
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultBookRepository
+import my.naqibrafiqi.pustaka.data.repository.BookmarkRepository
+import my.naqibrafiqi.pustaka.data.repository.DefaultBookmarkRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultHighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
@@ -37,6 +39,7 @@ import my.naqibrafiqi.pustaka.testing.writeEpub
 import my.naqibrafiqi.pustaka.util.text.uiText
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -69,6 +72,7 @@ class ReaderViewModelTest {
     private lateinit var reading: ReadingRepository
     private lateinit var series: SeriesRepository
     private lateinit var highlights: HighlightRepository
+    private lateinit var bookmarks: BookmarkRepository
     private val readerSettings = FakeReaderSettings()
     private val toolkit = ReadiumToolkit(ApplicationProvider.getApplicationContext())
 
@@ -79,6 +83,7 @@ class ReaderViewModelTest {
         reading = DefaultReadingRepository(db, clock)
         series = DefaultSeriesRepository(db, clock)
         highlights = DefaultHighlightRepository(db, clock)
+        bookmarks = DefaultBookmarkRepository(db, clock)
     }
 
     @After
@@ -449,6 +454,79 @@ class ReaderViewModelTest {
         assertTrue(viewModel.highlights.first { it.isEmpty() }.isEmpty())
     }
 
+    @Test
+    fun theBookmarkButtonBookmarksThePageAndRemovesItAgain() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val positions = viewModel.ready().positions
+        viewModel.onLocatorChanged(positions[1])
+        assertFalse(viewModel.pageBookmarked.value)
+
+        viewModel.toggleBookmark()
+
+        val bookmark = viewModel.bookmarks.first { it.isNotEmpty() }.single()
+        assertEquals(2, bookmark.page)
+        assertEquals(positions[1], bookmark.locator)
+        assertTrue(viewModel.pageBookmarked.first { it })
+
+        viewModel.onLocatorChanged(positions[2])
+        assertFalse(viewModel.pageBookmarked.first { !it })
+
+        viewModel.onLocatorChanged(positions[1])
+        assertTrue(viewModel.pageBookmarked.first { it })
+        viewModel.toggleBookmark()
+        assertTrue(viewModel.bookmarks.first { it.isEmpty() }.isEmpty())
+        assertFalse(viewModel.pageBookmarked.first { !it })
+    }
+
+    @Test
+    fun anotherScreenOfTheSamePageIsTheSameBookmark() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val page = viewModel.ready().positions[1]
+        viewModel.onLocatorChanged(page)
+        viewModel.toggleBookmark()
+        viewModel.bookmarks.first { it.isNotEmpty() }
+
+        // The next screen still has page 2's number.
+        val laterScreen = page.copy(locations = page.locations.copy(progression = (page.locations.progression ?: 0.0) + 0.01))
+        viewModel.onLocatorChanged(laterScreen)
+
+        assertTrue(viewModel.pageBookmarked.first { it })
+        viewModel.toggleBookmark()
+        assertTrue(viewModel.bookmarks.first { it.isEmpty() }.isEmpty())
+    }
+
+    @Test
+    fun bookmarksAreListedInBookOrderAndKeptForNextTime() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val positions = viewModel.ready().positions
+        viewModel.onLocatorChanged(positions[2])
+        viewModel.toggleBookmark(pageText = "  The dragon\n  woke. ")
+        viewModel.bookmarks.first { it.size == 1 }
+        viewModel.onLocatorChanged(positions[0])
+        viewModel.toggleBookmark()
+
+        val listed = viewModel.bookmarks.first { it.size == 2 }
+        assertEquals(listOf(1, 3), listed.map { it.page })
+        assertEquals("The dragon woke.", listed[1].text)
+
+        val reopened = viewModel(bookId)
+        reopened.ready()
+        assertEquals(listOf(1, 3), reopened.bookmarks.first { it.size == 2 }.map { it.page })
+
+        reopened.deleteBookmark(listed[0].id)
+        assertEquals(listOf(3), reopened.bookmarks.first { it.size == 1 }.map { it.page })
+    }
+
+    @Test
+    fun aBookmarksTextIsOneShortLine() {
+        assertEquals("a b", ReaderViewModel.snippet("  a\n\t b  "))
+        assertNull(ReaderViewModel.snippet("   "))
+        assertEquals(200, ReaderViewModel.snippet("x".repeat(500))?.length)
+    }
+
     /**
      * Readium counts pages from each chapter's size inside the zip, so the text is varied enough
      * not to compress away, giving the book several pages.
@@ -476,6 +554,7 @@ class ReaderViewModelTest {
         seriesRepository = series,
         readerSettings = readerSettings,
         highlightRepository = highlights,
+        bookmarkRepository = bookmarks,
         clock = clock,
     )
 

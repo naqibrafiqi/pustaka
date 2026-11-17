@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
+import my.naqibrafiqi.pustaka.data.local.entity.BookmarkEntity
 import my.naqibrafiqi.pustaka.data.local.entity.HighlightEntity
 import my.naqibrafiqi.pustaka.data.local.entity.ReadingProgressEntity
 import my.naqibrafiqi.pustaka.data.local.entity.ReadingSessionEntity
@@ -65,4 +66,18 @@ interface HighlightDao {
 
     @Query("DELETE FROM highlights WHERE id = :id")
     suspend fun deleteById(id: Long)
+}
+
+@Dao
+interface BookmarkDao {
+
+    /** In book order, and in the order they were made for the same place. */
+    @Query("SELECT * FROM bookmarks WHERE bookId = :bookId ORDER BY progression ASC, createdAt ASC, id ASC")
+    fun observeForBook(bookId: Long): Flow<List<BookmarkEntity>>
+
+    @Insert
+    suspend fun insert(bookmark: BookmarkEntity): Long
+
+    @Query("DELETE FROM bookmarks WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
 }

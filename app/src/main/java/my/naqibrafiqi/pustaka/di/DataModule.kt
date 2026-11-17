@@ -15,7 +15,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
+import my.naqibrafiqi.pustaka.data.repository.BookmarkRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultBookRepository
+import my.naqibrafiqi.pustaka.data.repository.DefaultBookmarkRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultHighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultReadingRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
@@ -79,6 +81,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindHighlightRepository(impl: DefaultHighlightRepository): HighlightRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBookmarkRepository(impl: DefaultBookmarkRepository): BookmarkRepository
 
     @Binds
     @Singleton
