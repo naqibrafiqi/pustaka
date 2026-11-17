@@ -198,6 +198,12 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 
 **Done when:** every issue above is fixed on `1.1.0`, or deliberately set aside with your agreement.
 
+**Wrapping up 1.1.0:** on branch `release-1.1.0`, from `1.1.0`:
+- Version 1.1.0 (version code 2) and the [release notes](releases/1.1.0.md).
+- A simpler app icon, as you asked: a flat cream open book with the green ribbon on a plain brown background, without the cover, lines of text, shadow and gradient. The colours are still D19's.
+- Screenshots in the README, of public-domain books from [Standard Ebooks](https://standardebooks.org), so no copyrighted covers or text are shown.
+- Two fixes found while taking them. An author also listed with another role, such as annotator, was shown as "Unknown author". A long genre on a series card squeezed the volume count into a thin bar. Books already in the library pick up the author fix when their file changes.
+
 ---
 
 ## Working agreement
@@ -221,4 +227,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). |
+| 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. Next: you sign and publish v1.1.0 ([RELEASING.md](RELEASING.md)). |

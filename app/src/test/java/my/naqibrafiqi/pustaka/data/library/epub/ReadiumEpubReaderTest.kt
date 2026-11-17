@@ -117,6 +117,31 @@ class ReadiumEpubReaderTest {
     }
 
     @Test
+    fun aCreatorWithSeveralRolesIsAnAuthorIfOneOfThemIs() = runTest {
+        // How Standard Ebooks credits an author who also wrote the notes: annotator, then author.
+        val epub = writeEpub(
+            temp.root.resolve("A Study in Scarlet.epub"),
+            metadata = """
+                <dc:title>A Study in Scarlet</dc:title>
+                <dc:creator id="author">Arthur Conan Doyle</dc:creator>
+                <meta property="role" refines="#author" scheme="marc:relators">ann</meta>
+                <meta property="role" refines="#author" scheme="marc:relators">aut</meta>
+                <dc:contributor id="artist">Ludwig Deutsch</dc:contributor>
+                <meta property="role" refines="#artist" scheme="marc:relators">art</meta>
+                <meta property="role" refines="#artist" scheme="marc:relators">ill</meta>
+                <meta property="dcterms:modified">2024-06-01T00:00:00Z</meta>
+            """.trimIndent(),
+        )
+
+        val details = reader.read(epub, "fp-roles")!!.details
+
+        assertEquals(
+            listOf(Creator("Arthur Conan Doyle", "aut"), Creator("Ludwig Deutsch", "ill")),
+            details.creators,
+        )
+    }
+
+    @Test
     fun savesTheCoverUnderTheFingerprint() = runTest {
         val epub = writeEpub(
             temp.root.resolve("covered.epub"),
