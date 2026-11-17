@@ -55,12 +55,17 @@ class ReadiumToolkit @Inject constructor(@ApplicationContext context: Context) {
     /**
      * @param allowProtected opens DRM-locked books too. Their details can still be read, but not
      *   their contents.
+     * @param forReading adds Pustaka's [PageStyles] to the pages, for showing the book in the reader.
      */
-    suspend fun open(file: File, allowProtected: Boolean = false): OpenResult = withContext(Dispatchers.IO) {
+    suspend fun open(file: File, allowProtected: Boolean = false, forReading: Boolean = false): OpenResult = withContext(Dispatchers.IO) {
         if (!file.canRead()) return@withContext OpenResult.Failed(OpenFailure.NOT_READABLE)
         val asset = assetRetriever.retrieve(file)
             .getOrElse { return@withContext OpenResult.Failed(OpenFailure.NOT_EPUB) }
-        val publication = publicationOpener.open(asset, allowUserInteraction = false)
+        val publication = publicationOpener.open(
+            asset,
+            allowUserInteraction = false,
+            onCreatePublication = if (forReading) PageStyles.onCreatePublication else ({}),
+        )
             .getOrElse {
                 asset.close()
                 return@withContext OpenResult.Failed(OpenFailure.NOT_EPUB)

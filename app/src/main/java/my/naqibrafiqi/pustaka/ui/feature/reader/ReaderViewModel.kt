@@ -277,7 +277,7 @@ class ReaderViewModel @Inject constructor(
         if (book == null) return fail(R.string.reader_error_not_in_library)
         if (book.isMissing) return fail(R.string.reader_error_missing)
 
-        val opened = when (val result = toolkit.open(File(book.filePath))) {
+        val opened = when (val result = toolkit.open(File(book.filePath), forReading = true)) {
             is OpenResult.Failed -> return fail(messageFor(result.reason))
             is OpenResult.Opened -> result.publication
         }

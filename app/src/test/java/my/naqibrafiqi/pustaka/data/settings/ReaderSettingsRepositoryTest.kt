@@ -31,6 +31,7 @@ class ReaderSettingsRepositoryTest {
             lineSpacing = ReaderLineSpacing.NORMAL,
             margins = ReaderMargins.NARROW,
             scroll = true,
+            justify = false,
         )
         repository.update(chosen)
         assertEquals(chosen, repository.settings.first())

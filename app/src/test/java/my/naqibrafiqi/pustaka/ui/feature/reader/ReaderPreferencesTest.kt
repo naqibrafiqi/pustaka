@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.reader
 
+import my.naqibrafiqi.pustaka.data.library.epub.PageStyles
 import my.naqibrafiqi.pustaka.data.settings.ReaderFont
 import my.naqibrafiqi.pustaka.data.settings.ReaderLineSpacing
 import my.naqibrafiqi.pustaka.data.settings.ReaderMargins
@@ -38,6 +39,17 @@ class ReaderPreferencesTest {
         assertEquals(true, preferences.publisherStyles)
         assertEquals(1.0, preferences.fontSize!!, 0.0)
         assertEquals(false, preferences.scroll)
+    }
+
+    @Test
+    fun justifyIsOnByDefaultAndKeepsThePublishersLook() {
+        val on = ReaderSettings().toEpubPreferences(systemDark = false)
+        assertEquals(PageStyles.JUSTIFY_SIGNAL, on.ligatures)
+        // Readium's own justifying would turn the publisher's styles off.
+        assertNull(on.textAlign)
+        assertEquals(true, on.publisherStyles)
+
+        assertNull(ReaderSettings(justify = false).toEpubPreferences(systemDark = false).ligatures)
     }
 
     @Test
