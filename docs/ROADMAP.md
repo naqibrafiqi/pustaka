@@ -172,7 +172,7 @@ This phase is split into three pull requests:
 - App icon, a signed release build, and version 1.0.0.
 
 ### Phase 8: Fixes and improvements after 1.0 (L)
-Work from the GitHub issues filed on 2026-11-17. This phase is split into six pull requests, smallest first, all into the `1.1.0` branch (D23). The open decisions D24 to D28 apply.
+Work from the GitHub issues filed on 2026-11-17. This phase is split into six parts, smallest first. Each is on its own feature branch and merged into `1.1.0` (D23). The open decisions D24 to D28 apply.
 1. **Reader fixes and layout (S–M):**
    - [#31](https://github.com/naqibrafiqi/pustaka/issues/31) (bug): the Contents sheet shakes when you swipe up on a list too short to scroll. A short list should stay still.
    - [#32](https://github.com/naqibrafiqi/pustaka/issues/32): justified paragraphs (D24). Readium only justifies when the book's own styling is off, so the switch has to work with the "Original" line-spacing option.
@@ -184,13 +184,14 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pu
 5. **Tablet layouts (M):** [#39](https://github.com/naqibrafiqi/pustaka/issues/39). Check every screen on a tablet, upright and sideways, and fix anything that overlaps, overflows or has text that's too small.
 6. **Page-flip animation (L):** [#36](https://github.com/naqibrafiqi/pustaka/issues/36). A third page-turn choice in reader settings, next to Paged and Scroll. This starts with the feasibility check in D28.
 
-**Done when:** every issue above is closed by a merged PR, or deliberately set aside with your agreement.
+**Done when:** every issue above is fixed on `1.1.0`, or deliberately set aside with your agreement.
 
 ---
 
 ## Working agreement
 
-- **Branches and pull requests:** one feature branch per phase, or per sub-feature for the large phases. Each starts from the version branch it's for (`1.1.0` for Phase 8, D23) and gets a PR into it for you to review. Claude creates each version branch locally from the one before it. Released versions such as `1.0.0` aren't changed. Version branches are merged into `main` separately.
+- **Branches:** one feature branch per phase, or per sub-feature for the large phases. Each starts from the version branch it's for (`1.1.0` for Phase 8, D23). Claude creates each version branch locally from the one before it. Released versions such as `1.0.0` aren't changed. Version branches are merged into `main` separately.
+- **Local only:** Claude works only in the local repository. It never pushes to GitHub, opens pull requests or changes anything there. When you approve a feature branch, Claude merges it into the local version branch. You push branches and handle pull requests, issues and releases yourself.
 - **Commit messages:** follow the existing style, e.g. `feat: …` and `fix: …`.
 - **Reports:** at the end of each phase you'll get what was built, what was tested and how, and any decisions that came up along the way.
 - **Scope changes:** if something in the designs is unclear or conflicts with this plan, Claude asks before building it.
