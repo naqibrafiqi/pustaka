@@ -35,6 +35,7 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D20 | Whether dynamic colour is on by default | **Off.** Pustaka's own colours show out of the box, and wallpaper colours can be switched on in Settings (Android 12 and newer). |
 | D21 | Who creates the release signing key | **The PM.** Claude provides the `keytool` command. The keystore and its passwords stay outside git, in a `keystore.properties` file the build reads. Claude never sees the passwords. |
 | D22 | How 1.0.0 is published | **The PM publishes it.** Claude builds the signed APK and writes the release notes in the repo. The PM creates the GitHub Release and uploads the APK. |
+| D23 | Which branch work goes into after 1.0.0 | **One branch per version.** `1.0.0` is released and stays as it is. The Phase 8 plan and the project skills are in `1.0.1`. The Phase 8 code goes into `1.1.0`, started from `1.0.1`. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
@@ -43,7 +44,6 @@ These came up while planning Phase 8. Each has a proposal, which Claude follows 
 
 | # | Question | Proposal |
 |---|---|---|
-| D23 | Which version and branch Phase 8 goes into | Ship PR 1 (the bug and the reader layout fixes) as **1.0.1** on its own, and the rest as **1.1.0**. The PRs go into a new `1.1.0` branch, started from `1.0.0`. |
 | D24 | Whether paragraphs are always justified (#32) | A **Justify** switch in reader settings and in Default reader settings, **on** by default. |
 | D25 | What "latest book" means for the series cover (#38) | The **last volume in volume order**, not the most recently added file. Picking another volume's cover in Edit series overrides it. |
 | D26 | When the "Back to where you were" button appears and disappears (#35) | It appears after jumping from the table of contents, the progress bar or a highlight. It goes away after reading **10 pages** forward from the new spot, after tapping it, or after closing the book. |
@@ -172,7 +172,7 @@ This phase is split into three pull requests:
 - App icon, a signed release build, and version 1.0.0.
 
 ### Phase 8: Fixes and improvements after 1.0 (L)
-Work from the GitHub issues filed on 2026-11-17. This phase is split into six pull requests, smallest first. The open decisions D23 to D28 apply.
+Work from the GitHub issues filed on 2026-11-17. This phase is split into six pull requests, smallest first, all into the `1.1.0` branch (D23). The open decisions D24 to D28 apply.
 1. **Reader fixes and layout (S–M):**
    - [#31](https://github.com/naqibrafiqi/pustaka/issues/31) (bug): the Contents sheet shakes when you swipe up on a list too short to scroll. A short list should stay still.
    - [#32](https://github.com/naqibrafiqi/pustaka/issues/32): justified paragraphs (D24). Readium only justifies when the book's own styling is off, so the switch has to work with the "Original" line-spacing option.
@@ -190,7 +190,7 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pu
 
 ## Working agreement
 
-- **Branches and pull requests:** one feature branch per phase, or per sub-feature for the large phases. Each starts from `1.0.0` and gets a PR into `1.0.0` for you to review. `1.0.0` is merged into `main` separately.
+- **Branches and pull requests:** one feature branch per phase, or per sub-feature for the large phases. Each starts from the version branch it's for (`1.1.0` for Phase 8, D23) and gets a PR into it for you to review. Claude creates each version branch locally from the one before it. Released versions such as `1.0.0` aren't changed. Version branches are merged into `main` separately.
 - **Commit messages:** follow the existing style, e.g. `feat: …` and `fix: …`.
 - **Reports:** at the end of each phase you'll get what was built, what was tested and how, and any decisions that came up along the way.
 - **Scope changes:** if something in the designs is unclear or conflicts with this plan, Claude asks before building it.
@@ -208,4 +208,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pu
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | Planned. Waiting on the open decisions D23 to D28. |
+| 8. Fixes and improvements after 1.0 | Planned for 1.1.0. Waiting on the open decisions D24 to D28. |
