@@ -209,4 +209,4 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | Planned for 1.1.0. Waiting on the open decisions D24 to D28. |
+| 8. Fixes and improvements after 1.0 | In progress, for 1.1.0. Part 1 (#31 to #34) is in review on `phase-8a-reader-fixes`, following the proposal in D24. D25 to D28 are still open. |

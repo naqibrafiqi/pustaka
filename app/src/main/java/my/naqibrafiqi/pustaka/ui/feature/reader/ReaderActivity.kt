@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -170,7 +172,10 @@ class ReaderActivity : AppCompatActivity() {
             AndroidFragment<EpubNavigatorFragment>(
                 modifier = Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility.union(WindowInsets.displayCutout)),
+                    .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility.union(WindowInsets.displayCutout))
+                    // Readium leaves the same space above and below the text, but the status bar
+                    // already adds space at the top, so the bottom of the page gets more (#33).
+                    .padding(bottom = if (settings.scroll) 0.dp else PAGE_BOTTOM_SPACE),
                 onUpdate = {
                     navigator = it
                     navigatorFragment = it
@@ -384,6 +389,8 @@ class ReaderActivity : AppCompatActivity() {
         const val EXTRA_BOOK_ID = "bookId"
         const val EXTRA_FROM_START = "fromStart"
         const val EXTRA_LOCATOR = "locator"
+
+        private val PAGE_BOTTOM_SPACE = 24.dp
 
         /** The reader's group of decorations for highlights. */
         private const val HIGHLIGHTS = "highlights"

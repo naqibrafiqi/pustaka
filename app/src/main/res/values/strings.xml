@@ -331,6 +331,8 @@
     <string name="reader_setting_text_size">Text size</string>
     <string name="reader_setting_line_spacing">Line spacing</string>
     <string name="reader_setting_margins">Margins</string>
+    <string name="reader_setting_justify">Justify</string>
+    <string name="reader_setting_justify_description">Line up paragraphs with both edges of the page.</string>
     <string name="reader_setting_scroll">Scroll</string>
     <string name="reader_setting_scroll_description">Scroll through each chapter instead of turning pages.</string>
     <string name="reader_text_smaller">Smaller text</string>
