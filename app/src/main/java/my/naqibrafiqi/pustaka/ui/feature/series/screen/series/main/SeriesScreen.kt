@@ -3,6 +3,7 @@ package my.naqibrafiqi.pustaka.ui.feature.series.screen.series.main
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.settings.SeriesLayout
 import my.naqibrafiqi.pustaka.data.settings.SeriesSort
+import my.naqibrafiqi.pustaka.ui.components.columnCount
 import my.naqibrafiqi.pustaka.ui.components.BookCover
 import my.naqibrafiqi.pustaka.ui.components.BookSeriesCard
 import my.naqibrafiqi.pustaka.ui.components.ErrorState
@@ -173,62 +175,83 @@ private fun SeriesScreenContent(
                 return@PullToRefreshBox
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState,
-                // Leaves room under the last card for the "New series" button.
-                contentPadding = PaddingValues(top = 8.dp, bottom = innerPadding.calculateBottomPadding() + 88.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                when (state) {
-                    is SeriesUiState.Error -> item { ErrorState(message = stringResource(state.message), onRetry = onRetry) }
-                    is SeriesUiState.Ready -> if (state.series.isEmpty()) {
-                        item {
-                            MessageState(
-                                title = stringResource(R.string.series_empty_title),
-                                message = stringResource(R.string.series_empty_message, state.libraryFolderPath),
-                                iconRes = R.drawable.newsstand,
-                                actionLabel = stringResource(R.string.series_new),
-                                onAction = onNewSeries,
-                            )
-                        }
-                    } else if (state.layout == SeriesLayout.GRID) {
-                        items(items = state.series.chunked(GRID_COLUMNS), key = { row -> row.first().id }) { row ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                row.forEach { series ->
-                                    SeriesGridItem(
-                                        series = series,
-                                        onClick = { onOpenSeries(series.id) },
-                                        modifier = Modifier.weight(1f),
-                                    )
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                // Three across in the compact grid and one card across on a phone; more on a tablet.
+                val seriesWidth = maxWidth - 32.dp
+                val gridColumns = columnCount(seriesWidth, GRID_CELL_WIDTH, spacing = 12.dp, minColumns = 3)
+                val cardColumns = columnCount(seriesWidth, CARD_CELL_WIDTH, spacing = 16.dp)
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    // Leaves room under the last card for the "New series" button.
+                    contentPadding = PaddingValues(top = 8.dp, bottom = innerPadding.calculateBottomPadding() + 88.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    when (state) {
+                        is SeriesUiState.Error -> item { ErrorState(message = stringResource(state.message), onRetry = onRetry) }
+                        is SeriesUiState.Ready -> if (state.series.isEmpty()) {
+                            item {
+                                MessageState(
+                                    title = stringResource(R.string.series_empty_title),
+                                    message = stringResource(R.string.series_empty_message, state.libraryFolderPath),
+                                    iconRes = R.drawable.newsstand,
+                                    actionLabel = stringResource(R.string.series_new),
+                                    onAction = onNewSeries,
+                                )
+                            }
+                        } else if (state.layout == SeriesLayout.GRID) {
+                            items(items = state.series.chunked(gridColumns), key = { row -> row.first().id }) { row ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    row.forEach { series ->
+                                        SeriesGridItem(
+                                            series = series,
+                                            onClick = { onOpenSeries(series.id) },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                    repeat(gridColumns - row.size) { Spacer(modifier = Modifier.weight(1f)) }
                                 }
-                                repeat(GRID_COLUMNS - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+                            }
+                        } else {
+                            items(items = state.series.chunked(cardColumns), key = { row -> row.first().id }) { row ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                ) {
+                                    row.forEach { series ->
+                                        BookSeriesCard(
+                                            series = series,
+                                            onContinueReading = { series.continueBookId?.let(onReadBook) },
+                                            onViewSeries = { onOpenSeries(series.id) },
+                                            onOpenVolume = onOpenBook,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                    repeat(cardColumns - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+                                }
                             }
                         }
-                    } else {
-                        items(items = state.series, key = { it.id }) { series ->
-                            BookSeriesCard(
-                                series = series,
-                                onContinueReading = { series.continueBookId?.let(onReadBook) },
-                                onViewSeries = { onOpenSeries(series.id) },
-                                onOpenVolume = onOpenBook,
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                            )
-                        }
+                        SeriesUiState.Loading -> Unit
                     }
-                    SeriesUiState.Loading -> Unit
                 }
             }
         }
     }
 }
 
-private const val GRID_COLUMNS = 3
+/** The narrowest a series gets in the compact grid. A phone fits three across. */
+private val GRID_CELL_WIDTH = 110.dp
+
+/** The narrowest a series card gets. A phone fits one across, a tablet two or three. */
+private val CARD_CELL_WIDTH = 320.dp
 
 /** The sort button and its menu, with a tick next to the current order. */
 @Composable

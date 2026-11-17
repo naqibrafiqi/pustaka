@@ -55,6 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.BookCover
 import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.MessageState
@@ -124,7 +125,9 @@ fun EditDetailsScreen(
                 onAction = onNavigateBack,
             )
             is EditUiState.Ready -> LazyColumn(
-                modifier = contentModifier.imePadding(),
+                modifier = contentModifier
+                    .centredContentWidth()
+                    .imePadding(),
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,

@@ -2,16 +2,28 @@ package my.naqibrafiqi.pustaka.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.feature.highlights.api.HighlightsRoute
@@ -75,6 +87,61 @@ fun BottomBar(
                 alwaysShowLabel = true,
             )
         }
+    }
+}
+
+/**
+ * The same tabs as [BottomBar], down the side of a wide window (D29). It sits clear of the status
+ * bar, the navigation bar and a camera cutout on its side.
+ */
+@Composable
+fun SideRail(
+    currentItem: BottomBarRoute?,
+    items: List<BottomBarRoute>,
+    onClick: (Int, BottomBarRoute) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    NavigationRail(
+        modifier = modifier.fillMaxHeight(),
+        windowInsets = SideRailInsets,
+    ) {
+        Spacer(modifier = Modifier.height(8.dp))
+        items.forEachIndexed { index, item ->
+            NavigationRailItem(
+                selected = currentItem?.let { it == item } ?: (index == 0),
+                onClick = {
+                    onClick(index, item)
+                },
+                icon = {
+                    Icon(
+                        painterResource(id = item.icon),
+                        contentDescription = null
+                    )
+                },
+                label = {
+                    Text(text = stringResource(id = item.label))
+                },
+                alwaysShowLabel = true,
+            )
+        }
+    }
+}
+
+/** The insets [SideRail] keeps clear of. The screens next to it don't need to keep clear of them too. */
+val SideRailInsets: WindowInsets
+    @Composable get() = WindowInsets.systemBars
+        .union(WindowInsets.displayCutout)
+        .only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+
+@Preview(showBackground = true, widthDp = 120, heightDp = 400)
+@Composable
+private fun SideRailPreview() {
+    PustakaTheme {
+        SideRail(
+            currentItem = BottomBarNavItems[0],
+            items = BottomBarNavItems,
+            onClick = { _, _ -> }
+        )
     }
 }
 

@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.BookCover
 import my.naqibrafiqi.pustaka.ui.components.MessageState
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
@@ -87,6 +88,7 @@ fun SearchScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
+                        .centredContentWidth()
                         .imePadding(),
                     contentPadding = PaddingValues(
                         top = innerPadding.calculateTopPadding(),

@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.model.Highlight
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
+import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.ErrorState
 import my.naqibrafiqi.pustaka.ui.components.LoadingState
 import my.naqibrafiqi.pustaka.ui.components.MessageState
@@ -231,7 +232,9 @@ private fun HighlightsList(
     onExportBook: (Long) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .centredContentWidth(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
