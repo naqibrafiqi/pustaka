@@ -6,7 +6,7 @@ Pustaka is an offline EPUB reader for Android, built for books that come in seri
 
 You keep your EPUB files in a `Pustaka` folder on your phone, either loose or in one subfolder per series. Pustaka scans that folder, reads each book's details from the EPUB itself, and keeps track of your reading progress and highlights. It never renames or moves your files.
 
-> **Status:** version 1.1.0. See the [release notes](docs/releases/1.1.0.md) and the [roadmap](docs/ROADMAP.md).
+> **Status:** version 1.2.0. See the [release notes](docs/releases/1.2.0.md) and the [roadmap](docs/ROADMAP.md).
 
 ## Screenshots
 <table>

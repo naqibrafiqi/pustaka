@@ -260,6 +260,8 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
 **Done when:** every issue above is fixed on `1.2.0`, or deliberately set aside with your agreement, and the README describes and shows what's in 1.2.0.
 
 **Wrapping up 1.2.0:** on branch `release-1.2.0`, from `1.2.0`: version 1.2.0 (version code 3), the release notes in `releases/1.2.0.md`, the README's status line pointing to them, and a last check that every screenshot matches the app.
+- Version 1.2.0 (version code 3) and the [release notes](releases/1.2.0.md), with the README's status line pointing to them.
+- Screenshot check: the screenshots Phase 9 didn't retake (`library.png`, `series.png`, `book-details-dark.png` and `settings.png`) were compared with what changed in the app since 1.1.0. Only `settings.png` was out of date: Reader settings now starts its description with "Brightness". It's retaken, the same way as before. The other screens look the same as in 1.1.0.
 
 ---
 
@@ -286,4 +288,4 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
 | 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. 1.1.0 was published on 2026-11-17. |
-| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is merged. Part 3 (#50) is merged. Next: the 1.2.0 wrap-up. |
+| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is merged. Part 3 (#50) is merged. The 1.2.0 wrap-up (version, release notes, screenshot check) is in review. |
