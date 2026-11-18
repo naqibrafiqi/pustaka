@@ -1,7 +1,10 @@
 package my.naqibrafiqi.pustaka.ui
 
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.assertIsDisplayed
@@ -9,9 +12,12 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import my.naqibrafiqi.pustaka.ui.components.BottomBarNavItems
+import my.naqibrafiqi.pustaka.ui.components.SideRail
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryFilter
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryScreen
 import my.naqibrafiqi.pustaka.ui.feature.library.screen.LibraryUiState
@@ -89,6 +95,25 @@ class TabletLayoutTest {
         return compose.onAllNodes(hasText("Book ", substring = true))
             .fetchSemanticsNodes()
             .count { node -> node.boundsInRoot.top == top }
+    }
+
+    @Test
+    fun railTabsAreCentredDownTheSide() {
+        compose.setContent {
+            PustakaTheme {
+                Box(Modifier.size(width = 96.dp, height = 800.dp)) {
+                    SideRail(currentItem = BottomBarNavItems[0], items = BottomBarNavItems, onClick = { _, _ -> })
+                }
+            }
+        }
+        val rail = compose.onRoot().getUnclippedBoundsInRoot()
+        val top = compose.onNodeWithText("Library").getUnclippedBoundsInRoot().top
+        val bottom = compose.onNodeWithText("Settings").getUnclippedBoundsInRoot().bottom
+        val spaceAbove = top - rail.top
+        val spaceBelow = rail.bottom - bottom
+        assertTrue("The tabs start well below the top (#56)", spaceAbove > 200.dp)
+        // The labels sit low in their tabs, so the space below is a little smaller.
+        assertEquals(spaceAbove.value, spaceBelow.value, 40f)
     }
 
     @Test

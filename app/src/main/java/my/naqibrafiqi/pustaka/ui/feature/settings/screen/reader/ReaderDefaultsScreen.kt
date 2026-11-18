@@ -6,7 +6,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +26,7 @@ import my.naqibrafiqi.pustaka.data.settings.ReaderSettingsRepository
 import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
 import my.naqibrafiqi.pustaka.ui.components.TopBar
 import my.naqibrafiqi.pustaka.ui.feature.reader.ReaderSettingsForm
+import my.naqibrafiqi.pustaka.ui.feature.reader.ScreenBrightness
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 import javax.inject.Inject
 
@@ -56,13 +59,19 @@ fun ReaderDefaultsScreen(
     onReset: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
+    // Dragging the brightness slider shows the brightness on this screen too. The phone's own
+    // brightness comes back when the screen is left.
+    val activity = LocalActivity.current
+    DisposableEffect(activity) {
+        onDispose { activity?.let { ScreenBrightness.apply(it, null) } }
+    }
     Scaffold(
         topBar = {
             TopBar(
                 title = stringResource(R.string.settings_reader_settings),
                 onNavigateBack = onNavigateBack,
                 actionButtons = {
-                    TextButton(onClick = onReset, enabled = settings != null && settings != ReaderSettings()) {
+                    TextButton(onClick = onReset, enabled = settings != null && !settings.looksLikeDefault) {
                         Text(stringResource(R.string.common_reset))
                     }
                 },
