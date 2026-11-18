@@ -52,7 +52,9 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
 ### Open
-None right now.
+| # | Decision | Proposal |
+|---|---|---|
+| D36 | How the reader's themes are picked, now that there are five (#55) | Five names don't fit in one row of buttons on a phone ("Dark grey" was cut to "Dark"), so the theme row became **a row of round swatches**, each showing "Aa" in the theme's colours with its name underneath. Auto's swatch is half light and half dark. Built this way in part 1, in the reader's sheet and in Default reader settings. |
 
 ---
 
@@ -221,6 +223,12 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
    - [#54](https://github.com/naqibrafiqi/pustaka/issues/54): the reader keeps its own brightness, with a slider in reader settings, and keeps the screen on while reading (D31).
    - [#55](https://github.com/naqibrafiqi/pustaka/issues/55): a **Dark grey** theme in reader settings and Default reader settings (D30). Readium has no such theme, so it's Readium's Dark theme with Pustaka's own background and text colours. The reader's bars and sheets match it.
    - Screenshots: `reader.png` (see-through bars), `tablet.png` (centred rail), and a new `reader-dark-grey.png` in the empty spot in the README's second row.
+   - Built as planned, on branch `phase-9a-reader-tablet-polish`:
+     - **Rail:** the four tabs sit in the middle of the side, with equal space above and below.
+     - **Bars:** 85% opaque, in the same colour as before. Their shadow is gone, since it showed through. The bars are dark grey with the Dark grey theme.
+     - **Brightness:** the slider is the first setting. It follows the same curve as the phone's own slider, so the middle looks the same in both. While it's dragged, the screen shows the brightness under your thumb, in the reader and in Default reader settings. **Reset** puts back how the page looks and leaves the brightness where you set it.
+     - **Dark grey:** light grey text (#DCDCDC) on a dark grey page (#303030). The bars and sheets are dark grey with it, even when the app is light. The other themes keep their bars as before.
+     - **Themes are picked from swatches (D36),** because five names didn't fit in a row of buttons.
 2. **Series and bookmarks (M):**
    - [#52](https://github.com/naqibrafiqi/pustaka/issues/52): a "Continue reading" button on Series Details (D32).
    - [#51](https://github.com/naqibrafiqi/pustaka/issues/51): bookmarks in the Highlights tab, next to highlights (D33). Bookmarks are already saved in their own table, so the database doesn't change.
@@ -260,4 +268,4 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
 | 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. 1.1.0 was published on 2026-11-17. |
-| 9. Improvements after 1.1 | Planned, for 1.2.0. The plan and D30 to D35 are approved. Next: part 1 (#53 to #56). |
+| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is built and waiting for review, with D36 open. |

@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -47,6 +48,7 @@ import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import my.naqibrafiqi.pustaka.R
+import my.naqibrafiqi.pustaka.data.settings.ReaderTheme
 import my.naqibrafiqi.pustaka.ui.theme.AppearanceViewModel
 import my.naqibrafiqi.pustaka.ui.theme.PustakaTheme
 import my.naqibrafiqi.pustaka.ui.theme.isDark
@@ -57,7 +59,6 @@ import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.input.InputListener
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.navigator.preferences.ReadingProgression
-import org.readium.r2.navigator.preferences.Theme
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.util.AbsoluteUrl
 
@@ -96,12 +97,17 @@ class ReaderActivity : AppCompatActivity() {
             // Waits for the settings, so the page doesn't flash in the wrong theme.
             val chosen = appearance ?: return@setContent
             val appDark = chosen.isDark()
-            PustakaTheme(darkTheme = appDark, dynamicColor = chosen.dynamicColor) {
-                val state by viewModel.state.collectAsStateWithLifecycle()
-                when (val current = state) {
-                    ReaderUiState.Loading -> ReaderLoading()
-                    is ReaderUiState.Failed -> ReaderFailed(message = stringResource(current.message), onClose = ::finish)
-                    is ReaderUiState.Ready -> Reader(current, appDark)
+            val settings by viewModel.settings.collectAsStateWithLifecycle()
+            // With Dark grey, the bars and sheets are dark grey too, even when the app is light (#55).
+            val darkGrey = settings.theme == ReaderTheme.DARK_GREY
+            PustakaTheme(darkTheme = appDark || darkGrey, dynamicColor = chosen.dynamicColor) {
+                ReaderChromeTheme(darkGrey = darkGrey) {
+                    val state by viewModel.state.collectAsStateWithLifecycle()
+                    when (val current = state) {
+                        ReaderUiState.Loading -> ReaderLoading()
+                        is ReaderUiState.Failed -> ReaderFailed(message = stringResource(current.message), onClose = ::finish)
+                        is ReaderUiState.Ready -> Reader(current, appDark)
+                    }
                 }
             }
         }
@@ -123,7 +129,7 @@ class ReaderActivity : AppCompatActivity() {
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val finishCard by viewModel.finishCard.collectAsStateWithLifecycle()
         // The reader's "Auto" theme follows the app's theme, which may follow the phone's.
-        val theme = settings.readiumTheme(appDark)
+        val pageColors = settings.pageColors(appDark)
         val preferences = settings.toEpubPreferences(appDark)
 
         // The fragment is made by Readium's factory, which has to be in place before it's added, so
@@ -166,8 +172,9 @@ class ReaderActivity : AppCompatActivity() {
 
         SystemBars(
             visible = chromeVisible || contentsOpen || settingsOpen || openHighlight != null,
-            darkContent = theme != Theme.DARK,
+            darkContent = !pageColors.isDark,
         )
+        ReadingScreen(brightness = settings.brightness)
 
         // The finish card takes the bottom of the screen, so the menus make way for it.
         LaunchedEffect(finishCard) { if (finishCard != null) chromeVisible = false }
@@ -179,7 +186,7 @@ class ReaderActivity : AppCompatActivity() {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(Color(theme.backgroundColor))
+                .background(Color(pageColors.background))
         ) {
             AndroidFragment<EpubNavigatorFragment>(
                 modifier = Modifier
@@ -387,6 +394,23 @@ class ReaderActivity : AppCompatActivity() {
             startActivity(Intent.createChooser(send, null))
         } catch (_: ActivityNotFoundException) {
             // Nothing to share with.
+        }
+    }
+
+    /**
+     * The reader's own brightness, which starts at the phone's the first time (D31), and keeping
+     * the screen on while pages are being turned (#54).
+     */
+    @Composable
+    private fun ReadingScreen(brightness: Float?) {
+        LaunchedEffect(Unit) { viewModel.onPhoneBrightness(ScreenBrightness.phoneLevel(this@ReaderActivity)) }
+        ScreenBrightnessEffect(brightness)
+
+        val keepScreenOn by viewModel.keepScreenOn.collectAsStateWithLifecycle()
+        val view = LocalView.current
+        DisposableEffect(view, keepScreenOn) {
+            view.keepScreenOn = keepScreenOn
+            onDispose { view.keepScreenOn = false }
         }
     }
 

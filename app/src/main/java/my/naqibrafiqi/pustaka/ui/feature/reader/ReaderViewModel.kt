@@ -5,7 +5,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -215,6 +218,23 @@ class ReaderViewModel @Inject constructor(
 
     private var lastSaved: Locator? = null
 
+    /** Goes up on every page turn, and when the reader comes back from the background. */
+    private val readingActivity = MutableStateFlow(0)
+
+    /**
+     * Whether the screen should stay on: while reading, until no page has been turned for the
+     * same idle limit as reading sessions. Then the phone's own sleep timeout applies again, so a
+     * book left open doesn't keep the screen on all night (#54, D31).
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val keepScreenOn: StateFlow<Boolean> = readingActivity
+        .transformLatest {
+            emit(true)
+            delay(SessionTracker.DEFAULT_IDLE_LIMIT.toMillis())
+            emit(false)
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     init {
         viewModelScope.launch { open() }
         viewModelScope.launch {
@@ -226,6 +246,7 @@ class ReaderViewModel @Inject constructor(
     fun onLocatorChanged(locator: Locator) {
         val ready = _state.value as? ReaderUiState.Ready ?: return
         latestLocator.value = locator
+        readingActivity.value++
         val position = positionOf(locator, ready)
         _position.value = position
 
@@ -260,6 +281,7 @@ class ReaderViewModel @Inject constructor(
 
     /** The reader is showing again, after being in the background. */
     fun onReaderResumed() {
+        readingActivity.value++
         if (sessions.isActive) return
         _position.value.page?.let { sessions.onPage(it, clock.instant()) }
     }
@@ -279,9 +301,19 @@ class ReaderViewModel @Inject constructor(
         viewModelScope.launch { readerSettings.update(settings) }
     }
 
+    /** Puts back how the page looks. The brightness stays as it was set. */
     fun resetSettings() {
-        _settings.value = ReaderSettings()
+        _settings.value = _settings.value.reset()
         viewModelScope.launch { readerSettings.reset() }
+    }
+
+    /**
+     * The phone's brightness as the reader opens. The first time, the reader's own brightness
+     * starts there (D31). After that it keeps the brightness it was set to.
+     */
+    fun onPhoneBrightness(level: Float?) {
+        if (level == null || _settings.value.brightness != null) return
+        updateSettings(_settings.value.copy(brightness = level))
     }
 
     fun dismissFinishCard() {
