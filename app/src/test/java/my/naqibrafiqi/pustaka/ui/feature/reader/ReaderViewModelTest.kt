@@ -1,5 +1,6 @@
 package my.naqibrafiqi.pustaka.ui.feature.reader
 
+import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.Flow
@@ -52,12 +53,15 @@ import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.util.Url
 import org.readium.r2.shared.util.mediatype.MediaType
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.Duration
 import kotlin.random.Random
 
 /** Opens real (small) EPUB files with Readium, against a real (in-memory) database. */
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ReaderViewModelTest {
 
     @get:Rule
@@ -559,6 +563,23 @@ class ReaderViewModelTest {
 
         reopened.deleteBookmark(listed[0].id)
         assertEquals(listOf(3), reopened.bookmarks.first { it.size == 1 }.map { it.page })
+    }
+
+    @Test
+    fun aLongPressedPictureOpensFullScreenAndCloses() = runTest {
+        val picture = Bitmap.createBitmap(30, 20, Bitmap.Config.ARGB_8888)
+        val png = ByteArrayOutputStream().also { picture.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        val file = writeEpub(temp.root.resolve("Pictures.epub"), metadata = "<dc:title>Test</dc:title>", cover = png)
+        val viewModel = viewModel(addBook(file))
+        val chapter = viewModel.ready().publication.readingOrder.first().url()
+
+        IllustrationBridge(chapter, viewModel::openIllustration).open("cover.png", "A blank picture")
+
+        val shown = viewModel.illustration.filterNotNull().first()
+        assertEquals(30, shown.bitmap.width)
+        assertEquals("A blank picture", shown.description)
+        viewModel.closeIllustration()
+        assertNull(viewModel.illustration.value)
     }
 
     @Test

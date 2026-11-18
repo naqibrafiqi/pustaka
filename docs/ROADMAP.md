@@ -247,6 +247,14 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
    - Centring is done by the same script, since adding a stylesheet to a chapter turns off Readium's own default styles.
    - Text selection has to keep working as before. A long press on text next to an illustration should select the text, not open the image.
    - Screenshots: a new `illustration.png` of a zoomed-in illustration, from a public-domain book that has illustrations, in a new row in the README.
+   - Built as planned, on branch `phase-9c-illustrations`:
+     - **Opening:** a long press on any picture in the book opens it, including small ones in a line of text. Android reports a long press on a picture differently from one on text, so a long press on text, even right next to a picture, still selects the text.
+     - **The viewer:** the picture fills the screen on black. Pinch to zoom up to 6 times, drag to move around, and double-tap to zoom in where you tapped, far enough to fill the screen (at least twice), or back out. The picture can't be dragged off the screen. Back or the close button at the top goes back to the same page. Turning the phone shows the whole picture again.
+     - **Sharpest version:** when the book has the picture at more than one size, as Standard Ebooks do, the largest is opened.
+     - **White behind the picture:** many books' drawings are black lines on a see-through background, which would vanish on black, so the picture sits on white, as it does on the page.
+     - **Centring:** a picture with nothing else on its lines is centred. Pictures in a line of text, and ones the book floats beside the text, stay where the book puts them. Books that already centre their pictures, like Standard Ebooks, look the same as before.
+     - **Not opened:** drawings made in SVG itself, rather than a picture file, aren't opened, since Android can't load them as pictures. A long press on one does what it did before. Pictures wrapped in SVG, as some books do for full-page pictures, do open.
+     - **README:** `illustration.png`, the White Rabbit from Alice's Adventures in Wonderland, zoomed in, joins `bookmarks.png` in the third row.
 
 **Done when:** every issue above is fixed on `1.2.0`, or deliberately set aside with your agreement, and the README describes and shows what's in 1.2.0.
 
@@ -277,4 +285,4 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
 | 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. 1.1.0 was published on 2026-11-17. |
-| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is merged. Next: part 3 (#50). |
+| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is merged. Part 3 (#50) is built and waiting for review. |
