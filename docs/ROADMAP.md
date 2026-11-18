@@ -241,6 +241,7 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
      - **Search and export:** the search looks at both lists (bookmarks by chapter, text, book and series). Export stays for highlights only, and its menu only appears when there are highlights.
      - **Screen readers:** Material 3 hides the text of a floating button with a label from screen readers, so the new button, and the Series tab's "New series" button, which had the same problem, now name themselves on their icon.
      - **README:** `bookmarks.png` starts a third row of screenshots, which part 3's `illustration.png` can join.
+   - Approved and merged into `1.2.0`, with the remove button on bookmarks.
 3. **Illustrations (L):** [#50](https://github.com/naqibrafiqi/pustaka/issues/50). A long press on an illustration opens it full-screen with zoom (D35), and illustrations are centred on the page.
    - Readium doesn't report presses on images, so the script Pustaka already adds to each chapter (the one that justifies paragraphs and centres chapter titles) also watches for a long press on an image and tells the app which one. The app loads the image from the book itself, at full size.
    - Centring is done by the same script, since adding a stylesheet to a chapter turns off Readium's own default styles.
@@ -276,4 +277,4 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
 | 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. 1.1.0 was published on 2026-11-17. |
-| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is in review. Next: part 3 (#50). |
+| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is merged. Next: part 3 (#50). |
