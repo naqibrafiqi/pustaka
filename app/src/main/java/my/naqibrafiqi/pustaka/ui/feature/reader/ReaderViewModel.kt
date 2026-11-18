@@ -5,7 +5,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.NonCancellable
@@ -48,6 +50,9 @@ import org.json.JSONObject
 import org.readium.r2.shared.publication.Locator
 import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.publication.services.positions
+import org.readium.r2.shared.util.Url
+import org.readium.r2.shared.util.getOrElse
+import org.readium.r2.shared.util.use
 import java.io.File
 import java.time.Clock
 import javax.inject.Inject
@@ -196,6 +201,12 @@ class ReaderViewModel @Inject constructor(
     val pageBookmarked: StateFlow<Boolean> = combine(bookmarks, latestLocator, _position) { list, locator, position ->
         locator != null && list.any { isOnPage(it, locator, position.page) }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    private val _illustration = MutableStateFlow<Illustration?>(null)
+
+    /** The illustration shown full screen after a long press on it (#50, D35). */
+    val illustration: StateFlow<Illustration?> = _illustration.asStateFlow()
+    private var illustrationLoad: Job? = null
 
     /** Adding and removing one at a time, so a quick double tap doesn't add the page twice. */
     private val bookmarkLock = Mutex()
@@ -402,6 +413,29 @@ class ReaderViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(NonCancellable) { bookmarkLock.withLock { bookmarkRepository.deleteBookmarks(listOf(id)) } }
         }
+    }
+
+    /**
+     * Shows the picture at [href] in the book full screen. Nothing opens when it can't be read,
+     * such as an SVG drawing, so the page just stays as it is.
+     *
+     * @param description the book's description of the picture.
+     */
+    fun openIllustration(href: Url, description: String?) {
+        val book = publication ?: return
+        illustrationLoad?.cancel()
+        illustrationLoad = viewModelScope.launch {
+            val bitmap = withContext(Dispatchers.Default) {
+                val bytes = book.get(href)?.use { resource -> resource.read().getOrElse { null } }
+                bytes?.let(::decodeIllustration)
+            } ?: return@launch
+            _illustration.value = Illustration(bitmap, description)
+        }
+    }
+
+    fun closeIllustration() {
+        illustrationLoad?.cancel()
+        _illustration.value = null
     }
 
     /** Saves the position now, for when the reader goes into the background or closes. */

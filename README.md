@@ -24,6 +24,7 @@ You keep your EPUB files in a `Pustaka` folder on your phone, either loose or in
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/bookmarks.png" width="200" alt="Highlights tab, on its Bookmarks tab: bookmarks grouped by series and book, each with its chapter, the start of the page and its page number"><br><sub>Bookmarks</sub></td>
+    <td align="center"><img src="docs/screenshots/illustration.png" width="200" alt="An illustration of the White Rabbit opened full screen from Alice's Adventures in Wonderland, zoomed in, with a close button"><br><sub>Illustration, zoomed in</sub></td>
   </tr>
 </table>
 
@@ -38,6 +39,7 @@ The books shown are public-domain ebooks from [Standard Ebooks](https://standard
 - Reader themes Light, Sepia, Dark and Dark grey, or Auto to follow the app's theme
 - The reader's own brightness, which auto-brightness doesn't change while you read, and a screen that stays on while you're turning pages
 - A "Back to page" button after jumping somewhere in a book
+- Illustrations centred on the page; a long press opens one full screen, where you can pinch or double-tap to zoom in
 - "Continue reading" for each series, on its card and on its details page
 - Reading progress, reading statistics, and highlights you can export as Markdown
 - Every highlight and bookmark in one tab, grouped by series and book, with search

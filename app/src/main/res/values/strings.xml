@@ -309,6 +309,7 @@
 
     <!-- Reader -->
     <string name="reader_close_book">Close the book</string>
+    <string name="reader_illustration">Illustration</string>
     <string name="reader_contents">Contents</string>
     <string name="reader_no_contents">This book doesn\'t have a table of contents.</string>
     <string name="reader_go_to_chapter">Go to chapter</string>

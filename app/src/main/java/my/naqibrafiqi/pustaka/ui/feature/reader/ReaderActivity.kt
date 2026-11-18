@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -145,6 +146,10 @@ class ReaderActivity : AppCompatActivity() {
                     // out again every time the menus are shown.
                     shouldApplyInsetsPadding = false
                     selectionActionModeCallback = selectionMenu
+                    // A long press on a picture opens it full screen (#50, D35).
+                    registerJavascriptInterface(IllustrationBridge.NAME) { chapter ->
+                        IllustrationBridge(chapter.url(), viewModel::openIllustration)
+                    }
                 },
             )
         }
@@ -163,6 +168,7 @@ class ReaderActivity : AppCompatActivity() {
         val returnPoint by viewModel.returnPoint.collectAsStateWithLifecycle()
         val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
         val pageBookmarked by viewModel.pageBookmarked.collectAsStateWithLifecycle()
+        val illustration by viewModel.illustration.collectAsStateWithLifecycle()
 
         // A jump from the contents, a bookmark or the progress bar can be gone back from (#35).
         fun jumpTo(target: Locator) {
@@ -180,6 +186,15 @@ class ReaderActivity : AppCompatActivity() {
         LaunchedEffect(finishCard) { if (finishCard != null) chromeVisible = false }
         LaunchedEffect(navigator, preferences) { navigator?.submitPreferences(preferences) }
         LaunchedEffect(navigator) { navigator?.currentLocator?.collect(viewModel::onLocatorChanged) }
+        // The menus close behind an illustration, and screen readers only see the illustration.
+        val illustrationOpen = illustration != null
+        LaunchedEffect(illustrationOpen) { if (illustrationOpen) chromeVisible = false }
+        DisposableEffect(navigator, illustrationOpen) {
+            val page = navigator?.view
+            page?.importantForAccessibility =
+                if (illustrationOpen) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+            onDispose { page?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO }
+        }
         PageTaps(navigator, scroll = settings.scroll, onMenuTap = { chromeVisible = !chromeVisible })
         Highlights(navigator, highlights = highlights, openId = openHighlightId, scroll = settings.scroll)
 
@@ -232,6 +247,8 @@ class ReaderActivity : AppCompatActivity() {
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
+
+            illustration?.let { IllustrationViewer(it, onClose = viewModel::closeIllustration) }
         }
 
         openHighlight?.let { highlight ->
