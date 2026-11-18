@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -22,6 +23,9 @@ enum class ReaderTheme(@param:StringRes val label: Int) {
     LIGHT(R.string.reader_theme_light),
     SEPIA(R.string.reader_theme_sepia),
     DARK(R.string.reader_theme_dark),
+
+    /** A softer dark: light grey text on a dark grey page (#55, D30). */
+    DARK_GREY(R.string.reader_theme_dark_grey),
 }
 
 enum class ReaderFont(@param:StringRes val label: Int) {
@@ -53,6 +57,9 @@ enum class ReaderMargins(@param:StringRes val label: Int, val pageMargins: Doubl
  * @property scroll scrolls through each chapter instead of turning pages (decision D9).
  * @property justify lines up paragraphs with both edges of the page, unless the book aligns them
  *   itself, such as centred lines (decision D24).
+ * @property brightness the screen's brightness while reading, as a position on the brightness
+ *   slider from 0 to 1 (see [my.naqibrafiqi.pustaka.ui.feature.reader.ScreenBrightness]). Null until the reader is first opened, which
+ *   starts it at the phone's brightness (#54, D31).
  */
 data class ReaderSettings(
     val theme: ReaderTheme = ReaderTheme.AUTO,
@@ -62,7 +69,17 @@ data class ReaderSettings(
     val margins: ReaderMargins = ReaderMargins.NORMAL,
     val scroll: Boolean = false,
     val justify: Boolean = true,
+    val brightness: Float? = null,
 ) {
+    /**
+     * Whether everything but the brightness is as it starts. Reset puts back how the page looks,
+     * and leaves the brightness where it was set.
+     */
+    val looksLikeDefault: Boolean get() = copy(brightness = null) == ReaderSettings()
+
+    /** These settings put back to how they start, keeping the brightness. */
+    fun reset(): ReaderSettings = ReaderSettings(brightness = brightness)
+
     /** 100 for 100%. */
     val textSizePercent: Int get() = (textSize * 100).roundToInt()
 
@@ -107,6 +124,7 @@ class DataStoreReaderSettingsRepository @Inject constructor(
                 margins = preferences[Keys.MARGINS].toEnum(defaults.margins),
                 scroll = preferences[Keys.SCROLL] ?: defaults.scroll,
                 justify = preferences[Keys.JUSTIFY] ?: defaults.justify,
+                brightness = preferences[Keys.BRIGHTNESS]?.coerceIn(0f, 1f),
             )
         }
         .distinctUntilChanged()
@@ -120,11 +138,14 @@ class DataStoreReaderSettingsRepository @Inject constructor(
             it[Keys.MARGINS] = settings.margins.name
             it[Keys.SCROLL] = settings.scroll
             it[Keys.JUSTIFY] = settings.justify
+            val brightness = settings.brightness
+            if (brightness != null) it[Keys.BRIGHTNESS] = brightness else it.remove(Keys.BRIGHTNESS)
         }
     }
 
+    /** Keeps the brightness, like [ReaderSettings.reset]. */
     override suspend fun reset() {
-        dataStore.edit { preferences -> Keys.ALL.forEach { preferences.remove(it) } }
+        dataStore.edit { preferences -> Keys.LOOK.forEach { preferences.remove(it) } }
     }
 
     /** A value saved by another version of the app that this one doesn't know falls back to the default. */
@@ -139,6 +160,9 @@ class DataStoreReaderSettingsRepository @Inject constructor(
         val MARGINS = stringPreferencesKey("reader_margins")
         val SCROLL = booleanPreferencesKey("reader_scroll")
         val JUSTIFY = booleanPreferencesKey("reader_justify")
-        val ALL = listOf(THEME, FONT, TEXT_SIZE, LINE_SPACING, MARGINS, SCROLL, JUSTIFY)
+        val BRIGHTNESS = floatPreferencesKey("reader_brightness")
+
+        /** Everything [reset] puts back. */
+        val LOOK = listOf(THEME, FONT, TEXT_SIZE, LINE_SPACING, MARGINS, SCROLL, JUSTIFY)
     }
 }

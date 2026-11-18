@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
@@ -23,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.ui.feature.highlights.api.HighlightsRoute
@@ -105,7 +103,8 @@ fun SideRail(
         modifier = modifier.fillMaxHeight(),
         windowInsets = SideRailInsets,
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        // Weighted space above and below centres the tabs down the side (#56).
+        Spacer(modifier = Modifier.weight(1f))
         items.forEachIndexed { index, item ->
             NavigationRailItem(
                 selected = currentItem?.let { it == item } ?: (index == 0),
@@ -124,6 +123,7 @@ fun SideRail(
                 alwaysShowLabel = true,
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 

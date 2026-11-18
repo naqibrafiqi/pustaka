@@ -17,14 +17,14 @@ You keep your EPUB files in a `Pustaka` folder on your phone, either loose or in
     <td align="center"><img src="docs/screenshots/book-details-dark.png" width="200" alt="Book Details in the dark theme: cover, title, author, synopsis and reading progress"><br><sub>Book details, dark theme</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/reader.png" width="200" alt="The reader with its bars shown: a bookmarked page with a yellow highlight and the page slider"><br><sub>Reader</sub></td>
+    <td align="center"><img src="docs/screenshots/reader.png" width="200" alt="The reader with its see-through bars shown: a bookmarked page with a yellow highlight and the page slider"><br><sub>Reader</sub></td>
     <td align="center"><img src="docs/screenshots/highlights.png" width="200" alt="Highlights tab: highlights grouped by series and book, with a note"><br><sub>Highlights</sub></td>
     <td align="center"><img src="docs/screenshots/settings.png" width="200" alt="Settings: library folder, rescan, hidden items, theme, reader settings and storage"><br><sub>Settings</sub></td>
-    <td></td>
+    <td align="center"><img src="docs/screenshots/reader-dark-grey.png" width="200" alt="The reader in the Dark grey theme, with Reading settings open: a brightness slider and a swatch for each theme"><br><sub>Reader, Dark grey</sub></td>
   </tr>
 </table>
 
-<p align="center"><img src="docs/screenshots/tablet.png" width="820" alt="The Library on a tablet held sideways, with the tabs in a rail on the left"><br><sub>On a tablet</sub></p>
+<p align="center"><img src="docs/screenshots/tablet.png" width="820" alt="The Library on a tablet held sideways, with the tabs in a rail centred down the left side"><br><sub>On a tablet</sub></p>
 
 The books shown are public-domain ebooks from [Standard Ebooks](https://standardebooks.org).
 
@@ -32,6 +32,8 @@ The books shown are public-domain ebooks from [Standard Ebooks](https://standard
 - A library built from a folder you manage yourself: put EPUBs directly in `Pustaka/` for standalone books, or in `Pustaka/<Series>/` for a series
 - Title, authors, cover, description and volume number read automatically from each EPUB, and editable in the app
 - A reader with page turning or scrolling, a table of contents, bookmarks and reader settings
+- Reader themes Light, Sepia, Dark and Dark grey, or Auto to follow the app's theme
+- The reader's own brightness, which auto-brightness doesn't change while you read, and a screen that stays on while you're turning pages
 - A "Back to page" button after jumping somewhere in a book
 - Reading progress, reading statistics, and highlights you can export as Markdown
 - Search, sorting, and a light or dark theme

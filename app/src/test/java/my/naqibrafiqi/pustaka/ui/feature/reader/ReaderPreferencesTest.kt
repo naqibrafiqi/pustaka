@@ -31,6 +31,27 @@ class ReaderPreferencesTest {
     }
 
     @Test
+    fun darkGreyIsReadiumsDarkThemeWithPustakasOwnColours() {
+        val settings = ReaderSettings(theme = ReaderTheme.DARK_GREY)
+        val preferences = settings.toEpubPreferences(systemDark = false)
+
+        assertEquals(Theme.DARK, preferences.theme)
+        assertEquals(DARK_GREY_BACKGROUND, preferences.backgroundColor?.int)
+        assertEquals(DARK_GREY_TEXT, preferences.textColor?.int)
+        assertEquals(PageColors(DARK_GREY_BACKGROUND, DARK_GREY_TEXT, isDark = true), settings.pageColors(systemDark = false))
+    }
+
+    @Test
+    fun theOtherThemesUseReadiumsOwnColours() {
+        val dark = ReaderSettings(theme = ReaderTheme.DARK)
+        assertNull(dark.toEpubPreferences(systemDark = false).backgroundColor)
+        assertNull(dark.toEpubPreferences(systemDark = false).textColor)
+        assertEquals(PageColors(Theme.DARK.backgroundColor, Theme.DARK.contentColor, isDark = true), dark.pageColors(systemDark = false))
+        assertFalse(ReaderSettings(theme = ReaderTheme.SEPIA).pageColors(systemDark = true).isDark)
+        assertTrue(ReaderSettings(theme = ReaderTheme.AUTO).pageColors(systemDark = true).isDark)
+    }
+
+    @Test
     fun theDefaultsKeepThePublishersLook() {
         val preferences = ReaderSettings().toEpubPreferences(systemDark = false)
 

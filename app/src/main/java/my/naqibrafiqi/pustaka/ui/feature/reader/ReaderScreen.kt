@@ -173,7 +173,7 @@ private fun ReaderTopBar(
     onOpenContents: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
-    Surface(tonalElevation = 3.dp, shadowElevation = 2.dp) {
+    ReaderBarSurface {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -230,7 +230,7 @@ private fun ReaderBottomBar(position: ReaderPosition, onGoToPage: (Int) -> Unit)
     var dragPage by remember { mutableStateOf<Int?>(null) }
     val shownPage = dragPage ?: position.page
 
-    Surface(tonalElevation = 3.dp, shadowElevation = 2.dp) {
+    ReaderBarSurface {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -274,6 +274,21 @@ private fun ReaderBottomBar(position: ReaderPosition, onGoToPage: (Int) -> Unit)
         }
     }
 }
+
+/**
+ * The background of the top and bottom bars. It's see-through, so the page shows a little through
+ * it, but not so much that the bar's text gets hard to read over the page's (#53, D34).
+ */
+@Composable
+private fun ReaderBarSurface(content: @Composable () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = BAR_OPACITY),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        content = content,
+    )
+}
+
+private const val BAR_OPACITY = 0.85f
 
 /** The two tabs of the Contents sheet (D27). */
 enum class ContentsTab { CHAPTERS, BOOKMARKS }

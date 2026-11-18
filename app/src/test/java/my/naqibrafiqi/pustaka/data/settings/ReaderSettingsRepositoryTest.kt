@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -38,6 +40,22 @@ class ReaderSettingsRepositoryTest {
 
         repository.reset()
         assertEquals(ReaderSettings(), repository.settings.first())
+    }
+
+    @Test
+    fun savesTheBrightnessAndKeepsItOnReset() = runTest {
+        val dataStore = PreferenceDataStoreFactory.create(scope = backgroundScope) {
+            File(tempFolder.root, "settings.preferences_pb")
+        }
+        val repository = DataStoreReaderSettingsRepository(dataStore)
+        assertNull(repository.settings.first().brightness)
+
+        repository.update(ReaderSettings(theme = ReaderTheme.DARK_GREY, brightness = 0.35f))
+        assertEquals(ReaderSettings(theme = ReaderTheme.DARK_GREY, brightness = 0.35f), repository.settings.first())
+
+        repository.reset()
+        assertEquals(ReaderSettings(brightness = 0.35f), repository.settings.first())
+        assertTrue(repository.settings.first().looksLikeDefault)
     }
 
     @Test

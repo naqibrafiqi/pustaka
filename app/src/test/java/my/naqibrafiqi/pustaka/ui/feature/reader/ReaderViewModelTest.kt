@@ -323,6 +323,47 @@ class ReaderViewModelTest {
     }
 
     @Test
+    fun brightnessStartsAtThePhonesThenKeepsItsOwn() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        viewModel.ready()
+        assertNull(viewModel.settings.value.brightness)
+
+        viewModel.onPhoneBrightness(0.4f)
+        assertEquals(0.4f, readerSettings.current.value.brightness)
+
+        // Opening the reader again doesn't follow the phone any more.
+        viewModel.onPhoneBrightness(0.9f)
+        assertEquals(0.4f, viewModel.settings.value.brightness)
+
+        // Reset puts back how the page looks and keeps the brightness.
+        viewModel.updateSettings(viewModel.settings.value.copy(theme = ReaderTheme.DARK_GREY))
+        viewModel.resetSettings()
+        assertEquals(ReaderSettings(brightness = 0.4f), viewModel.settings.value)
+        assertEquals(ReaderSettings(brightness = 0.4f), readerSettings.current.value)
+    }
+
+    @Test
+    fun theScreenStaysOnUntilNoPageIsTurnedForFiveMinutes() = runTest {
+        val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
+        val viewModel = viewModel(bookId)
+        val ready = viewModel.ready()
+
+        viewModel.onLocatorChanged(ready.positions[0])
+        assertTrue(viewModel.keepScreenOn.value)
+        testScheduler.advanceTimeBy(Duration.ofMinutes(4).toMillis())
+        viewModel.onLocatorChanged(ready.positions[1])
+        testScheduler.advanceTimeBy(Duration.ofMinutes(4).toMillis())
+        assertTrue("A page was turned 4 minutes ago", viewModel.keepScreenOn.value)
+
+        testScheduler.advanceTimeBy(Duration.ofMinutes(2).toMillis())
+        assertFalse(viewModel.keepScreenOn.value)
+
+        viewModel.onLocatorChanged(ready.positions[2])
+        assertTrue(viewModel.keepScreenOn.value)
+    }
+
+    @Test
     fun selectedTextIsHighlightedInTheColourUsedLast() = runTest {
         val bookId = addBook(epub("Brunhild, Vol. 01.epub"))
         val other = books.addBook(book("Other.epub"))
@@ -574,6 +615,6 @@ private class FakeReaderSettings : ReaderSettingsRepository {
         current.value = settings
     }
     override suspend fun reset() {
-        current.value = ReaderSettings()
+        current.value = current.value.reset()
     }
 }
