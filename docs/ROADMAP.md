@@ -288,4 +288,4 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
 | 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. 1.1.0 was published on 2026-11-17. |
-| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is merged. Part 3 (#50) is merged. The 1.2.0 wrap-up (version, release notes, screenshot check) is in review. |
+| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Part 2 (#51, #52) is merged. Part 3 (#50) is merged. The 1.2.0 wrap-up (version, release notes, screenshot check) is merged. Next: you sign and publish 1.2.0, following [RELEASING.md](RELEASING.md). |
