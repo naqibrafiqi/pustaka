@@ -93,6 +93,11 @@ sealed interface SeriesDetailsUiState {
         val indexedCount: Int,
         val volumes: List<BookItem>,
         val isGrid: Boolean,
+        /**
+         * The volume "Continue reading" opens, the same one as on the series card (#52, D32), or
+         * null when every volume is finished or none can be read.
+         */
+        val continueBookId: Long? = null,
     ) : SeriesDetailsUiState
 }
 
@@ -212,6 +217,7 @@ class SeriesDetailsViewModel @AssistedInject constructor(
             indexedCount = onDisk.size,
             volumes = volumes.map { it.toItem(progress[it.id], seriesProgress.labelOf(it)) },
             isGrid = grid,
+            continueBookId = seriesProgress.current?.id,
         )
     }
 

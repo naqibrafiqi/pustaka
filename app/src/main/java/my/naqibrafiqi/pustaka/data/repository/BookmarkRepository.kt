@@ -9,11 +9,17 @@ import my.naqibrafiqi.pustaka.data.model.Bookmark
 import java.time.Clock
 import javax.inject.Inject
 
-/** Bookmarked pages, added with the reader's bookmark button and listed in its Contents sheet (#37, D27). */
+/**
+ * Bookmarked pages, added with the reader's bookmark button and listed in its Contents sheet (#37,
+ * D27) and in the Highlights tab (#51, D33).
+ */
 interface BookmarkRepository {
 
     /** In book order. */
     fun observeBookmarks(bookId: Long): Flow<List<Bookmark>>
+
+    /** Every bookmark in the library, each book's in book order. */
+    fun observeAllBookmarks(): Flow<List<Bookmark>>
 
     /**
      * @param locator where the page starts, as a serialized Readium `Locator`.
@@ -34,6 +40,9 @@ class DefaultBookmarkRepository @Inject constructor(
 
     override fun observeBookmarks(bookId: Long): Flow<List<Bookmark>> =
         dao.observeForBook(bookId).map { bookmarks -> bookmarks.map { it.toModel() } }
+
+    override fun observeAllBookmarks(): Flow<List<Bookmark>> =
+        dao.observeAll().map { bookmarks -> bookmarks.map { it.toModel() } }
 
     override suspend fun addBookmark(bookId: Long, locator: String, progression: Double, text: String?): Long =
         dao.insert(

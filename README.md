@@ -13,14 +13,18 @@ You keep your EPUB files in a `Pustaka` folder on your phone, either loose or in
   <tr>
     <td align="center"><img src="docs/screenshots/library.png" width="200" alt="Library tab: the book being read, with a Resume button, above the recently added books"><br><sub>Library</sub></td>
     <td align="center"><img src="docs/screenshots/series.png" width="200" alt="Series tab: a card per series with its cover, author, volume count and progress"><br><sub>Series</sub></td>
-    <td align="center"><img src="docs/screenshots/series-details.png" width="200" alt="Series Details: a fan of covers, the synopsis, series progress and the volumes in order"><br><sub>Series details</sub></td>
+    <td align="center"><img src="docs/screenshots/series-details.png" width="200" alt="Series Details: a fan of covers, the synopsis, series progress, the volumes in order and a Continue reading button"><br><sub>Series details</sub></td>
     <td align="center"><img src="docs/screenshots/book-details-dark.png" width="200" alt="Book Details in the dark theme: cover, title, author, synopsis and reading progress"><br><sub>Book details, dark theme</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/reader.png" width="200" alt="The reader with its see-through bars shown: a bookmarked page with a yellow highlight and the page slider"><br><sub>Reader</sub></td>
-    <td align="center"><img src="docs/screenshots/highlights.png" width="200" alt="Highlights tab: highlights grouped by series and book, with a note"><br><sub>Highlights</sub></td>
+    <td align="center"><img src="docs/screenshots/highlights.png" width="200" alt="Highlights tab, on its Highlights tab: highlights grouped by series and book, with a note"><br><sub>Highlights</sub></td>
     <td align="center"><img src="docs/screenshots/settings.png" width="200" alt="Settings: library folder, rescan, hidden items, theme, reader settings and storage"><br><sub>Settings</sub></td>
     <td align="center"><img src="docs/screenshots/reader-dark-grey.png" width="200" alt="The reader in the Dark grey theme, with Reading settings open: a brightness slider and a swatch for each theme"><br><sub>Reader, Dark grey</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/bookmarks.png" width="200" alt="Highlights tab, on its Bookmarks tab: bookmarks grouped by series and book, each with its chapter, the start of the page and its page number"><br><sub>Bookmarks</sub></td>
+    <td align="center"><img src="docs/screenshots/illustration.png" width="200" alt="An illustration of the White Rabbit opened full screen from Alice's Adventures in Wonderland, zoomed in, with a close button"><br><sub>Illustration, zoomed in</sub></td>
   </tr>
 </table>
 
@@ -35,7 +39,10 @@ The books shown are public-domain ebooks from [Standard Ebooks](https://standard
 - Reader themes Light, Sepia, Dark and Dark grey, or Auto to follow the app's theme
 - The reader's own brightness, which auto-brightness doesn't change while you read, and a screen that stays on while you're turning pages
 - A "Back to page" button after jumping somewhere in a book
+- Illustrations centred on the page; a long press opens one full screen, where you can pinch or double-tap to zoom in
+- "Continue reading" for each series, on its card and on its details page
 - Reading progress, reading statistics, and highlights you can export as Markdown
+- Every highlight and bookmark in one tab, grouped by series and book, with search
 - Search, sorting, and a light or dark theme
 - Layouts for phones and tablets
 - Works offline, with no account

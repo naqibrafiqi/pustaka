@@ -34,6 +34,15 @@ class PageStylesTest {
     }
 
     @Test
+    fun theScriptCentresIllustrationsAndReportsLongPressesOnThem() {
+        val injected = String(PageStyles.inject("<head></head>".toByteArray()))
+
+        assertTrue(injected.contains("[data-pustaka-illustration] { display: block; margin-left: auto !important; margin-right: auto !important; }"))
+        assertTrue(injected.contains("addEventListener('contextmenu'"))
+        assertTrue(injected.contains("window.${PageStyles.IMAGES_INTERFACE}.open(picture.src, picture.alt || '')"))
+    }
+
+    @Test
     fun textOutsideAsciiIsKeptAsItIs() {
         val html = "<head><title>Café — 第一章</title></head><body>…</body>"
 

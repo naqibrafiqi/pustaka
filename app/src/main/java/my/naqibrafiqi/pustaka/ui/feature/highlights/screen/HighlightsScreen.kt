@@ -18,15 +18,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -35,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +64,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import my.naqibrafiqi.pustaka.R
+import kotlinx.coroutines.launch
+import my.naqibrafiqi.pustaka.data.model.Bookmark
 import my.naqibrafiqi.pustaka.data.model.Highlight
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.ui.components.centredContentWidth
@@ -73,9 +82,13 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/** The Highlights tab's two lists, in the order of their tabs (D33). */
+enum class HighlightsPage { HIGHLIGHTS, BOOKMARKS }
+
 /**
- * The Highlights tab: every highlight in the library, grouped by series and book. Tapping one opens
- * the book at that spot.
+ * The Highlights tab: every highlight and bookmark in the library, grouped by series and book, on
+ * two tabs you can swipe between (#51, D33). Tapping one opens the book at that spot. The search
+ * covers both lists.
  */
 @Composable
 fun HighlightsScreen(
@@ -87,10 +100,14 @@ fun HighlightsScreen(
     onEdit: (Long) -> Unit,
     onExportBook: (Long) -> Unit,
     onExportAll: () -> Unit,
+    onOpenBookmark: (Bookmark) -> Unit,
+    onDeleteBookmark: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    initialPage: HighlightsPage = HighlightsPage.HIGHLIGHTS,
 ) {
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     val ready = state as? HighlightsUiState.Ready
+    val pagerState = rememberPagerState(initialPage = initialPage.ordinal) { HighlightsPage.entries.size }
 
     fun closeSearch() {
         searchOpen = false
@@ -106,14 +123,15 @@ fun HighlightsScreen(
                 SearchBar(query = ready?.query.orEmpty(), onQueryChange = onSearch, onClose = ::closeSearch)
             } else {
                 HighlightsTopBar(
-                    count = ready?.totalCount ?: 0,
+                    highlightCount = ready?.totalCount ?: 0,
+                    bookmarkCount = ready?.bookmarkCount ?: 0,
                     onOpenSearch = { searchOpen = true },
                     onExportAll = onExportAll,
                 )
             }
         },
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
@@ -121,36 +139,119 @@ fun HighlightsScreen(
             when (state) {
                 HighlightsUiState.Loading -> LoadingState()
                 is HighlightsUiState.Error -> ErrorState(message = stringResource(state.message), onRetry = onRetry)
-                is HighlightsUiState.Ready -> when {
-                    state.totalCount == 0 -> MessageState(
-                        title = stringResource(R.string.highlights_empty_title),
-                        message = stringResource(R.string.highlights_empty_message),
-                        iconRes = R.drawable.bookmark_stacks,
-                    )
-                    state.groups.isEmpty() -> MessageState(
-                        title = stringResource(R.string.highlights_no_matches_title),
-                        message = stringResource(R.string.highlights_no_matches_message, state.query.trim()),
-                        iconRes = R.drawable.search,
-                    )
-                    else -> HighlightsList(
-                        groups = state.groups,
-                        onOpen = onOpen,
-                        onEdit = onEdit,
-                        onExportBook = onExportBook,
-                    )
+                is HighlightsUiState.Ready -> {
+                    PageTabs(pagerState = pagerState, highlightCount = state.totalCount, bookmarkCount = state.bookmarkCount)
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.Top,
+                        key = { HighlightsPage.entries[it] },
+                    ) { page ->
+                        when (HighlightsPage.entries[page]) {
+                            HighlightsPage.HIGHLIGHTS -> HighlightsPageContent(
+                                state = state,
+                                onOpen = onOpen,
+                                onEdit = onEdit,
+                                onExportBook = onExportBook,
+                            )
+                            HighlightsPage.BOOKMARKS -> BookmarksPageContent(
+                                state = state,
+                                onOpen = onOpenBookmark,
+                                onDelete = onDeleteBookmark,
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+/** "Highlights" and "Bookmarks", each with its count once there is one, like the reader's Contents sheet. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HighlightsTopBar(count: Int, onOpenSearch: () -> Unit, onExportAll: () -> Unit) {
+private fun PageTabs(pagerState: PagerState, highlightCount: Int, bookmarkCount: Int) {
+    val scope = rememberCoroutineScope()
+    PrimaryTabRow(
+        selectedTabIndex = pagerState.currentPage,
+        modifier = Modifier.centredContentWidth(),
+    ) {
+        HighlightsPage.entries.forEach { page ->
+            val count = if (page == HighlightsPage.HIGHLIGHTS) highlightCount else bookmarkCount
+            Tab(
+                selected = pagerState.currentPage == page.ordinal,
+                onClick = { scope.launch { pagerState.animateScrollToPage(page.ordinal) } },
+                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = {
+                    Text(
+                        when {
+                            page == HighlightsPage.HIGHLIGHTS && count > 0 -> stringResource(R.string.highlights_tab_count, count)
+                            page == HighlightsPage.HIGHLIGHTS -> stringResource(R.string.highlights_tab)
+                            count > 0 -> stringResource(R.string.reader_bookmarks_count, count)
+                            else -> stringResource(R.string.reader_bookmarks)
+                        }
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun HighlightsPageContent(
+    state: HighlightsUiState.Ready,
+    onOpen: (Highlight) -> Unit,
+    onEdit: (Long) -> Unit,
+    onExportBook: (Long) -> Unit,
+) {
+    when {
+        state.totalCount == 0 -> MessageState(
+            title = stringResource(R.string.highlights_empty_title),
+            message = stringResource(R.string.highlights_empty_message),
+            iconRes = R.drawable.bookmark_stacks,
+        )
+        state.groups.isEmpty() -> MessageState(
+            title = stringResource(R.string.highlights_no_matches_title),
+            message = stringResource(R.string.highlights_no_matches_message, state.query.trim()),
+            iconRes = R.drawable.search,
+        )
+        else -> HighlightsList(
+            groups = state.groups,
+            onOpen = onOpen,
+            onEdit = onEdit,
+            onExportBook = onExportBook,
+        )
+    }
+}
+
+@Composable
+private fun BookmarksPageContent(
+    state: HighlightsUiState.Ready,
+    onOpen: (Bookmark) -> Unit,
+    onDelete: (Long) -> Unit,
+) {
+    when {
+        state.bookmarkCount == 0 -> MessageState(
+            title = stringResource(R.string.bookmarks_empty_title),
+            message = stringResource(R.string.bookmarks_empty_message),
+            iconRes = R.drawable.bookmarks,
+        )
+        state.bookmarks.isEmpty() -> MessageState(
+            title = stringResource(R.string.bookmarks_no_matches_title),
+            message = stringResource(R.string.highlights_no_matches_message, state.query.trim()),
+            iconRes = R.drawable.search,
+        )
+        else -> BookmarksList(groups = state.bookmarks, onOpen = onOpen, onDelete = onDelete)
+    }
+}
+
+/** Search finds highlights and bookmarks; export is for highlights only (D33). */
+@Composable
+private fun HighlightsTopBar(highlightCount: Int, bookmarkCount: Int, onOpenSearch: () -> Unit, onExportAll: () -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
     TopBar(
         title = stringResource(R.string.highlights_title),
-        subtitle = if (count == 0) null else pluralStringResource(R.plurals.highlights_count, count, count),
-        actionButtons = if (count == 0) {
+        actionButtons = if (highlightCount == 0 && bookmarkCount == 0) {
             null
         } else {
             {
@@ -159,19 +260,21 @@ private fun HighlightsTopBar(count: Int, onOpenSearch: () -> Unit, onExportAll: 
                     iconResId = R.drawable.search,
                     contentDescription = stringResource(R.string.highlights_search),
                 )
-                DropdownMenuButton(
-                    expanded = menuOpen,
-                    openMenu = { menuOpen = true },
-                    closeMenu = { menuOpen = false },
-                ) {
-                    MenuItem(
-                        onClick = {
-                            menuOpen = false
-                            onExportAll()
-                        },
-                        text = stringResource(R.string.highlights_export_all),
-                        leadingIconResId = R.drawable.share,
-                    )
+                if (highlightCount > 0) {
+                    DropdownMenuButton(
+                        expanded = menuOpen,
+                        openMenu = { menuOpen = true },
+                        closeMenu = { menuOpen = false },
+                    ) {
+                        MenuItem(
+                            onClick = {
+                                menuOpen = false
+                                onExportAll()
+                            },
+                            text = stringResource(R.string.highlights_export_all),
+                            leadingIconResId = R.drawable.share,
+                        )
+                    }
                 }
             }
         },
@@ -239,22 +342,129 @@ private fun HighlightsList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         groups.forEach { group ->
-            item(key = "series:${group.seriesId}") {
-                Text(
-                    text = group.name ?: stringResource(R.string.highlights_standalone),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .semantics { heading() },
-                )
-            }
+            item(key = "series:${group.seriesId}") { SeriesHeading(group.name) }
             group.books.forEach { book ->
                 item(key = "book:${book.bookId}") {
                     BookHeader(book = book, onExport = { onExportBook(book.bookId) })
                 }
                 items(book.highlights, key = { "highlight:${it.id}" }) { item ->
                     HighlightCard(item = item, onOpen = { onOpen(item.highlight) }, onEdit = { onEdit(item.id) })
+                }
+            }
+        }
+    }
+}
+
+/** A series' name, or "Standalone books", above its books. */
+@Composable
+private fun SeriesHeading(name: String?) {
+    Text(
+        text = name ?: stringResource(R.string.highlights_standalone),
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .padding(top = 16.dp)
+            .semantics { heading() },
+    )
+}
+
+@Composable
+private fun BookmarksList(
+    groups: List<SeriesBookmarks>,
+    onOpen: (Bookmark) -> Unit,
+    onDelete: (Long) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .centredContentWidth(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        groups.forEach { group ->
+            item(key = "series:${group.seriesId}") { SeriesHeading(group.name) }
+            group.books.forEach { book ->
+                item(key = "book:${book.bookId}") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, bottom = 4.dp),
+                    ) {
+                        Text(
+                            text = book.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.semantics { heading() },
+                        )
+                        Text(
+                            text = pluralStringResource(R.plurals.bookmarks_count, book.bookmarks.size, book.bookmarks.size),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                items(book.bookmarks, key = { "bookmark:${it.id}" }) { item ->
+                    BookmarkCard(item = item, onOpen = { onOpen(item.bookmark) }, onDelete = { onDelete(item.id) })
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The chapter, then the start of the page's text, then the page and how far into the book, the
+ * same as a bookmark in the reader's Contents sheet.
+ */
+@Composable
+private fun BookmarkCard(item: BookmarkItem, onOpen: () -> Unit, onDelete: () -> Unit) {
+    val page = item.page?.let { stringResource(R.string.page_number, it) }
+    val percent = stringResource(R.string.common_percent, item.percent)
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.reader_go_to_bookmark), onClick = onOpen),
+    ) {
+        Row(modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp, end = 4.dp)) {
+            Icon(
+                painter = painterResource(R.drawable.bookmark_filled),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = item.chapter ?: page ?: percent,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                item.text?.let { text ->
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (page != null) stringResource(R.string.reader_bookmark_place, page, percent) else percent,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            painter = painterResource(R.drawable.bookmark_remove),
+                            contentDescription = stringResource(R.string.reader_remove_bookmark),
+                        )
+                    }
                 }
             }
         }
@@ -391,6 +601,8 @@ private fun HighlightsScreenPreview() {
             onEdit = {},
             onExportBook = {},
             onExportAll = {},
+            onOpenBookmark = {},
+            onDeleteBookmark = {},
         )
     }
 }

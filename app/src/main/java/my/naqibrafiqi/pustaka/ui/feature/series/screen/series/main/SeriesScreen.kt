@@ -133,10 +133,12 @@ private fun SeriesScreenContent(
         modifier = modifier,
         floatingActionButton = {
             if (state is SeriesUiState.Ready && state.series.isNotEmpty()) {
+                val label = stringResource(R.string.series_new)
                 ExtendedFloatingActionButton(
                     onClick = onNewSeries,
-                    icon = { Icon(painter = painterResource(R.drawable.add), contentDescription = null) },
-                    text = { Text(stringResource(R.string.series_new)) },
+                    // Material 3 hides the button's text from screen readers, so the icon says it.
+                    icon = { Icon(painter = painterResource(R.drawable.add), contentDescription = label) },
+                    text = { Text(label) },
                 )
             }
         },

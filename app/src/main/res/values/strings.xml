@@ -309,6 +309,7 @@
 
     <!-- Reader -->
     <string name="reader_close_book">Close the book</string>
+    <string name="reader_illustration">Illustration</string>
     <string name="reader_contents">Contents</string>
     <string name="reader_no_contents">This book doesn\'t have a table of contents.</string>
     <string name="reader_go_to_chapter">Go to chapter</string>
@@ -389,8 +390,17 @@
         <item quantity="one">%d highlight</item>
         <item quantity="other">%d highlights</item>
     </plurals>
-    <string name="highlights_search">Search highlights</string>
-    <string name="highlights_search_placeholder">Search highlights, notes and books</string>
+    <string name="highlights_search">Search highlights and bookmarks</string>
+    <string name="highlights_search_placeholder">Search highlights, bookmarks and books</string>
+    <string name="highlights_tab">Highlights</string>
+    <string name="highlights_tab_count">Highlights (%1$d)</string>
+    <string name="bookmarks_empty_title">No bookmarks yet</string>
+    <string name="bookmarks_empty_message">While reading, tap the bookmark button at the top of the page. Your bookmarks show up here.</string>
+    <string name="bookmarks_no_matches_title">No matching bookmarks</string>
+    <plurals name="bookmarks_count">
+        <item quantity="one">%d bookmark</item>
+        <item quantity="other">%d bookmarks</item>
+    </plurals>
     <string name="highlights_export_all">Export all as Markdown</string>
     <string name="highlights_export_book">Export highlights from %1$s as Markdown</string>
     <string name="highlights_open_in_book">Open in the book</string>

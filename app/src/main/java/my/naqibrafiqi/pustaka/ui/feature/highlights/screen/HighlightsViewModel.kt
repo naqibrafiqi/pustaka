@@ -24,6 +24,7 @@ import my.naqibrafiqi.pustaka.R
 import my.naqibrafiqi.pustaka.data.export.ExportFiles
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
+import my.naqibrafiqi.pustaka.data.repository.BookmarkRepository
 import my.naqibrafiqi.pustaka.data.repository.HighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.SeriesRepository
 import java.time.Clock
@@ -39,13 +40,18 @@ sealed interface HighlightsUiState {
     /**
      * @property allGroups every highlight in the library, grouped by series and book.
      * @property groups the ones matching [query].
+     * @property allBookmarks every bookmark in the library, grouped the same way (#51, D33).
+     * @property bookmarks the ones matching [query].
      */
     data class Ready(
         val allGroups: List<SeriesHighlights>,
         val groups: List<SeriesHighlights>,
         val query: String,
+        val allBookmarks: List<SeriesBookmarks> = emptyList(),
+        val bookmarks: List<SeriesBookmarks> = emptyList(),
     ) : HighlightsUiState {
         val totalCount: Int get() = allGroups.sumOf { it.highlightCount }
+        val bookmarkCount: Int get() = allBookmarks.sumOf { it.bookmarkCount }
         val isSearching: Boolean get() = query.isNotBlank()
     }
 }
@@ -59,11 +65,15 @@ sealed interface HighlightsEvent {
     data class Message(@param:StringRes val text: Int) : HighlightsEvent
 }
 
-/** The Highlights tab: every highlight, grouped by series and book, with search and export. */
+/**
+ * The Highlights tab: every highlight and bookmark, grouped by series and book, with search, and
+ * export for highlights.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HighlightsViewModel @Inject constructor(
     private val highlights: HighlightRepository,
+    private val bookmarks: BookmarkRepository,
     books: BookRepository,
     series: SeriesRepository,
     private val exportFiles: ExportFiles,
@@ -78,12 +88,20 @@ class HighlightsViewModel @Inject constructor(
         .flatMapLatest {
             combine(
                 highlights.observeAllHighlights(),
+                bookmarks.observeAllBookmarks(),
                 books.observeLibraryBooks(),
                 series.observeSeries(),
                 query,
-            ) { all, library, allSeries, query ->
+            ) { all, allBookmarks, library, allSeries, query ->
                 val groups = groupHighlights(all, library, allSeries)
-                HighlightsUiState.Ready(allGroups = groups, groups = groups.search(query), query = query) as HighlightsUiState
+                val bookmarkGroups = groupBookmarks(allBookmarks, library, allSeries)
+                HighlightsUiState.Ready(
+                    allGroups = groups,
+                    groups = groups.search(query),
+                    query = query,
+                    allBookmarks = bookmarkGroups,
+                    bookmarks = bookmarkGroups.searchBookmarks(query),
+                ) as HighlightsUiState
             }.catch { emit(HighlightsUiState.Error(R.string.highlights_error)) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HighlightsUiState.Loading)
@@ -122,6 +140,13 @@ class HighlightsViewModel @Inject constructor(
         if (_openHighlightId.value == id) _openHighlightId.value = null
         viewModelScope.launch {
             withContext(NonCancellable) { highlights.deleteHighlight(id) }
+        }
+    }
+
+    /** Removes a bookmark from the Bookmarks list, the same as in the reader's Contents sheet. */
+    fun deleteBookmark(id: Long) {
+        viewModelScope.launch {
+            withContext(NonCancellable) { bookmarks.deleteBookmarks(listOf(id)) }
         }
     }
 

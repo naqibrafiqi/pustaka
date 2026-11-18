@@ -214,6 +214,33 @@ class ScreenViewModelTest {
     }
 
     @Test
+    fun seriesDetailsContinuesTheSameVolumeAsTheSeriesCard() = runTest {
+        val (seriesId, volumes) = addSeriesWithVolumes("Death Games", 3)
+        val viewModel = SeriesDetailsViewModel(seriesId, series, books, reading, files(), SavedStateHandle())
+        suspend fun continueBookId(predicate: (Long?) -> Boolean) =
+            (viewModel.state.first { it is SeriesDetailsUiState.Ready && predicate(it.continueBookId) } as SeriesDetailsUiState.Ready)
+                .continueBookId
+        suspend fun cardContinueBookId() =
+            SeriesViewModel(series, books, FakeSettings(), files()).state.awaitState<SeriesUiState.Ready>()
+                .series.single().continueBookId
+
+        // Nothing read yet: the first volume.
+        assertEquals(volumes[0], continueBookId { it == volumes[0] })
+
+        // The volume being read that was opened last, the same as the card's button (#52, D32).
+        books.setReadingStatus(volumes[0], ReadingStatus.FINISHED)
+        books.setReadingStatus(volumes[2], ReadingStatus.READING)
+        books.markOpened(volumes[2])
+        assertEquals(volumes[2], continueBookId { it == volumes[2] })
+        assertEquals(volumes[2], cardContinueBookId())
+
+        // No button once every volume is finished.
+        volumes.forEach { books.setReadingStatus(it, ReadingStatus.FINISHED) }
+        assertNull(continueBookId { it == null })
+        assertNull(cardContinueBookId())
+    }
+
+    @Test
     fun seriesDetailsForAnUnknownSeriesIsNotFound() = runTest {
         val state = SeriesDetailsViewModel(404, series, books, reading, files(), SavedStateHandle()).state
             .first { it !is SeriesDetailsUiState.Loading }
