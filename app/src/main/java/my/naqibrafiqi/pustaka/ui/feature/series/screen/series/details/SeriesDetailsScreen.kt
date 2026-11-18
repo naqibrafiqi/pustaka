@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -72,6 +73,7 @@ fun SeriesDetailsScreen(
     onToggleLayout: () -> Unit,
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
+    onContinueReading: (Long) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     snackbarHostState: SnackbarHostState,
@@ -82,6 +84,7 @@ fun SeriesDetailsScreen(
         onToggleLayout = onToggleLayout,
         onRetry = onRetry,
         onOpenBook = onOpenBook,
+        onContinueReading = onContinueReading,
         onEdit = onEdit,
         onDelete = onDelete,
         snackbarHostState = snackbarHostState,
@@ -95,6 +98,7 @@ private fun SeriesDetailsScreenContent(
     onToggleLayout: () -> Unit,
     onRetry: () -> Unit,
     onOpenBook: (Long) -> Unit,
+    onContinueReading: (Long) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     snackbarHostState: SnackbarHostState,
@@ -103,12 +107,26 @@ private fun SeriesDetailsScreenContent(
     val gridState = rememberLazyGridState()
     val ready = state as? SeriesDetailsUiState.Ready
     val isGrid = ready?.isGrid ?: true
+    val continueBookId = ready?.continueBookId
 
     var openMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        // Opens the same volume as the series card's button, so it can be reached when the series
+        // is shown as a cover in the grid (#52, D32). Gone once every volume is finished.
+        floatingActionButton = {
+            if (continueBookId != null) {
+                val label = stringResource(R.string.series_continue_reading)
+                ExtendedFloatingActionButton(
+                    onClick = { onContinueReading(continueBookId) },
+                    // Material 3 hides the button's text from screen readers, so the icon says it.
+                    icon = { Icon(painter = painterResource(R.drawable.play_arrow), contentDescription = label) },
+                    text = { Text(label) },
+                )
+            }
+        },
         topBar = {
             TopBar(
                 title = stringResource(R.string.series_details_title),
@@ -176,7 +194,8 @@ private fun SeriesDetailsScreenContent(
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 16.dp
+                    // Room for the button, so it doesn't cover the last volume.
+                    bottom = innerPadding.calculateBottomPadding() + if (continueBookId != null) FAB_CLEARANCE else 16.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -186,6 +205,9 @@ private fun SeriesDetailsScreenContent(
         }
     }
 }
+
+/** The button's height and margin, plus a gap. */
+private val FAB_CLEARANCE = 96.dp
 
 /** Wider than [MaxContentWidth][my.naqibrafiqi.pustaka.ui.components.MaxContentWidth], to fit four covers across. */
 private val DETAILS_MAX_WIDTH = 840.dp
@@ -533,11 +555,13 @@ private fun SeriesDetailsScreenPreview() {
                     )
                 },
                 isGrid = true,
+                continueBookId = 1,
             ),
             onNavigateBack = {},
             onToggleLayout = {},
             onRetry = {},
             onOpenBook = {},
+            onContinueReading = {},
             onEdit = {},
             onDelete = {},
             snackbarHostState = SnackbarHostState(),

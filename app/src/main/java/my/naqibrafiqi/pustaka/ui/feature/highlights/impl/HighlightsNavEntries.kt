@@ -53,6 +53,8 @@ fun EntryProviderScope<NavKey>.highlightsEntryBuilder() {
             onEdit = viewModel::openHighlight,
             onExportBook = viewModel::exportBook,
             onExportAll = viewModel::exportAll,
+            onOpenBookmark = { bookmark -> reader.openAt(bookmark.bookId, bookmark.locator) },
+            onDeleteBookmark = viewModel::deleteBookmark,
         )
 
         val openHighlight = (state as? HighlightsUiState.Ready)?.allGroups

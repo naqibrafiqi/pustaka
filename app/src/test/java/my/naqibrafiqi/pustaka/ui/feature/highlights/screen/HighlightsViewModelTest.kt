@@ -8,6 +8,8 @@ import my.naqibrafiqi.pustaka.data.export.ExportFiles
 import my.naqibrafiqi.pustaka.data.local.PustakaDatabase
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
 import my.naqibrafiqi.pustaka.data.repository.BookRepository
+import my.naqibrafiqi.pustaka.data.repository.BookmarkRepository
+import my.naqibrafiqi.pustaka.data.repository.DefaultBookmarkRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultBookRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultHighlightRepository
 import my.naqibrafiqi.pustaka.data.repository.DefaultSeriesRepository
@@ -40,6 +42,7 @@ class HighlightsViewModelTest {
     private lateinit var books: BookRepository
     private lateinit var series: SeriesRepository
     private lateinit var highlights: HighlightRepository
+    private lateinit var bookmarks: BookmarkRepository
     private val exportFiles = FakeExportFiles()
 
     @Before
@@ -48,6 +51,7 @@ class HighlightsViewModelTest {
         books = DefaultBookRepository(db, clock)
         series = DefaultSeriesRepository(db, clock)
         highlights = DefaultHighlightRepository(db, clock)
+        bookmarks = DefaultBookmarkRepository(db, clock)
     }
 
     @After
@@ -180,6 +184,92 @@ class HighlightsViewModelTest {
         assertTrue(text, text.contains("> First quote") && text.contains("> Second quote"))
     }
 
+    // --- Bookmarks (#51, D33) ---
+
+    @Test
+    fun bookmarksAreGroupedLikeHighlightsWithTheirChapterAndPage() = runTest {
+        val alpha = series.addSeries("/P/Alpha", "Alpha")
+        val alpha2 = books.addBook(book("Alpha 2.epub", seriesId = alpha, folder = "/P/Alpha"))
+        val alpha10 = books.addBook(book("Alpha 10.epub", seriesId = alpha, folder = "/P/Alpha"))
+        val standalone = books.addBook(book("A standalone.epub"))
+        val removed = books.addBook(book("Removed.epub"))
+        bookmark(alpha10, progression = 0.5, chapter = "Ten")
+        bookmark(standalone, progression = 0.1)
+        bookmark(alpha2, progression = 0.876, page = 80, chapter = "Chapter 4", text = "  The rain\n kept   falling.")
+        bookmark(alpha2, progression = 0.1, page = 10, chapter = "Prologue")
+        bookmark(removed, progression = 0.3)
+        books.setHidden(removed, true)
+
+        val state = viewModel().ready()
+
+        assertEquals(listOf("Alpha", null), state.bookmarks.map { it.name })
+        assertEquals(listOf("Alpha 2", "Alpha 10"), state.bookmarks[0].books.map { it.title })
+        val two = state.bookmarks[0].books[0].bookmarks
+        assertEquals(listOf("Prologue", "Chapter 4"), two.map { it.chapter })
+        assertEquals(listOf(10, 80), two.map { it.page })
+        assertEquals(listOf(10, 87), two.map { it.percent })
+        assertEquals("The rain kept falling.", two[1].text)
+        val alone = state.bookmarks[1].books.single().bookmarks.single()
+        assertNull(alone.chapter)
+        assertNull(alone.page)
+        assertEquals(4, state.bookmarkCount)
+        // Bookmarks don't count as highlights.
+        assertEquals(0, state.totalCount)
+    }
+
+    @Test
+    fun searchAlsoLooksAtBookmarks() = runTest {
+        val brunhild = books.addBook(book("Brunhild.epub"))
+        val divas = books.addBook(book("Battle Divas.epub"))
+        add(brunhild, "The dragon's maiden")
+        bookmark(brunhild, progression = 0.2, chapter = "The Dragon Wakes")
+        bookmark(brunhild, progression = 0.4, chapter = "Morning", text = "A dragon flew past.")
+        bookmark(brunhild, progression = 0.6, chapter = "Nothing here")
+        bookmark(divas, progression = 0.1, chapter = "Opening")
+        val viewModel = viewModel()
+        viewModel.ready()
+
+        viewModel.search("dragon")
+        val byText = viewModel.ready { it.query == "dragon" }
+        assertEquals(listOf("The dragon's maiden"), byText.groups.flatMap { g -> g.books.flatMap { b -> b.highlights.map { it.highlight.text } } })
+        assertEquals(listOf("The Dragon Wakes", "Morning"), byText.bookmarks.flatMap { g -> g.books.flatMap { b -> b.bookmarks.map { it.chapter } } })
+        assertEquals(4, byText.bookmarkCount)
+
+        viewModel.search("battle divas")
+        val byTitle = viewModel.ready { it.query == "battle divas" }
+        assertTrue(byTitle.groups.isEmpty())
+        assertEquals(listOf("Opening"), byTitle.bookmarks.flatMap { g -> g.books.flatMap { b -> b.bookmarks.map { it.chapter } } })
+    }
+
+    @Test
+    fun aBookmarkCanBeRemoved() = runTest {
+        val bookId = books.addBook(book("Vol 1.epub"))
+        val kept = bookmark(bookId, progression = 0.1)
+        val removed = bookmark(bookId, progression = 0.2)
+        val viewModel = viewModel()
+        viewModel.ready { it.bookmarkCount == 2 }
+
+        viewModel.deleteBookmark(removed)
+
+        val state = viewModel.ready { it.bookmarkCount == 1 }
+        assertEquals(listOf(kept), state.bookmarks.single().books.single().bookmarks.map { it.id })
+    }
+
+    /** Adds a bookmark with a locator like the reader saves: Readium puts the chapter in its title. */
+    private suspend fun bookmark(
+        bookId: Long,
+        progression: Double,
+        page: Int? = null,
+        chapter: String? = null,
+        text: String? = null,
+    ): Long {
+        val positionJson = page?.let { ""","position":$it""" }.orEmpty()
+        val titleJson = chapter?.let { ""","title":"$it"""" }.orEmpty()
+        val locator = """{"href":"chapter.xhtml","type":"application/xhtml+xml"$titleJson,"locations":{"progression":0.0,"totalProgression":$progression$positionJson}}"""
+        clock.advanceSeconds(++created)
+        return bookmarks.addBookmark(bookId, locator = locator, progression = progression, text = text)
+    }
+
     private var created = 0L
 
     /** Adds a highlight at a place in the book, with a locator like the reader saves. */
@@ -198,6 +288,7 @@ class HighlightsViewModelTest {
 
     private fun viewModel() = HighlightsViewModel(
         highlights = highlights,
+        bookmarks = bookmarks,
         books = books,
         series = series,
         markdown = HighlightsMarkdown(testResources),
