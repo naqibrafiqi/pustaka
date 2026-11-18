@@ -48,13 +48,12 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D33 | How bookmarks appear in the Highlights tab (#51) | The tab keeps the name **Highlights**, and the screen gets two tabs you can swipe between: **Highlights** and **Bookmarks**. Bookmarks are grouped by series and book like highlights, show the chapter, page and start of the page's text, and open the reader at that page. Search covers both. Export stays for highlights only. Approved with the Phase 9 plan. |
 | D34 | How see-through the reader's bars are (#53) | **Plain semi-transparent**, about 85% opaque so the bar's text stays readable over any page. The frosted-glass look isn't proposed: blurring what's behind the bars only works on Android 12 and newer, and it would need an extra library. Approved with the Phase 9 plan. |
 | D35 | How illustrations open (#50) | **A long press on an illustration** opens it full-screen over the reader, on a black background, where you can pinch or double-tap to zoom and drag to move around. Back or a tap on the close button returns to the same page. A long press on text still selects text. Illustrations are also centred on the page. Approved with the Phase 9 plan. |
+| D36 | How the reader's themes are picked, now that there are five (#55) | Five names don't fit in one row of buttons on a phone ("Dark grey" was cut to "Dark"), so the theme row became **a row of round swatches**, each showing "Aa" in the theme's colours with its name underneath. Auto's swatch is half light and half dark. Built this way in part 1, in the reader's sheet and in Default reader settings, and approved with it. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
 ### Open
-| # | Decision | Proposal |
-|---|---|---|
-| D36 | How the reader's themes are picked, now that there are five (#55) | Five names don't fit in one row of buttons on a phone ("Dark grey" was cut to "Dark"), so the theme row became **a row of round swatches**, each showing "Aa" in the theme's colours with its name underneath. Auto's swatch is half light and half dark. Built this way in part 1, in the reader's sheet and in Default reader settings. |
+None right now.
 
 ---
 
@@ -229,6 +228,7 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
      - **Brightness:** the slider is the first setting. It follows the same curve as the phone's own slider, so the middle looks the same in both. While it's dragged, the screen shows the brightness under your thumb, in the reader and in Default reader settings. **Reset** puts back how the page looks and leaves the brightness where you set it.
      - **Dark grey:** light grey text (#DCDCDC) on a dark grey page (#303030). The bars and sheets are dark grey with it, even when the app is light. The other themes keep their bars as before.
      - **Themes are picked from swatches (D36),** because five names didn't fit in a row of buttons.
+   - Approved and merged into `1.2.0`, with D36.
 2. **Series and bookmarks (M):**
    - [#52](https://github.com/naqibrafiqi/pustaka/issues/52): a "Continue reading" button on Series Details (D32).
    - [#51](https://github.com/naqibrafiqi/pustaka/issues/51): bookmarks in the Highlights tab, next to highlights (D33). Bookmarks are already saved in their own table, so the database doesn't change.
@@ -268,4 +268,4 @@ Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibr
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
 | 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. 1.1.0 was published on 2026-11-17. |
-| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is built and waiting for review, with D36 open. |
+| 9. Improvements after 1.1 | In progress, for 1.2.0. The plan and D30 to D35 are approved. Part 1 (#53 to #56) is merged, with D36. Next: part 2 (#51, #52). |
