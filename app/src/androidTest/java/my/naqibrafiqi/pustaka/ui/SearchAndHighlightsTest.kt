@@ -20,12 +20,16 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import my.naqibrafiqi.pustaka.data.model.Bookmark
 import my.naqibrafiqi.pustaka.data.model.Highlight
 import my.naqibrafiqi.pustaka.data.model.HighlightColor
+import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.BookBookmarks
 import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.BookHighlights
+import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.BookmarkItem
 import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.HighlightItem
 import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.HighlightsScreen
 import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.HighlightsUiState
+import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.SeriesBookmarks
 import my.naqibrafiqi.pustaka.ui.feature.highlights.screen.SeriesHighlights
 import my.naqibrafiqi.pustaka.ui.feature.reader.ColorPicker
 import my.naqibrafiqi.pustaka.ui.feature.search.screen.SearchResult
@@ -118,19 +122,76 @@ class SearchAndHighlightsTest {
                     onEdit = {},
                     onExportBook = { exported = it },
                     onExportAll = {},
+                    onOpenBookmark = {},
+                    onDeleteBookmark = {},
                 )
             }
         }
 
         compose.onNode(hasText("Brunhild") and isHeading()).assertIsDisplayed()
-        // In the top bar and above the book's highlights.
-        compose.onAllNodesWithText("1 highlight").assertCountEquals(2)
+        compose.onNodeWithText("Highlights (1)").assertIsSelected()
+        compose.onAllNodesWithText("1 highlight").assertCountEquals(1)
         compose.onNodeWithText("Foreshadowing?").assertIsDisplayed()
         compose.onNodeWithText("The dragon's maiden looked up at the sky.").performClick()
         compose.onNodeWithContentDescription("Export highlights from Brunhild, Vol. 01 as Markdown").performClick()
 
         assertEquals(5L, opened?.id)
         assertEquals(2L, exported)
+    }
+
+    @Test
+    fun bookmarksAreOnTheirOwnTab() {
+        val bookmark = Bookmark(id = 7, bookId = 2, locator = "{}", progression = 0.42, createdAt = Instant.EPOCH)
+        val bookmarks = listOf(
+            SeriesBookmarks(
+                seriesId = 1,
+                name = "Brunhild",
+                books = listOf(
+                    BookBookmarks(
+                        2,
+                        "Brunhild, Vol. 01",
+                        listOf(BookmarkItem(bookmark, chapter = "Chapter 3", page = 42, percent = 42, text = "The rain kept falling.")),
+                    )
+                ),
+            )
+        )
+        var opened: Bookmark? = null
+        var deleted: Long? = null
+        compose.setContent {
+            PustakaTheme {
+                HighlightsScreen(
+                    state = HighlightsUiState.Ready(
+                        allGroups = emptyList(),
+                        groups = emptyList(),
+                        query = "",
+                        allBookmarks = bookmarks,
+                        bookmarks = bookmarks,
+                    ),
+                    snackbarHostState = SnackbarHostState(),
+                    onSearch = {},
+                    onRetry = {},
+                    onOpen = {},
+                    onEdit = {},
+                    onExportBook = {},
+                    onExportAll = {},
+                    onOpenBookmark = { opened = it },
+                    onDeleteBookmark = { deleted = it },
+                )
+            }
+        }
+
+        compose.onNodeWithText("No highlights yet").assertIsDisplayed()
+        compose.onNodeWithText("Bookmarks (1)").performClick()
+
+        compose.onNodeWithText("Bookmarks (1)").assertIsSelected()
+        compose.onNodeWithText("1 bookmark").assertIsDisplayed()
+        compose.onNodeWithText("Page 42 · 42%").assertIsDisplayed()
+        compose.onNodeWithText("The rain kept falling.").assertIsDisplayed()
+        compose.onNodeWithText("Chapter 3").performClick()
+        compose.onNodeWithContentDescription("Remove bookmark").performClick()
+
+        assertEquals(7L, opened?.id)
+        assertEquals(7L, deleted)
     }
 
     @Test

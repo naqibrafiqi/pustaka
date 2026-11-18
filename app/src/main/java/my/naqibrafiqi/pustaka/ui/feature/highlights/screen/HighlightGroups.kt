@@ -53,31 +53,44 @@ data class SeriesHighlights(
  */
 fun groupHighlights(highlights: List<Highlight>, books: List<Book>, series: List<Series>): List<SeriesHighlights> {
     val byBook = highlights.groupBy { it.bookId }
-    val booksWithHighlights = books.filter { it.id in byBook }
+    return shelvesOf(byBook.keys, books, series).map { shelf ->
+        SeriesHighlights(
+            seriesId = shelf.seriesId,
+            name = shelf.name,
+            books = shelf.books.map { book ->
+                BookHighlights(
+                    bookId = book.id,
+                    title = book.name.value,
+                    highlights = byBook.getValue(book.id)
+                        .map(::itemOf)
+                        .sortedWith(compareBy<HighlightItem> { it.progression }.thenBy { it.highlight.createdAt }.thenBy { it.id }),
+                )
+            },
+        )
+    }
+}
 
-    fun bookGroup(book: Book) = BookHighlights(
-        bookId = book.id,
-        title = book.name.value,
-        highlights = byBook.getValue(book.id)
-            .map(::itemOf)
-            .sortedWith(compareBy<HighlightItem> { it.progression }.thenBy { it.highlight.createdAt }.thenBy { it.id }),
-    )
+/** The books of one series, or the standalone books when [seriesId] is null. */
+internal data class Shelf(val seriesId: Long?, val name: String?, val books: List<Book>)
 
-    val volumesBySeries = booksWithHighlights.filterNot { it.isStandalone }.groupBy { it.seriesId }
-    val seriesGroups = series
+/**
+ * The books in [bookIds], grouped the way the Highlights tab lists them: series by name, their
+ * volumes in reading order (see [VolumeOrder]), then standalone books by name. Books that aren't in
+ * [books], such as books removed from the library, are left out.
+ */
+internal fun shelvesOf(bookIds: Set<Long>, books: List<Book>, series: List<Series>): List<Shelf> {
+    val listed = books.filter { it.id in bookIds }
+    val volumesBySeries = listed.filterNot { it.isStandalone }.groupBy { it.seriesId }
+    val seriesShelves = series
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name.value })
         .mapNotNull { s ->
             val volumes = volumesBySeries[s.id] ?: return@mapNotNull null
-            SeriesHighlights(seriesId = s.id, name = s.name.value, books = VolumeOrder.sort(volumes).map(::bookGroup))
+            Shelf(seriesId = s.id, name = s.name.value, books = VolumeOrder.sort(volumes))
         }
-
-    val standalone = booksWithHighlights
+    val standalone = listed
         .filter { it.isStandalone }
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name.value })
-        .map(::bookGroup)
-    val standaloneGroup = standalone.takeIf { it.isNotEmpty() }?.let { SeriesHighlights(seriesId = null, name = null, books = it) }
-
-    return seriesGroups + listOfNotNull(standaloneGroup)
+    return seriesShelves + listOfNotNull(standalone.takeIf { it.isNotEmpty() }?.let { Shelf(seriesId = null, name = null, books = it) })
 }
 
 /**

@@ -72,6 +72,7 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanView
 
     entry<SeriesDetailsRoute> { route ->
         val navigator = LocalAppNavigator.current
+        val reader = rememberReaderLauncher()
         val viewModel = hiltViewModel<SeriesDetailsViewModel, SeriesDetailsViewModel.Factory>(
             creationCallback = { factory -> factory.create(route.seriesId) }
         )
@@ -86,6 +87,7 @@ fun EntryProviderScope<NavKey>.seriesEntryBuilder(scanViewModel: LibraryScanView
             onToggleLayout = viewModel::toggleLayout,
             onRetry = viewModel::retry,
             onOpenBook = { bookId -> navigator.add(BookDetailsRoute(bookId)) },
+            onContinueReading = { bookId -> reader.open(bookId, fromStart = false) },
             onEdit = { navigator.add(EditSeriesRoute(route.seriesId)) },
             onDelete = viewModel::requestDelete,
             snackbarHostState = snackbarHostState,
