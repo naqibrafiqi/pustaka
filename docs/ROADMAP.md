@@ -1,8 +1,8 @@
 # Pustaka Roadmap
 
-_Last updated: 2026-11-17_
+_Last updated: 2026-11-18_
 
-Pustaka is an offline EPUB reader for books that come in series of numbered volumes. Phases 0 to 7 took it from four screens of placeholder data to version 1.0.0, published on 2026-11-15. Phase 8 covers the fixes and improvements filed as [GitHub issues](https://github.com/naqibrafiqi/pustaka/issues) after using 1.0.0.
+Pustaka is an offline EPUB reader for books that come in series of numbered volumes. Phases 0 to 7 took it from four screens of placeholder data to version 1.0.0, published on 2026-11-15. Phase 8 covered the fixes and improvements filed as [GitHub issues](https://github.com/naqibrafiqi/pustaka/issues) after using 1.0.0, and became 1.1.0, published on 2026-11-17. Phase 9 covers the issues filed after using 1.1.0, for 1.2.0.
 
 **Roles:** the project manager (you) sets priorities and makes the product decisions. Claude does the engineering and reports at the end of each milestone.
 
@@ -42,6 +42,12 @@ Pustaka is an offline EPUB reader for books that come in series of numbered volu
 | D27 | Where bookmarks are listed (#37) | A **Bookmarks** tab in the Contents sheet, next to the chapters, with a bookmark button in the reader's top bar. A bookmark belongs to a page number, and tapping one opens that page. Built as proposed in part 4 and approved with it. |
 | D28 | Whether to build the page-flip animation (#36) | **Set aside for a later version.** A quick trial showed that a page curl can be drawn over Readium's page, turned by a tap or by dragging with a finger, but it was far from what you have in mind. #36 stays open and comes back in a later version. The trial is kept on the local branch `spike/page-flip-d28` for reference and isn't merged. |
 | D29 | Where the tabs go on a tablet (#39) | On a window **600dp or wider** (tablets, unfolded foldables, phones on their side), the tabs are in a **navigation rail** down the left side, kept on every screen. Phones held upright keep the bottom bar. Built in part 5 and approved with it. |
+| D30 | Whether the reader's **Auto** theme stays when Dark grey is added (#55) | **Keep Auto.** It's the default and follows the app's light or dark theme, so removing it would change the reader for anyone who never picked a theme. Dark grey is added after Dark: Light, Sepia, Dark, Dark grey. Auto keeps using Dark in dark mode. Approved with the Phase 9 plan. |
+| D31 | What brightness the reader uses (#54) | Android can't pause auto-brightness for a single app, only replace it, so the reader sets its own brightness. A **Brightness** slider in reader settings, and in Default reader settings. The first time, it starts at the phone's brightness at that moment. The phone's own brightness and auto-brightness come back as soon as you leave the reader. The screen also stays on while reading, and goes back to the phone's normal sleep timeout after **5 minutes without a page turn**, the same idle limit as reading sessions, so a book left open doesn't keep the screen on all night. Approved with the Phase 9 plan. |
+| D32 | Where "Continue reading" goes for series in the grid (#52) | **A button on Series Details only.** A floating "Continue reading" button opens the volume the series card's button would open. It isn't shown when every volume is finished. The grid keeps 3 covers per row and gets no button of its own. Approved with the Phase 9 plan. |
+| D33 | How bookmarks appear in the Highlights tab (#51) | The tab keeps the name **Highlights**, and the screen gets two tabs you can swipe between: **Highlights** and **Bookmarks**. Bookmarks are grouped by series and book like highlights, show the chapter, page and start of the page's text, and open the reader at that page. Search covers both. Export stays for highlights only. Approved with the Phase 9 plan. |
+| D34 | How see-through the reader's bars are (#53) | **Plain semi-transparent**, about 85% opaque so the bar's text stays readable over any page. The frosted-glass look isn't proposed: blurring what's behind the bars only works on Android 12 and newer, and it would need an extra library. Approved with the Phase 9 plan. |
+| D35 | How illustrations open (#50) | **A long press on an illustration** opens it full-screen over the reader, on a black background, where you can pinch or double-tap to zoom and drag to move around. Back or a tap on the close button returns to the same page. A long press on text still selects text. Illustrations are also centred on the page. Approved with the Phase 9 plan. |
 
 All the details are in [local_storage_and_library.md](local_storage_and_library.md).
 
@@ -204,13 +210,39 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 - Screenshots in the README, of public-domain books from [Standard Ebooks](https://standardebooks.org), so no copyrighted covers or text are shown.
 - Two fixes found while taking them. An author also listed with another role, such as annotator, was shown as "Unknown author". A long genre on a series card squeezed the volume count into a thin bar. Books already in the library pick up the author fix when their file changes.
 
+### Phase 9: Improvements after 1.1 (L)
+Work from the GitHub issues filed on 2026-11-18, [#50](https://github.com/naqibrafiqi/pustaka/issues/50) to [#56](https://github.com/naqibrafiqi/pustaka/issues/56). #36 (page flip) stays set aside (D28). This phase is split into three parts, smallest first. Each is on its own feature branch, started from `1.2.0` and merged into it. Decisions D30 to D35 apply.
+
+**README and screenshots:** each part updates [README.md](../README.md) before it's reviewed: the Features list for anything new you can see or use, and the screenshots it changes, retaken the same way as for 1.1.0 (the Standard Ebooks books on the emulator, a clean status bar). The screenshots each part changes are listed with it.
+
+1. **Reader and tablet polish (S–M):**
+   - [#56](https://github.com/naqibrafiqi/pustaka/issues/56): the tabs in the tablet's navigation rail are centred down the side instead of starting at the top.
+   - [#53](https://github.com/naqibrafiqi/pustaka/issues/53): the reader's top and bottom bars are semi-transparent (D34), so the page shows through. The "Back to page 42" button keeps its own colour.
+   - [#54](https://github.com/naqibrafiqi/pustaka/issues/54): the reader keeps its own brightness, with a slider in reader settings, and keeps the screen on while reading (D31).
+   - [#55](https://github.com/naqibrafiqi/pustaka/issues/55): a **Dark grey** theme in reader settings and Default reader settings (D30). Readium has no such theme, so it's Readium's Dark theme with Pustaka's own background and text colours. The reader's bars and sheets match it.
+   - Screenshots: `reader.png` (see-through bars), `tablet.png` (centred rail), and a new `reader-dark-grey.png` in the empty spot in the README's second row.
+2. **Series and bookmarks (M):**
+   - [#52](https://github.com/naqibrafiqi/pustaka/issues/52): a "Continue reading" button on Series Details (D32).
+   - [#51](https://github.com/naqibrafiqi/pustaka/issues/51): bookmarks in the Highlights tab, next to highlights (D33). Bookmarks are already saved in their own table, so the database doesn't change.
+   - Screenshots: `series-details.png` (the new button) and `highlights.png` (the two tabs), plus a new `bookmarks.png` of the Bookmarks list.
+3. **Illustrations (L):** [#50](https://github.com/naqibrafiqi/pustaka/issues/50). A long press on an illustration opens it full-screen with zoom (D35), and illustrations are centred on the page.
+   - Readium doesn't report presses on images, so the script Pustaka already adds to each chapter (the one that justifies paragraphs and centres chapter titles) also watches for a long press on an image and tells the app which one. The app loads the image from the book itself, at full size.
+   - Centring is done by the same script, since adding a stylesheet to a chapter turns off Readium's own default styles.
+   - Text selection has to keep working as before. A long press on text next to an illustration should select the text, not open the image.
+   - Screenshots: a new `illustration.png` of a zoomed-in illustration, from a public-domain book that has illustrations, in a new row in the README.
+
+**Done when:** every issue above is fixed on `1.2.0`, or deliberately set aside with your agreement, and the README describes and shows what's in 1.2.0.
+
+**Wrapping up 1.2.0:** on branch `release-1.2.0`, from `1.2.0`: version 1.2.0 (version code 3), the release notes in `releases/1.2.0.md`, the README's status line pointing to them, and a last check that every screenshot matches the app.
+
 ---
 
 ## Working agreement
 
-- **Branches:** one feature branch per phase, or per sub-feature for the large phases. Each starts from the version branch it's for (`1.1.0` for Phase 8, D23). Claude creates each version branch locally from the one before it. Released versions such as `1.0.0` aren't changed. Version branches are merged into `main` separately.
+- **Branches:** one feature branch per phase, or per sub-feature for the large phases. Each starts from the version branch it's for (`1.1.0` for Phase 8, D23, and `1.2.0` for Phase 9). Claude creates each version branch locally from the one before it. Released versions such as `1.0.0` aren't changed. Version branches are merged into `main` separately.
 - **Local only:** Claude works only in the local repository. It never pushes to GitHub, opens pull requests or changes anything there. When you approve a feature branch, Claude merges it into the local version branch. You push branches and handle pull requests, issues and releases yourself.
 - **Commit messages:** follow the existing style, e.g. `feat: …` and `fix: …`.
+- **README:** every feature branch that changes what you can see or do in the app updates README.md, including its screenshots, before it's reviewed.
 - **Reports:** at the end of each phase you'll get what was built, what was tested and how, and any decisions that came up along the way.
 - **Scope changes:** if something in the designs is unclear or conflicts with this plan, Claude asks before building it.
 - This file is the source of truth for scope and gets updated as phases are completed.
@@ -227,4 +259,5 @@ Work from the GitHub issues filed on 2026-11-17. This phase is split into six pa
 | 5. Highlights | Done |
 | 6. Settings, search and sorting | Done |
 | 7. Polish and release | Done. 1.0.0 was published on 2026-11-15 (D22), following [RELEASING.md](RELEASING.md). |
-| 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. Next: you sign and publish v1.1.0 ([RELEASING.md](RELEASING.md)). |
+| 8. Fixes and improvements after 1.0 | Done, for 1.1.0. Parts 1 (#31 to #34), 2 (#38), 3 (#35), 4 (#37) and 5 (#39) are merged. Part 6 (#36, page flip) is set aside for a later version (D28). The 1.1.0 wrap-up (version, icon, screenshots, release notes) is merged. 1.1.0 was published on 2026-11-17. |
+| 9. Improvements after 1.1 | Planned, for 1.2.0. The plan and D30 to D35 are approved. Next: part 1 (#53 to #56). |
