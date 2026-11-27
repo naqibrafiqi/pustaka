@@ -38,6 +38,7 @@ fun PustakaRoot(viewModel: StartupViewModel = hiltViewModel()) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         )
+
         StartupScreen.WELCOME -> WelcomeScreen(
             libraryFolderPath = state.libraryFolderPath,
             onContinue = {
@@ -45,10 +46,12 @@ fun PustakaRoot(viewModel: StartupViewModel = hiltViewModel()) {
                 requestAccess()
             },
         )
+
         StartupScreen.ACCESS_NEEDED -> AccessNeededScreen(
             libraryFolderPath = state.libraryFolderPath,
             onGrantAccess = requestAccess,
         )
+
         StartupScreen.READY -> PustakaApp()
     }
 }
