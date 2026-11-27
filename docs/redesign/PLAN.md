@@ -8,7 +8,7 @@
 2. **During the phase:** build on a branch named `redesign/rN-<name>`, cut from `2.0.0`. Everything stays local, as before; you handle the remote. When you're stuck, ask for a hint at the level you want:
    - **Nudge:** which concept or doc to look at.
    - **Direction:** the approach, in words.
-   - **Sketch:** pseudo-code or a small snippet, never the finished code.
+   - **Sketch:** pseudocode or a small snippet, never the finished code.
 3. **At the deadline** (Sunday night), say "review R*N*". I will:
    - read the diff against `2.0.0`
    - build `assembleDebug` and run the unit tests (and the UI tests when an emulator is running)
@@ -18,7 +18,7 @@
 
 **Deadlines.** Each phase is due Sunday at 23:59 your time. **Must** items are what a phase needs to pass review; **Stretch** items are optional. If a phase is going to be late, say so before the deadline. It then moves into the next buffer week. Two phases never run at once.
 
-**Docs aren't coding practice.** At review I can update README.md and the screenshots for the screens a phase changed, if you want me to.
+**Docs aren't coding practice.** At review, I can update README.md and the screenshots for the screens a phase changed, if you want me to.
 
 ## Decisions
 
@@ -80,18 +80,18 @@ The Compose and Android skills in `.claude/skills` are good reading too: `compos
 **Must**
 - Create `redesign/r0-foundations` from the local `2.0.0`. `2.0.0` is `1.2.0` plus these redesign docs.
 - Bundle the four font families in `res/font`. Build `Typography` from DESIGN.md section 2.2.
-- Replace the light and dark colour schemes with section 2.1. Add `PustakaColors` (the extended colours) through a `staticCompositionLocalOf`, with a `PustakaTheme.colors` accessor.
+- Replace the light and dark color schemes with section 2.1. Add `PustakaColors` (the extended colors) through a `staticCompositionLocalOf`, with a `PustakaTheme.colors` accessor.
 - `Shapes` from section 2.3, plus `TicketShape` as a custom `Shape`.
 - A `PustakaMotion` object holding the motion tokens, and a `LocalReduceMotion` that reads the system's animator duration scale.
-- Extend `ColorSchemeContrastTest` to cover the new pairings and the extended colours, and make it pass.
-- Add the fonts to the open-source licences screen.
+- Extend `ColorSchemeContrastTest` to cover the new pairings and the extended colors, and make it pass.
+- Add the fonts to the open-source licenses screen.
 
-**Stretch:** a `DesignCatalog.kt` of `@Preview`s showing every colour, type style, shape and token, in light and dark.
+**Stretch:** a `DesignCatalog.kt` of `@Preview`s showing every color, type style, shape and token, in light and dark.
 
 **Done when**
-- Every existing screen renders with the new colours and fonts.
+- Every existing screen renders with the new colors and fonts.
 - The tests are green.
-- Dynamic colours still overrides the scheme when it's switched on.
+- Dynamic colors still overrides the scheme when it's switched on.
 
 **You'll practise:** M3 theming, custom design-system tokens, `CompositionLocal`, font resources, and the `Shape` and `Outline` APIs.
 - https://developer.android.com/develop/ui/compose/designsystems/custom
@@ -99,8 +99,8 @@ The Compose and Android skills in `.claude/skills` are good reading too: `compos
 - https://developer.android.com/develop/ui/compose/graphics/draw/shapes
 
 **Think about**
-- `staticCompositionLocalOf` or `compositionLocalOf`: which suits colours that change only with the theme, and why?
-- When dynamic colour is on, where do the *extended* colours come from?
+- `staticCompositionLocalOf` or `compositionLocalOf`: which suits colors that change only with the theme, and why?
+- When dynamic color is on, where do the *extended* colors come from?
 - `TicketShape` must work at any size. What does `createOutline` receive, and which unit is the notch radius in?
 
 ---
@@ -112,7 +112,7 @@ The Compose and Android skills in `.claude/skills` are good reading too: `compos
 **Boards:** Home (the bottom of the board), Shelves, Notes. Motion note 1.
 
 **Must**
-- `NavPill`: your own composable, not M3's `NavigationBar`. The selected item expands to show its label. The ribbon-coloured indicator slides and stretches between items using `PustakaMotion.spatialBouncy`.
+- `NavPill`: your own composable, not M3's `NavigationBar`. The selected item expands to show its label. The ribbon-colored indicator slides and stretches between items using `PustakaMotion.spatialBouncy`.
 - Three tab back stacks: Home, Shelves, Notes. Settings becomes a route pushed from an icon on Home's top bar.
 - `NowReadingBar` above the pill on the tab roots, showing the most recently opened in-progress book. Tapping it opens Book details; tapping play opens the reader. It hides when nothing is in progress.
 - The pill and bar hide on pushed screens, as the bottom bar does now.
@@ -153,7 +153,7 @@ The Compose and Android skills in `.claude/skills` are good reading too: `compos
 - A DAO query for sessions since a given instant, and a repository function returning a `Flow`.
 - The greeting, with the date in mono and morning, afternoon or evening.
 - The streak ticket in `TicketShape`. Tapping it goes to a placeholder Journal route (the real screen comes in R7).
-- **Continue carousel:** a `HorizontalPager` of the books in progress, with neighbouring pages scaled and tilted by their page offset. Each card has the cover with its **ribbon** (build `RibbonShape`), "CH. n · x PAGES LEFT" if the data allows (otherwise page X of Y), and Resume.
+- **Continue carousel:** a `HorizontalPager` of the books in progress, with neighboring pages scaled and tilted by their page offset. Each card has the cover with its **ribbon** (build `RibbonShape`), "CH. n · x PAGES LEFT" if the data allows (otherwise page X of Y), and Resume.
 
 **Stretch:** Resume morphs from a pill to a squircle while pressed (`androidx.graphics:graphics-shapes`: `RoundedPolygon` and `Morph`, driven by `interactionSource.collectIsPressedAsState()`).
 
@@ -172,14 +172,14 @@ The Compose and Android skills in `.claude/skills` are good reading too: `compos
 
 ---
 
-## R3 · Home II: book colours, the shelf, the grid (due Sun 20 Dec)
+## R3 · Home II: book colors, the shelf, the grid (due Sun 20 Dec)
 
 **Goal:** the signature element. Books stand on a shelf as spines in their own colours.
 
 **Boards:** Home (Your shelf and All books). Motion note 4.
 
 **Must**
-- **A colour for each book from its cover.** Use AndroidX Palette, or write your own extraction from a downsampled bitmap for the challenge. Store it in a new nullable `BookEntity.coverColor` column: Room version 3 with `AutoMigration(2, 3)`, and a migration test. Work it out where covers are already extracted during a scan, not on the UI thread.
+- **A color for each book from its cover.** Use AndroidX Palette, or write your own extraction from a downsampled bitmap for the challenge. Store it in a new nullable `BookEntity.coverColor` column: Room version 3 with `AutoMigration(2, 3)`, and a migration test. Work it out where covers are already extracted during a scan, not on the UI thread.
 - `Spine`: the title rotated 90° and measured correctly (the rotated text must take up the rotated space). Width comes from file size in buckets; height from a stable hash of the title.
 - `Shelf`: a custom `Layout` that bottom-aligns the spines on a plank and scrolls sideways when there are more.
 - **Pull-out:** tapping a spine lifts it with `spatialBouncy` and shows its title, author and Open below the shelf. Tapping another swaps them; tapping the same one again pushes it back.
@@ -190,7 +190,7 @@ The Compose and Android skills in `.claude/skills` are good reading too: `compos
 
 **Done when**
 - The migration test passes.
-- A fresh scan fills in the colours.
+- A fresh scan fills in the colors.
 - The spines don't jump when one is pulled.
 - TalkBack can reach and pull a spine.
 - At 200% font size the spine titles are ellipsized, not clipped mid-glyph.
